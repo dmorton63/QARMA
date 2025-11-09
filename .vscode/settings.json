@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "cpu_core_manager.h": "c",
+        "time.h": "c",
+        "message_manager.h": "c",
+        "keyboard_subsystem.h": "c",
+        "dispatch_logf.h": "c",
+        "subsystem_registry.h": "c",
+        "kernel.h": "c",
+        "log.h": "c",
+        "video_subsystem.h": "c",
+        "stdbool.h": "c",
+        "window_subsystem.h": "c",
+        "stdlib.h": "c",
+        "xutil.h": "c"
+    }
+}

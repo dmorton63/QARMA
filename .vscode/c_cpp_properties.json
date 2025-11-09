@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "QuantumOS",
+      "includePath": [
+        "${workspaceFolder}/headers",
+        "${workspaceFolder}/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",  // or your actual compiler
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "linux-gcc-x64"  // or "windows-gcc-x64" if you're on Windows
+    }
+  ],
+  "version": 4
+}
