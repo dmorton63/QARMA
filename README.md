@@ -23,7 +23,7 @@
 
 ## Mouse found, Mouse registers, Mouse should be working - need to tie it in to the messaging system.
 
-## Network layer developped, tested with a few commands
+## Network layer developed, tested with a few commands
 
 ## ADD a Terminal mode back in so that we can Execute system commands natively.
 
