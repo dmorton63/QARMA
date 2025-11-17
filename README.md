@@ -16,11 +16,17 @@
 ## Screen print of login screen.  Starting to look like something now.
 <img width="1290" height="856" alt="QarmaLogin" src="https://github.com/user-attachments/assets/c3c07578-e14e-4b4d-ace3-af3447336b17" />
 ## things to do:  Add Title bar and menu bar to main window.
+
 ## Display main window first, then load the login dialog box.
+
 ## Add a Status bar to the bottom of the window.
+
 ## Mouse found, Mouse registers, Mouse should be working - need to tie it in to the messaging system.
+
 ## Network layer developped, tested with a few commands
+
 ## ADD a Terminal mode back in so that we can Execute system commands natively.
+
 ## Help used to work, is broken at the moment.
 
 ## Overview
