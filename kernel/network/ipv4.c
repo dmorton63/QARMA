@@ -1,8 +1,8 @@
 #include "ipv4.h"
 #include "ethernet.h"
 #include "arp.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 static uint16_t ip_packet_id = 1;
 

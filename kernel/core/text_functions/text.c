@@ -1,7 +1,7 @@
 // text.c
 
 #include "text.h"
-#include "../../kernel/graphics/font_data.h" // glyph metrics if available
+#include "graphics/font_data.h" // glyph metrics if available
 
 #define FONT_WIDTH 8 // Fallback width if no metrics provided
 

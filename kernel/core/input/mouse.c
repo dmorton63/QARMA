@@ -1,9 +1,9 @@
 #include "../stdtools.h"
 #include "mouse.h"
-#include "../../../config.h"
-#include "../../drivers/usb/usb_mouse.h"
-#include "../../graphics/framebuffer.h"
-#include "../../core/io.h"
+#include "config.h"
+#include "drivers/usb/usb_mouse.h"
+#include "graphics/framebuffer.h"
+#include "core/io.h"
 
 // PS/2 Controller Commands
 #define PS2_CMD_PORT    0x64
@@ -68,7 +68,7 @@ static uint8_t mouse_read(void) {
 }
 
 void mouse_init(void) {
-    GFX_LOG_MIN("Starting mouse initialization...\n");
+    SERIAL_LOG("Mouse: Initializing USB mouse...\n");
     
     // Initialize mouse position to center of screen
     mouse_state.x = fb_width / 2;
@@ -84,16 +84,14 @@ void mouse_init(void) {
     // Clear packet buffer
     packet_index = 0;
     
-    // Try USB mouse first
-    GFX_LOG_MIN("Attempting USB mouse initialization...\n");
-    if (usb_mouse_init() == 0) {
-        GFX_LOG_MIN("USB mouse driver initialized successfully\n");
-        return;
+    // Initialize USB mouse - focus on fixing UHCI/TD issues
+    extern int usb_mouse_init(void);
+    int result = usb_mouse_init();
+    if (result == 0) {
+        SERIAL_LOG("Mouse: USB mouse initialized successfully\n");
+    } else {
+        SERIAL_LOG("Mouse: USB mouse initialization failed\n");
     }
-    
-    // Fall back to PS/2 mouse (disabled for now to prevent conflicts)
-    GFX_LOG_MIN("USB mouse not available, PS/2 mouse disabled for compatibility\n");
-    GFX_LOG_MIN("Mouse initialization complete (no hardware mouse active)\n");
 }
 
 void mouse_handler() {
@@ -106,7 +104,7 @@ void mouse_handler() {
         uint8_t data = inb(PS2_DATA_PORT); // Read and discard to clear interrupt
         SERIAL_LOG("Mouse: Discarded PS/2 byte (USB mouse active)\n");
     }
-    
+    SERIAL_LOG("Mouse: USB mouse interrupt handled\n");
     // Send EOI to both PICs
     outb(0xA0, 0x20); // slave PIC
     outb(0x20, 0x20); // master PIC

@@ -1,38 +1,49 @@
 #include "qarma_window_manager.h"
 #include "panic.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
+#include "config.h"
+
+// For SERIAL_LOG macro
+extern void serial_debug(const char* msg);
 
 QARMA_WINDOW_MANAGER qarma_window_manager;
 
 void add_window(QARMA_WINDOW_MANAGER* mgr, QARMA_WIN_HANDLE* win, const char* caller) {
-    gfx_printf("[qarma_win_factory] Creating window: ID %u, type %d, title '%s'\n", win->id, win->type, win->title ? win->title : "(null)");
-    gfx_printf("Caller: %s\n", caller);
-    //gfx_printf("[add_window] Called from %u → ID %u, type %d\n", caller, win->id, win->type);
-    if(win->title == "") {
-        gfx_printf("Warning: Window title is empty string.\n");
-    } else {
-        gfx_printf("Window title: '%s'\n", win->title);
-        if (!mgr || !win) {
-            panic("add_window: manager or window is NULL");
-            return;
-        }
-
-        if (!win->vtable) {
-            panic("add_window: window vtable is NULL");
-            return;
-        }
-
-        if ((win->type == QARMA_WIN_TYPE_SPLASH || (win->flags & QARMA_FLAG_FADE_OUT)) && !win->traits) {
-            panic("add_window: splash window missing traits");
-            return;
-        }
-
-        if (mgr->count >= QARMA_MAX_WINDOWS) {
-            panic("add_window: window manager overflow");
-            return;
-        }
+    // Skip gfx_printf during early boot - it might hang
+    (void)caller;
+    
+    SERIAL_LOG("[WINMGR] add_window called\n");
+    
+    if (!mgr || !win) {
+        SERIAL_LOG("[WINMGR] ERROR: manager or window is NULL\n");
+        panic("add_window: manager or window is NULL");
+        return;
     }
+    
+    SERIAL_LOG("[WINMGR] Checking vtable\n");
+    if (!win->vtable) {
+        SERIAL_LOG("[WINMGR] ERROR: window vtable is NULL\n");
+        panic("add_window: window vtable is NULL");
+        return;
+    }
+
+    SERIAL_LOG("[WINMGR] Checking traits\n");
+    if ((win->type == QARMA_WIN_TYPE_SPLASH || (win->flags & QARMA_FLAG_FADE_OUT)) && !win->traits) {
+        SERIAL_LOG("[WINMGR] ERROR: splash window missing traits\n");
+        panic("add_window: splash window missing traits");
+        return;
+    }
+
+    SERIAL_LOG("[WINMGR] Checking window count\n");
+    if (mgr->count >= QARMA_MAX_WINDOWS) {
+        SERIAL_LOG("[WINMGR] ERROR: window manager overflow\n");
+        panic("add_window: window manager overflow");
+        return;
+    }
+    
+    SERIAL_LOG("[WINMGR] Adding window to array\n");
     mgr->windows[mgr->count++] = win;
+    SERIAL_LOG("[WINMGR] Window added successfully\n");
 }
 
 static void update_all(QARMA_WINDOW_MANAGER* mgr, QARMA_TICK_CONTEXT* ctx) {

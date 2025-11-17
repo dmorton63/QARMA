@@ -1,12 +1,12 @@
 #include "uhci.h"
 #include "usb.h"
-#include "../../core/memory/heap.h"
-#include "../../core/timer.h"
-#include "../../core/memory/vmm/vmm.h"
-#include "../../core/memory/pmm/pmm.h"
-#include "../../graphics/graphics.h"
-#include "../../config.h"
-#include "../../core/pci.h"
+#include "core/memory/heap.h"
+#include "core/timer.h"
+#include "core/memory/vmm/vmm.h"
+#include "core/memory/pmm/pmm.h"
+#include "graphics/graphics.h"
+#include "config.h"
+#include "core/pci.h"
 
 /* Debug helper: when enabled, force an immediate diagnostic dump after
  * enqueueing descriptors so emulator captures contain controller-visible
@@ -20,6 +20,24 @@
 static inline uint32_t vaddr_to_phys(void *vaddr);
 /* Forward I/O prototypes (definitions appear later) */
 static inline uint16_t uhci_inw(uint16_t port);
+static inline void uhci_outw(uint16_t port, uint16_t value);
+
+/* Port manipulation helpers that properly handle RWC (Read-Write-Clear) bits.
+ * RWC bits (CSC, PEC) are cleared when you write 1 to them. */
+static inline void uhci_port_set_bits(uint16_t port_reg, uint16_t bits) {
+    uint16_t status = uhci_inw(port_reg);
+    status &= ~UHCI_PORT_RWC;  // Preserve RWC bits (don't clear them)
+    status |= bits;             // Set the desired bits
+    uhci_outw(port_reg, status);
+}
+
+static inline void uhci_port_clr_bits(uint16_t port_reg, uint16_t bits) {
+    uint16_t status = uhci_inw(port_reg);
+    status &= ~UHCI_PORT_RWC;  // Preserve RWC bits (don't clear them)
+    status &= ~bits;            // Clear the desired bits
+    status |= (UHCI_PORT_RWC & bits);  // If clearing RWC bits, set them to clear
+    uhci_outw(port_reg, status);
+}
 
 // Print a compact timestamp (system tick count) for UHCI diagnostics
 static inline void uhci_log_ts(void) {
@@ -62,19 +80,40 @@ int uhci_pci_init(void) {
                 uint8_t subclass   = pci_read_config_word(bus, slot, func, 0x0A) & 0xFF;
                 uint8_t prog_if    = pci_read_config_word(bus, slot, func, 0x08) >> 8;
 
+                // Log all USB controllers found
+                if (class_code == 0x0C && subclass == 0x03) {
+                    SERIAL_LOG("UHCI: Found USB controller - Bus ");
+                    SERIAL_LOG_HEX("", bus);
+                    SERIAL_LOG(" Slot ");
+                    SERIAL_LOG_HEX("", slot);
+                    SERIAL_LOG(" Func ");
+                    SERIAL_LOG_HEX("", func);
+                    SERIAL_LOG(" ProgIF ");
+                    SERIAL_LOG_HEX("", prog_if);
+                    SERIAL_LOG("\n");
+                }
+
                 if (class_code == 0x0C && subclass == 0x03 && (prog_if == 0x00 || prog_if == 0x01)) {
                     uint32_t bar4 = pci_read_config_dword(bus, slot, func, 0x20);
                     uint16_t io_base = bar4 & 0xFFF0;
 
+                    SERIAL_LOG("UHCI: Attempting to initialize controller at I/O base ");
+                    SERIAL_LOG_HEX("", io_base);
+                    SERIAL_LOG("\n");
+
                     if (uhci_init_controller(bus, slot, func, io_base) == 0) {
-                        SERIAL_LOG("UHCI: Controller initialized at I/O base ");
-                        SERIAL_LOG_HEX("", io_base);
-                        SERIAL_LOG("\n");
+                        SERIAL_LOG("UHCI: Controller initialized successfully\n");
+                    } else {
+                        SERIAL_LOG("UHCI: Controller initialization failed\n");
                     }
                 }
             }
         }
     }
+
+    SERIAL_LOG("UHCI: Scan complete, found ");
+    SERIAL_LOG_DEC("", g_uhci_count);
+    SERIAL_LOG(" controllers\n");
 
     return g_uhci_count;
 }
@@ -164,13 +203,13 @@ int uhci_init_controller(uint8_t bus, uint8_t slot, uint8_t func, uint16_t io_ba
     uhci->td_pool = (uhci_td_t *)((uintptr_t)td_pool_phys);
     uhci->qh_pool = (uhci_qh_t *)((uintptr_t)qh_pool_phys);
     
-    // Initialize pools
+    // Initialize pools with 0xFFFFFFFF as free marker (not 1, which conflicts with TD_PTR_TERMINATE)
     for (int i = 0; i < 64; i++) {
-        uhci->td_pool[i].hw.link_ptr = 1; // Mark as free (hw.link_ptr is what allocation checks)
-        uhci->td_pool[i].link_ptr = 1;    // Also set software link_ptr for consistency
+        uhci->td_pool[i].hw.link_ptr = 0xFFFFFFFF; // Mark as free
+        uhci->td_pool[i].link_ptr = 0xFFFFFFFF;    // Also set software link_ptr
     }
     for (int i = 0; i < 16; i++) {
-        uhci->qh_pool[i].link_ptr = 1; // Mark as free  
+        uhci->qh_pool[i].link_ptr = 0xFFFFFFFF; // Mark as free  
     }
     
     // Start the controller
@@ -270,7 +309,7 @@ uhci_td_t *uhci_alloc_td(uhci_controller_t *uhci) {
     SERIAL_LOG("UHCI: CRASH TEST TD-3 - Before TD pool search\n");
     for (int i = 0; i < 64; i++) {
         SERIAL_LOG("UHCI: CRASH TEST TD-4 - Checking TD pool entry\n");
-        if (uhci->td_pool[i].hw.link_ptr == 1) { // Free
+        if (uhci->td_pool[i].hw.link_ptr == 0xFFFFFFFF) { // Free marker
             SERIAL_LOG("UHCI: CRASH TEST TD-5 - Found free TD, clearing\n");
             uhci->td_pool[i].hw.link_ptr = 0;
             uhci->td_pool[i].hw.control = 0;
@@ -289,14 +328,14 @@ uhci_td_t *uhci_alloc_td(uhci_controller_t *uhci) {
 
 void uhci_free_td(uhci_controller_t *uhci, uhci_td_t *td) {
     if (td >= uhci->td_pool && td < uhci->td_pool + 64) {
-        td->hw.link_ptr = 1; // Mark as free (hw.link_ptr is what allocation checks)
-        td->link_ptr = 1;    // Also mark software link_ptr for consistency
+        td->hw.link_ptr = 0xFFFFFFFF; // Mark as free with unique value
+        td->link_ptr = 0xFFFFFFFF;    // Also mark software link_ptr for consistency
     }
 }
 
 uhci_qh_t *uhci_alloc_qh(uhci_controller_t *uhci) {
     for (int i = 0; i < 16; i++) {
-        if (uhci->qh_pool[i].link_ptr == 1) { // Free
+        if (uhci->qh_pool[i].link_ptr == 0xFFFFFFFF) { // Free marker
             uhci->qh_pool[i].link_ptr = 1; // Terminate
             uhci->qh_pool[i].element_ptr = 1; // Terminate
             uhci->qh_pool[i].next = NULL;
@@ -309,7 +348,7 @@ uhci_qh_t *uhci_alloc_qh(uhci_controller_t *uhci) {
 
 void uhci_free_qh(uhci_controller_t *uhci, uhci_qh_t *qh) {
     if (qh >= uhci->qh_pool && qh < uhci->qh_pool + 16) {
-        qh->link_ptr = 1; // Mark as free
+        qh->link_ptr = 0xFFFFFFFF; // Mark as free with unique value
     }
 }
 
@@ -394,7 +433,8 @@ static void uhci_td_activate_chain(uhci_controller_t *uhci, uhci_qh_t *qh, uhci_
             for (; b < end; b += 64) __asm__ volatile ("clflush (%0)" :: "r"(b) : "memory");
         }
         uhci_td_t *tt = data_head;
-        while (tt) {
+        int flush_count = 0;
+        while (tt && flush_count++ < 100) {
             uint8_t *b = (uint8_t *)tt;
             uint8_t *end = b + sizeof(uhci_td_t);
             for (; b < end; b += 64) __asm__ volatile ("clflush (%0)" :: "r"(b) : "memory");
@@ -412,7 +452,8 @@ static void uhci_td_activate_chain(uhci_controller_t *uhci, uhci_qh_t *qh, uhci_
 
     /* Walk and activate data TDs */
     uhci_td_t *t = data_head;
-    while (t) {
+    int activate_count = 0;
+    while (t && activate_count++ < 100) {
         t->hw.control |= UHCI_TD_ACTIVE;
         t = t->next;
     }
@@ -620,9 +661,9 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
         }
 
         SERIAL_LOG("UHCI: CRASH TEST 8 - Before setup TD configuration\n");
-        // Setup TD
+        // Setup TD - SETUP packets are always exactly 8 bytes
         uhci_setup_td_common(setup_td, device, 0);
-        setup_td->hw.token = uhci_create_token(UHCI_TD_PID_SETUP, device->address, 0, 8, false);
+        setup_td->hw.token = uhci_create_token(UHCI_TD_PID_SETUP, device->address, 0, 8, false); // maxlen=8 bytes
         
         SERIAL_LOG("UHCI: CRASH TEST 9 - After token setup, before decode\n");
     uhci_decode_and_log_token(setup_td->hw.token, "setup_td");
@@ -639,6 +680,15 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
         }
         SERIAL_LOG("UHCI: CRASH TEST 12 - Before buffer assignment\n");
         setup_td->hw.buffer = setup_buf_phys;
+        
+        // Dump setup packet contents for verification
+        uint8_t *setup_bytes = (uint8_t*)setup;
+        SERIAL_LOG("UHCI: Setup packet bytes: ");
+        for (int i = 0; i < 8; i++) {
+            SERIAL_LOG_HEX("", setup_bytes[i]);
+            SERIAL_LOG(" ");
+        }
+        SERIAL_LOG("\n");
 
         SERIAL_LOG("UHCI: CRASH TEST 13 - After buffer assignment, before data phase\n");
         // Data phase fragmentation
@@ -670,7 +720,7 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
                 }
                 t->hw.buffer = data_buf_phys;
                 t->next = NULL;
-                t->link_ptr = 1; // terminate until chained
+                t->hw.link_ptr = TD_PTR_TERMINATE; // terminate until chained
 
                 SERIAL_LOG("UHCI: CRASH TEST 18 - Before data TD linking\n");
                 if (!data_head) data_head = t;
@@ -697,7 +747,7 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
         SERIAL_LOG("UHCI: CRASH TEST 21 - After status TD token, before decode\n");
     uhci_decode_and_log_token(status_td->hw.token, "status_td");
     status_td->hw.buffer = 0; /* status stage has no data buffer */
-        status_td->hw.link_ptr = 1; // terminate
+        status_td->hw.link_ptr = TD_PTR_TERMINATE; // terminate
 
         SERIAL_LOG("UHCI: CRASH TEST 22 - Before TD physical translation\n");
         // Translate descriptors to physical addresses and chain
@@ -716,9 +766,16 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
             SERIAL_LOG("UHCI: CRASH TEST 25 - Inside data chain walk\n");
             // Walk data chain and set physical link_ptrs
             uhci_td_t *tmp = data_head;
+            int chain_count = 0;
+            SERIAL_LOG("UHCI: Starting data chain walk\n");
             while (tmp) {
-                SERIAL_LOG("UHCI: CRASH TEST 26 - Data chain iteration\n");
+                if (chain_count++ >= 10) {
+                    SERIAL_LOG("UHCI: >>>>>> INFINITE LOOP DETECTED - BREAKING <<<<<<\n");
+                    break;
+                }
+                SERIAL_LOG("UHCI: About to call vaddr_to_phys\n");
                 uint32_t this_phys = vaddr_to_phys(tmp);
+                SERIAL_LOG("UHCI: vaddr_to_phys returned\n");
                 if (this_phys == 0) {
                     SERIAL_LOG("UHCI: Missing physical mapping for data TD\n");
                     uhci_cleanup_control_tds(uhci, setup_td, data_head, status_td);
@@ -733,11 +790,11 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
                         uhci_free_qh(uhci, qh);
                         return -1;
                     }
-                        /* Link to next TD (no special depth-first bit for now). */
-                    tmp->link_ptr = next_phys;
+                        /* Link to next TD with DEPTH flag for breadth-first */
+                    tmp->hw.link_ptr = next_phys | TD_PTR_DEPTH;
                 } else {
                     // Last data TD points to status TD (physical)
-                    tmp->link_ptr = status_phys;
+                    tmp->hw.link_ptr = status_phys | TD_PTR_DEPTH;
                 }
                 tmp = tmp->next;
             }
@@ -752,10 +809,10 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
                 uhci_free_qh(uhci, qh);
                 return -1;
             }
-                /* point setup -> data chain */
-            setup_td->link_ptr = data_head_phys;
+                /* point setup -> data chain (HARDWARE FIELD!) with DEPTH flag */
+            setup_td->hw.link_ptr = data_head_phys | TD_PTR_DEPTH;
         } else {
-            setup_td->link_ptr = status_phys;
+            setup_td->hw.link_ptr = status_phys | TD_PTR_DEPTH;
         }
 
         SERIAL_LOG("UHCI: CRASH TEST 29 - Before frame number read\n");
@@ -910,7 +967,8 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
         bool all_done = !(setup_td->hw.control & UHCI_TD_ACTIVE);
         if (data_head) {
             uhci_td_t *tmp = data_head;
-            while (tmp) { if (tmp->hw.control & UHCI_TD_ACTIVE) { all_done = false; break; } tmp = tmp->next; }
+            int check_count = 0;
+            while (tmp && check_count++ < 100) { if (tmp->hw.control & UHCI_TD_ACTIVE) { all_done = false; break; } tmp = tmp->next; }
         }
         if (!(status_td->hw.control & UHCI_TD_ACTIVE) && all_done) {
             uhci_log_ts();
@@ -924,7 +982,8 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
     bool final_all_done = !(setup_td->hw.control & UHCI_TD_ACTIVE);
     if (data_head) {
         uhci_td_t *tmp = data_head;
-        while (tmp) { if (tmp->hw.control & UHCI_TD_ACTIVE) { final_all_done = false; break; } tmp = tmp->next; }
+        int final_check_count = 0;
+        while (tmp && final_check_count++ < 100) { if (tmp->hw.control & UHCI_TD_ACTIVE) { final_all_done = false; break; } tmp = tmp->next; }
     }
     final_all_done = final_all_done && !(status_td->hw.control & UHCI_TD_ACTIVE);
     
@@ -1181,7 +1240,20 @@ int uhci_control_transfer(uhci_controller_t *uhci, usb_device_t *device,
             uhci_print_td_bits(single->hw.control);
             /* Skip problematic controller status print - causes system hangs */
             // uhci_print_controller_status(uhci);
-            if (!(single->hw.control & UHCI_TD_ACTIVE)) { SERIAL_LOG("UHCI: single TD cleared ACTIVE\n"); break; }
+            if (!(single->hw.control & UHCI_TD_ACTIVE)) { 
+                SERIAL_LOG("UHCI: single TD cleared ACTIVE\n");
+                // Check for errors in the TD status
+                if (single->hw.control & (1 << 22)) SERIAL_LOG("UHCI: TD ERROR - Stalled\n");
+                if (single->hw.control & (1 << 21)) SERIAL_LOG("UHCI: TD ERROR - Data Buffer Error\n");
+                if (single->hw.control & (1 << 20)) SERIAL_LOG("UHCI: TD ERROR - Babble\n");
+                if (single->hw.control & (1 << 19)) SERIAL_LOG("UHCI: TD ERROR - NAK Received\n");
+                if (single->hw.control & (1 << 18)) SERIAL_LOG("UHCI: TD ERROR - CRC/Timeout\n");
+                if (single->hw.control & (1 << 17)) SERIAL_LOG("UHCI: TD ERROR - Bitstuff Error\n");
+                uint16_t actual_len = (single->hw.control & 0x7FF) + 1;
+                SERIAL_LOG_DEC("UHCI: TD actual length transferred: ", actual_len);
+                SERIAL_LOG("\n");
+                break; 
+            }
         }
         /* restore original frame list window */
         for (int i = 0; i < 8; ++i) uhci->frame_list[(cur2 + i) & 0x3FF] = saved[i];
@@ -1556,53 +1628,75 @@ bool uhci_port_device_connected(uhci_controller_t *uhci, int port) {
     return port_status & (1 << 0); // Bit 0 = CurrentConnectStatus
 }
 
-void uhci_reset_port(uhci_controller_t *uhci, int port) {
+bool uhci_reset_port(uhci_controller_t *uhci, int port) {
     uint16_t port_reg = uhci->io_base + 0x10 + port * 2;
     SERIAL_LOG_DEC("UHCI: Resetting port ", port);
 
-    /* Read and log status before asserting reset so we can compare
-     * before/after values in diagnostics. */
     uint16_t status_before = uhci_inw(port_reg);
     SERIAL_LOG_HEX("UHCI: Status before reset: ", status_before);
-
-    /* Set Reset bit (bit 9) */
-    uint16_t pr_val = (uint16_t)(status_before | (1 << 9));
-    uhci_outw(port_reg, pr_val);
-    SERIAL_LOG_HEX("UHCI: WROTE PORT PR=", (uint32_t)pr_val);
-    /* Read immediate value back from port to capture transient PR bit (if visible) */
-    {
-        uint16_t port_after_pr = uhci_inw(port_reg);
-        SERIAL_LOG_HEX("UHCI: PORT after PR write (readback)=", port_after_pr);
+    
+    /* Check if device is connected */
+    if (!(status_before & UHCI_PORT_CCS)) {
+        SERIAL_LOG("UHCI: No device connected\n");
+        return false;
     }
-    uhci_delay_ms(50); // Wait ~50ms for port reset
 
-    /* Clear Reset bit and allow recovery time */
-    uint16_t mid = uhci_inw(port_reg);
-    uint16_t cleared = (uint16_t)(mid & ~(1 << 9));
-    uhci_outw(port_reg, cleared);
-    SERIAL_LOG_HEX("UHCI: CLEARED PORT PR=", (uint32_t)cleared);
-    {
-        uint16_t port_after_clear = uhci_inw(port_reg);
-        SERIAL_LOG_HEX("UHCI: PORT after clear PR (readback)=", port_after_clear);
+    /* Set Reset bit using RWC-safe helper */
+    uhci_port_set_bits(port_reg, UHCI_PORT_PR);
+    SERIAL_LOG("UHCI: Port reset asserted\n");
+    uhci_delay_ms(50); // Wait 50ms for port reset
+
+    /* Clear Reset bit using RWC-safe helper */
+    uhci_port_clr_bits(port_reg, UHCI_PORT_PR);
+    SERIAL_LOG("UHCI: Port reset cleared\n");
+    
+    /* Wait for port to become enabled - up to 100ms */
+    for (int i = 0; i < 10; i++) {
+        uhci_delay_ms(10);
+        uint16_t status = uhci_inw(port_reg);
+        
+        /* Check if device disconnected */
+        if (!(status & UHCI_PORT_CCS)) {
+            SERIAL_LOG("UHCI: Device disconnected during reset\n");
+            return false;
+        }
+        
+        /* Clear status change bits if set */
+        if (status & UHCI_PORT_RWC) {
+            uhci_port_clr_bits(port_reg, UHCI_PORT_RWC);
+            SERIAL_LOG_HEX("UHCI: Cleared status change bits: ", status);
+        }
+        
+        /* Check if port auto-enabled */
+        if (status & UHCI_PORT_PE) {
+            SERIAL_LOG_HEX("UHCI: Port auto-enabled, status: ", status);
+            return true;
+        }
+        
+        /* Try to explicitly enable */
+        uhci_port_set_bits(port_reg, UHCI_PORT_PE);
     }
-    uhci_delay_ms(10); // Wait for reset recovery
-
-    /* Read status after reset/enable sequence and log it */
-    uint16_t status_after = uhci_inw(port_reg);
-    SERIAL_LOG_HEX("UHCI: Status after reset: ", status_after);
+    
+    uint16_t status_final = uhci_inw(port_reg);
+    if (status_final & UHCI_PORT_PE) {
+        SERIAL_LOG_HEX("UHCI: Port enabled after explicit set, status: ", status_final);
+        return true;
+    } else {
+        SERIAL_LOG_HEX("UHCI: ERROR - Port enable failed, status: ", status_final);
+        return false;
+    }
 }
 
 void uhci_enable_port(uhci_controller_t *uhci, int port) {
     uint16_t port_reg = uhci->io_base + 0x10 + port * 2;
-    uint16_t val = uhci_inw(port_reg);
-    val |= (1 << 2); // set PE
-    uhci_outw(port_reg, val);
-    /* Read back and log the port register to capture PE transient */
-    {
-        uint16_t port_after_pe = uhci_inw(port_reg);
-        SERIAL_LOG_HEX("UHCI: WROTE PORT PE=", (uint32_t)val);
-        SERIAL_LOG_HEX("UHCI: PORT after PE write (readback)=", port_after_pe);
+    
+    uint16_t status = uhci_inw(port_reg);
+    if (status & UHCI_PORT_PE) {
+        SERIAL_LOG("UHCI: Port already enabled\n");
+        return;
     }
+    
+    SERIAL_LOG("UHCI: Port enable check - not needed (reset handles it)\n");
 }
 
 void uhci_disable_port(uhci_controller_t *uhci, int port) {

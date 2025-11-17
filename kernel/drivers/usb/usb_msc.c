@@ -3,9 +3,9 @@
 #include "usb.h"
 #include "usb_hid.h"
 #include "usb_mouse.h"
-#include "../../core/memory/heap.h"
-#include "../../graphics/graphics.h"
-#include "../../config.h"
+#include "core/memory/heap.h"
+#include "graphics/graphics.h"
+#include "config.h"
 #include <string.h>
 
 // SCSI / BOT constants

@@ -1,19 +1,19 @@
 /**
- * QuantumOS - Quantum Kernel Implementation
+ * QARMA - Quantum Kernel Implementation
  * 
  * Implementation of quantum process management with superposition,
  * entanglement, and quantum error correction.
  */
 
 #include "quantum_kernel.h"
-//#include "../core/kernel.h"
-#include "../core/core_manager.h"
-#include "../graphics/graphics.h"
-#include "../config.h"
-#include "../core/clock_overlay.h"
-#include "../core/memory.h"
-#include "../core/memory/heap.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
+//#include "core/kernel.h"
+#include "core/core_manager.h"
+#include "graphics/graphics.h"
+#include "config.h"
+#include "core/clock_overlay.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
+#include "qarma_win_handle/qarma_window_manager.h"
 
 
 // Global quantum system state

@@ -1,6 +1,6 @@
 # USB Mouse Driver Module
 
-This module implements USB mouse support for QuantumOS. It provides a layered architecture for handling USB Human Interface Devices (HID), specifically mice.
+This module implements USB mouse support for QARMA. It provides a layered architecture for handling USB Human Interface Devices (HID), specifically mice.
 
 ## Architecture Overview
 

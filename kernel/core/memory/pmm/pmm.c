@@ -1,5 +1,5 @@
 #include "pmm.h"
-#include "../../../config.h"
+#include "config.h"
 #include "../memory.h"
 
 #define MAX_PHYSICAL_PAGES 32768  // Example: 128MB / 4KB

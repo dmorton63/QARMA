@@ -1,4 +1,4 @@
-# QuantumOS Build System — Modular, Adaptive, Legacy-Aware
+# QARMA OS Build System — Modular, Adaptive, Legacy-Aware
 
 # Toolchain
 CC       = i686-elf-gcc
@@ -27,8 +27,8 @@ C_SRC       := $(shell find $(SRC_DIR) -name "*.c")
 ASM_SRC     := $(shell find $(SRC_DIR) -name "*.asm")
 BOOT_SRC    := $(shell find $(BOOT_DIR) -name "*.asm")
 
-# Auto-discover includes
-INCLUDES    := $(foreach dir,$(shell find $(SRC_DIR) -type d),-I$(dir))
+# Unified headers directory
+INCLUDES    := -Iheaders $(foreach dir,$(shell find headers -type d),-I$(dir))
 
 # Object files
 C_OBJS      := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRC))
@@ -38,7 +38,7 @@ BOOT_OBJS   := $(patsubst %.asm,$(BUILD_DIR)/%.bin,$(BOOT_SRC))
 # Targets
 .PHONY: all clean qemu debug docs install-deps
 
-all: $(BUILD_DIR)/quantum_os.iso
+all: $(BUILD_DIR)/qarma.iso
 
 # Create build directories
 $(BUILD_DIR):
@@ -76,10 +76,10 @@ $(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker.
 	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
 
 # Create ISO image
-$(BUILD_DIR)/quantum_os.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg $(ISO_DIR)/splash.png
-	@echo "Creating QuantumOS ISO..."
+$(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg $(ISO_DIR)/splash.png
+	@echo "Creating QARMA OS ISO..."
 	@mkdir -p $(ISO_DIR)/boot/grub
-	@cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/quantum_os.elf
+	@cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/qarma.elf
 	@cp config/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
 	@grub-mkrescue -o $@ $(ISO_DIR) || echo "GRUB not available — ISO skipped"
 
@@ -87,12 +87,12 @@ $(BUILD_DIR)/quantum_os.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg $(ISO_DIR)/
 QEMU_CPUS ?= 8
 
 # Run in QEMU
-qemu: $(BUILD_DIR)/quantum_os.iso
-	@echo "Booting QuantumOS in QEMU ($(QEMU_CPUS) CPUs)..."
+qemu: $(BUILD_DIR)/qarma.iso
+	@echo "Booting QARMA OS in QEMU ($(QEMU_CPUS) CPUs)..."
 	qemu-system-i386 -drive file=$<,format=raw,media=cdrom,if=ide -m 256M -vga std -smp $(QEMU_CPUS)
 
 # Debug with GDB
-debug: $(BUILD_DIR)/quantum_os.iso
+debug: $(BUILD_DIR)/qarma.iso
 	@echo "Starting debugger..."
 	qemu-system-i386 -drive file=$<,format=raw,media=cdrom,if=ide -m 256M -vga std -smp $(QEMU_CPUS) -s -S &
 	gdb $(BUILD_DIR)/kernel.elf -ex "target remote :1234"

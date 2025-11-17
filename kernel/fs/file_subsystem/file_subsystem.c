@@ -1,12 +1,12 @@
 /**
- * QuantumOS - Filesystem Subsystem Implementation
+ * QARMA - Filesystem Subsystem Implementation
  * Comprehensive file management and VFS integration layer
  */
 
 #include "file_subsystem.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
-#include "../../config.h"
+#include "core/string.h"
+#include "core/memory.h"
+#include "config.h"
 
 // Forward declarations
 extern void serial_debug(const char* msg);

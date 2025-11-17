@@ -1,8 +1,9 @@
 #include "qarma_splash_window.h"
-#include "../graphics/framebuffer.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
-#include "../core/memory.h"
-#include "../graphics/png_decoder.h"
+#include "graphics/framebuffer.h"
+#include "qarma_win_handle/qarma_window_manager.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
+#include "graphics/png_decoder.h"
 
 // Extended splash glyph
 typedef struct QARMA_SPLASH_HANDLE {
@@ -42,10 +43,15 @@ QARMA_SPLASH_HANDLE* splash_window_create(const char* title, uint32_t flags) {
     win->vtable = &splash_vtable;
     win->traits = splash;
     win->buffer_size = win->size;
-    win->pixel_buffer = malloc(win->buffer_size.width * win->buffer_size.height * sizeof(uint32_t));
-    if (win->pixel_buffer) {
-        memset(win->pixel_buffer, 0, win->buffer_size.width * win->buffer_size.height * sizeof(uint32_t));
+    
+    // Use heap_alloc for large pixel buffer (640x480x4 = ~1.2MB, too big for malloc)
+    size_t buffer_bytes = win->buffer_size.width * win->buffer_size.height * sizeof(uint32_t);
+    win->pixel_buffer = (uint32_t*)heap_alloc(buffer_bytes);
+    if (!win->pixel_buffer) {
+        free(splash);
+        return NULL;
     }
+    memset(win->pixel_buffer, 0, buffer_bytes);
 
     splash->fade_speed = 0.5f;  // Slower fade for better visibility
     splash->splash_image = load_splash_image();
@@ -119,7 +125,7 @@ static void splash_destroy(QARMA_WIN_HANDLE* self) {
     qarma_window_manager.remove_window(&qarma_window_manager, self->id);
 
     if (self->pixel_buffer) {
-        free(self->pixel_buffer);
+        heap_free(self->pixel_buffer);
         self->pixel_buffer = NULL;
     }
     

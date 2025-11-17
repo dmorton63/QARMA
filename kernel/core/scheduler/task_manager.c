@@ -2,7 +2,7 @@
 #include "../kernel.h"
 #include "../memory/heap.h"
 #include "../timer.h"
-#include "../../config.h"
+#include "config.h"
 #include "../string.h"
 
 /* Task manager global state */

@@ -1,12 +1,12 @@
 /**
- * QuantumOS - Basic Memory Management and String Functions
+ * QARMA - Basic Memory Management and String Functions
  */
 
-#include "../core/kernel.h"
-#include "../graphics/graphics.h" 
+#include "core/kernel.h"
+#include "graphics/graphics.h" 
 #include "multiboot.h"
 #include "memory.h"
-#include "../config.h"
+#include "config.h"
 #include "memory/pmm/pmm.h"
 #include "memory/vmm/vmm.h"
 #include "memory/heap.h"

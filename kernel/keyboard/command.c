@@ -1,12 +1,14 @@
 #include "command.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
-#include "../core/core_manager.h"
-#include "../core/memory/memory_pool.h"
-#include "../kernel_types.h"
-#include "../core/io.h"
-#include "../keyboard/keyboard.h"
-//#include "../drivers/usb/usb_mouse.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
+#include "core/core_manager.h"
+#include "core/memory/memory_pool.h"
+#include "kernel_types.h"
+#include "core/io.h"
+#include "keyboard/keyboard.h"
+#include "core/input/mouse.h"
+#include "core/sleep.h"
+//#include "drivers/usb/usb_mouse.h"
 // Global state
 shell_mode_t current_mode = MODE_NORMAL;
 
@@ -31,6 +33,8 @@ void cmd_help(int argc, char** argv) {
     gfx_print("  ifdown  - Bring network interface down\n");
     gfx_print("  ping    - Send ICMP echo request to host\n");
     gfx_print("  pipeline- Test execution pipeline system\n");
+    gfx_print("  window  - Create a test window\n");
+    gfx_print("  winloop - Run window/mouse update loop\n");
     gfx_print("  reboot  - Restart the system\n");
 }
 
@@ -53,7 +57,7 @@ void cmd_cls(int argc, char** argv) {
 
 void cmd_version(int argc, char** argv) {
     (void)argc; (void)argv;
-    gfx_print("QuantumOS v1.0.0-alpha\n");
+    gfx_print("QARMA v1.0.0-alpha\n");
     gfx_print("Built with keyboard support\n");
 }
 
@@ -249,6 +253,8 @@ static const simple_command_t commands[] = {
     {"ping", cmd_ping},
     {"arp", cmd_arp},
     {"pipeline", cmd_pipeline},
+    {"window", cmd_window},
+    {"winloop", cmd_winloop},
     // {"mouse", cmd_mouse},
     {NULL, NULL}
 };
@@ -451,6 +457,60 @@ void cmd_pipeline(int argc, char** argv) {
     
     extern void pipeline_example_test(void);
     pipeline_example_test();
+}
+
+void cmd_window(int argc, char** argv) {
+    (void)argc; (void)argv;
+    
+    extern void window_test_demo(void);
+    window_test_demo();
+}
+
+void cmd_winloop(int argc, char** argv) {
+    (void)argc; (void)argv;
+    
+    extern void window_update_mouse(void);
+    extern mouse_state_t mouse_state;
+    extern void mock_mouse_update(void);
+    
+    SERIAL_LOG("Starting window mode - ESC to exit");
+    
+    // Initial render
+    window_update_mouse();
+    
+    // Track mouse state for change detection
+    int last_x = mouse_state.x;
+    int last_y = mouse_state.y;
+    bool last_left = mouse_state.left_pressed;
+    
+    // Simple render loop - interrupts handle everything else
+    bool exit_loop = false;
+    while (!exit_loop) {
+        // Check for ESC key in normal scancode buffer
+        if (keyboard_has_scancode()) {
+            uint8_t sc = keyboard_get_scancode();
+            if (sc == 0x01) {  // ESC pressed
+                exit_loop = true;
+            }
+        }
+        
+        // Update mock mouse state from key states (updated by interrupts)
+        mock_mouse_update();
+        
+        // Redraw only if mouse changed
+        if (mouse_state.x != last_x || mouse_state.y != last_y || 
+            mouse_state.left_pressed != last_left) {
+            window_update_mouse();
+            last_x = mouse_state.x;
+            last_y = mouse_state.y;
+            last_left = mouse_state.left_pressed;
+        }
+        
+        // Wait for interrupt with interrupts enabled (sti + hlt is atomic)
+        __asm__ volatile("sti; hlt");
+    }
+    
+    SERIAL_LOG("Exiting window mode");
 }
 
 // Stub functions for compatibility

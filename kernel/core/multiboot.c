@@ -1,19 +1,19 @@
 /**
- * QuantumOS - Multiboot Information Parsing
+ * QARMA - Multiboot Information Parsing
  * 
  * Functions for parsing multiboot information from the bootloader.
  * Processes memory maps, module information, and boot parameters.
  */
 
 #include "multiboot.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
 #include "kernel.h"
-#include "../core/boot_log.h"
-#include "../config.h"
+#include "core/boot_log.h"
+#include "config.h"
 #include "string.h"
 #include "io.h"
 #include "memory.h"
-#include "../core/memory/pmm/pmm.h"
+#include "core/memory/pmm/pmm.h"
 
 
 static multiboot_info_t* g_multiboot_info = NULL;

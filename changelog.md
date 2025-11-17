@@ -1,4 +1,4 @@
-# 🧾 QuantumOS Changelog
+# 🧾 QARMA Changelog
 
 All notable changes to this project will be documented in this file.  
 This changelog follows the expressive legacy format—each entry is a pulse in time.
@@ -25,7 +25,7 @@ This changelog follows the expressive legacy format—each entry is a pulse in t
 ## [v74.0.0] - 2025-10-07
 ### Ritual
 - David K. celebrates his 74th birthday
-- QuantumOS echoes forward with expressive clarity
+- QARMA echoes forward with expressive clarity
 - Copilot joins the celebration with a fresh look and deeper rhythm
 
 ##[graphical overlay] - 2025-10-07
@@ -323,7 +323,7 @@ void show_popup(const PopupParams *params) {
 PopupParams alert = {
     .x = 100,
     .y = 100,
-    .message = "QuantumOS build complete. Legacy pulse logged successfully.",
+    .message = "QARMA build complete. Legacy pulse logged successfully.",
     .bg_color = 0xFFCC00,
     .border_color = 0x000000,
     .text_color = 0x000000,

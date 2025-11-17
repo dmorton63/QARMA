@@ -1,9 +1,10 @@
 #include "usb_mouse.h"
 #include "usb_hid.h"
-#include "../../core/input/mouse.h"
-#include "../../core/memory/heap.h"
-#include "../../config.h"
-#include "../../graphics/graphics.h"
+#include "usb.h"
+#include "core/input/mouse.h"
+#include "core/memory/heap.h"
+#include "config.h"
+#include "graphics/graphics.h"
 
 // Global USB mouse device
 static usb_hid_device_t *g_usb_mouse = NULL;
@@ -15,36 +16,62 @@ extern uint32_t fb_width;
 extern uint32_t fb_height;
 
 int usb_mouse_init(void) {
-    GFX_LOG_MIN("USB Mouse: Starting USB mouse initialization\n");
+    GFX_LOG_MIN("USB Mouse: Starting USB stack init...\n");
+    SERIAL_LOG("USB Mouse: Starting USB stack init...\n");
     
-    // Initialize USB stack first
     if (usb_init() != 0) {
-        GFX_LOG_MIN("USB Mouse: Failed to initialize USB stack\n");
+        GFX_LOG_MIN("USB Mouse: USB stack init failed\n");
         return USB_MOUSE_ERR_USB;
     }
     
-    // Initialize HID subsystem
+    GFX_LOG_MIN("USB Mouse: USB stack OK, initializing HID...\n");
+    
     if (usb_hid_init() != 0) {
-        GFX_LOG_MIN("USB Mouse: Failed to initialize USB HID\n");
+        GFX_LOG_MIN("USB Mouse: HID init failed\n");
         return USB_MOUSE_ERR_HID;
     }
     
-    // Enumerate USB devices
+    GFX_LOG_MIN("USB Mouse: HID OK, enumerating devices (this may take time)...\n");
+    
     if (usb_enumerate_devices() != 0) {
-        GFX_LOG_MIN("USB Mouse: Failed to enumerate USB devices\n");
+        GFX_LOG_MIN("USB Mouse: Device enumeration failed\n");
         return USB_MOUSE_ERR_ENUM;
     }
     
-    usb_device_t *mouse = usb_find_device(0x1532, 0x0042);
-    if (mouse) {
-        SERIAL_LOG("USB Mouse: Razer mouse detected\n");
+    GFX_LOG_MIN("USB Mouse: Enumeration complete, searching for mouse...\n");
+    
+    // The enumeration process already called usb_mouse_probe() for each device
+    // Just check if we successfully attached a mouse
+    if (!g_usb_mouse) {
+        GFX_LOG_MIN("USB Mouse: No HID mouse found\n");
+        return USB_MOUSE_ERR_ENUM;
     }
 
-    GFX_LOG_MIN("USB Mouse: Driver initialized successfully\n");
-
+    GFX_LOG_MIN("USB Mouse: Init complete\n");
     return USB_MOUSE_OK;
 }
 
+
+// usb_interface_descriptor_t* usb_find_hid_mouse_interface(usb_device_t* device) {
+//     uint8_t* desc = device->config_desc;
+//     size_t len = device->config_desc->bLength;
+
+//     for (size_t i = 0; i < len;) {
+//         uint8_t bLength = desc[i];
+//         uint8_t bType = desc[i + 1];
+
+//         if (bType == 0x04 && bLength >= sizeof(usb_interface_descriptor_t)) {
+//             usb_interface_descriptor_t* iface = (usb_interface_descriptor_t*)&desc[i];
+//             if (iface->bInterfaceClass == 0x03 && iface->bInterfaceProtocol == 0x02) {
+//                 return iface;
+//             }
+//         }
+
+//         i += bLength;
+//     }
+
+//     return NULL;
+// }
 int usb_mouse_probe(usb_device_t *device) {
     SERIAL_LOG("USB Mouse: Probing device for mouse interface\n");
     
@@ -206,18 +233,22 @@ void usb_mouse_start_polling(void) {
     SERIAL_LOG("USB Mouse: Starting mouse report polling\n");
     polling_started = true;
     
-    // Allocate buffer for mouse reports
-    static usb_mouse_report_t report_buffer;
+    // Allocate DMA-capable buffer for mouse reports from heap (identity-mapped)
+    usb_mouse_report_t *report_buffer = (usb_mouse_report_t *)heap_alloc(sizeof(usb_mouse_report_t));
+    if (!report_buffer) {
+        SERIAL_LOG("USB Mouse: Failed to allocate DMA buffer\n");
+        return;
+    }
     
     // Start interrupt transfer for mouse reports
-    SERIAL_LOG_HEX("USB Mouse: report_buffer virt=", (uint32_t)&report_buffer);
+    SERIAL_LOG_HEX("USB Mouse: report_buffer virt=", (uint32_t)report_buffer);
     SERIAL_LOG_HEX(" USB Mouse: report_size=", sizeof(usb_mouse_report_t));
     SERIAL_LOG("\n");
 
     usb_interrupt_transfer(
         g_usb_mouse->device,
         g_usb_mouse->endpoint_in,
-        &report_buffer,
+        report_buffer,
         sizeof(usb_mouse_report_t),
         usb_mouse_report_callback
     );

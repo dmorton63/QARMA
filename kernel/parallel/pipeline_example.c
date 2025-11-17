@@ -1,11 +1,11 @@
 /**
- * QuantumOS - Pipeline Example
+ * QARMA - Pipeline Example
  * 
  * Demonstrates execution pipeline with a simple data processing chain.
  */
 
 #include "execution_pipeline.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
 
 extern void* heap_alloc(size_t size);
 extern void heap_free(void* ptr);

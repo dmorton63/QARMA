@@ -1,7 +1,7 @@
 #include "tcp.h"
 #include "ipv4.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 void tcp_init(void) {
     gfx_print("TCP layer initialized\n");

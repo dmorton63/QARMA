@@ -1,6 +1,6 @@
 #include "iso9660.h"
-#include "../core/string.h"
-#include "../core/blockdev.h"
+#include "core/string.h"
+#include "core/blockdev.h"
 #include "vfs.h"
 
 extern void gfx_print(const char*);

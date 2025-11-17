@@ -10,11 +10,11 @@
 1af16cd Fix formatting and update project description in README
 30e288e Resolve README.md merge conflict
 e01d7d5 Update changelog and build artifacts
-01596e8 Rename QuantumOS to QARMA in README
+01596e8 Rename QARMA to QARMA in README
 0965cc7 Update README.md
-62d0799 Rename QuantumOS to QARMA and fix date format
+62d0799 Rename QARMA to QARMA and fix date format
 30e288e Resolve README.md merge conflict
 e01d7d5 Update changelog and build artifacts
-01596e8 Rename QuantumOS to QARMA in README
+01596e8 Rename QARMA to QARMA in README
 0965cc7 Update README.md
-62d0799 Rename QuantumOS to QARMA and fix date format
+62d0799 Rename QARMA to QARMA and fix date format

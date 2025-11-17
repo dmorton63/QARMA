@@ -1,7 +1,7 @@
 // input.c
 
 #include "input.h"
-#include "../../keyboard/keyboard.h"
+#include "keyboard/keyboard.h"
 
 char wait_for_key(void) {
     // Poll keyboard buffer exposed by keyboard API

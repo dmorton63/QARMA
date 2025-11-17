@@ -1,6 +1,6 @@
 #include "ethernet.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 void ethernet_init(void) {
     gfx_print("Ethernet layer initialized\n");

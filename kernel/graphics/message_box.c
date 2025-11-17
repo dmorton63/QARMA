@@ -1,16 +1,16 @@
 #include "message_box.h"
 #include "font_data.h"
 #include "framebuffer.h"
-#include "../graphics/graphics.h"
-//#include "../config.h"
-#include "../core/memory.h"
-#include "../core/memory/heap.h"
-#include "../core/text_functions/text.h"
-#include "../core/boot_log.h" // defines BOOT_LOG_LINE_LENGTH and kernel stdarg
+#include "graphics/graphics.h"
+//#include "config.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
+#include "core/text_functions/text.h"
+#include "core/boot_log.h" // defines BOOT_LOG_LINE_LENGTH and kernel stdarg
 #include <string.h>
 #include "irq_logger.h"
-#include "../../keyboard/command.h"
-#include "../../keyboard/keyboard_types.h"
+#include "keyboard/command.h"
+#include "keyboard/keyboard_types.h"
 
 // Prevent routing loops: when the message box is actively rendering or
 // pushing, avoid re-routing logs back into the box. Instead fall back to

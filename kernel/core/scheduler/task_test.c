@@ -1,6 +1,6 @@
 #include "task_manager.h"
 #include "../kernel.h"
-#include "../../config.h"
+#include "config.h"
 
 /* Test task functions */
 static int test_task_1(void *data);

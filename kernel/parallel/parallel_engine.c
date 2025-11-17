@@ -1,15 +1,15 @@
 /**
- * QuantumOS - Parallel Processing Engine Implementation
+ * QARMA - Parallel Processing Engine Implementation
  * 
  * Implementation of advanced multi-core processing with NUMA awareness
  * and lock-free work stealing algorithms.
  */
 
 #include "parallel_engine.h"
-#include "../core/kernel.h"
-#include "../graphics/graphics.h"
-#include "../core/memory.h"
-#include "../core/memory/heap.h"
+#include "core/kernel.h"
+#include "graphics/graphics.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
 
 // Global parallel engine state
 static cpu_core_t* g_cpu_cores = NULL;

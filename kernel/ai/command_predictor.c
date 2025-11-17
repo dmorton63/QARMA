@@ -4,8 +4,8 @@
  */
 
 #include "command_predictor.h"
-#include "../core/string.h"  // For string operations
-#include "../core/timer.h"   // For timestamps
+#include "core/string.h"  // For string operations
+#include "core/timer.h"   // For timestamps
 
 // Command cache storage
 static command_cache_entry_t command_cache[MAX_CACHED_COMMANDS];

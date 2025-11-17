@@ -1,5 +1,5 @@
 #include "blockdev.h"
-#include "../core/string.h"
+#include "core/string.h"
 
 static blockdev_t* blockdev_head = 0;
 

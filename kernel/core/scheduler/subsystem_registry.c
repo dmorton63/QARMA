@@ -1,6 +1,6 @@
 #include "subsystem_registry.h"
 #include "../stdtools.h"
-#include "../../config.h"
+#include "config.h"
 
 static subsystem_t registry[MAX_SUBSYSTEMS];
 

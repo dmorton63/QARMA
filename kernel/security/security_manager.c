@@ -1,11 +1,11 @@
 /**
- * QuantumOS - Security Manager Implementation
+ * QARMA - Security Manager Implementation
  */
 
 #include "security_manager.h"
-#include "../core/kernel.h"
-#include "../core/core_manager.h"
-#include "../graphics/graphics.h"
+#include "core/kernel.h"
+#include "core/core_manager.h"
+#include "graphics/graphics.h"
 
 static security_stats_t g_security_stats = {0};
 

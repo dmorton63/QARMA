@@ -1,8 +1,8 @@
 #include "video_subsystem.h"
-#include "../../core/stdtools.h"
+#include "core/stdtools.h"
 #include "../framebuffer.h"
 #include "../graphics.h"
-#include "../../config.h"
+#include "config.h"
 
 // Forward declaration for gfx_print
 extern void gfx_print(const char* text);

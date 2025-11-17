@@ -1,7 +1,7 @@
 #include "udp.h"
 #include "ipv4.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 void udp_init(void) {
     gfx_print("UDP layer initialized\n");

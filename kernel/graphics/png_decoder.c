@@ -1,10 +1,10 @@
 #include "png_decoder.h"
-#include "../core/memory.h"
-#include "../core/memory/heap.h"
-#include "../core/memory/memory_pool.h"
-#include "../core/string.h"
-#include "../splash_data.h"
-#include "../config.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
+#include "core/memory/memory_pool.h"
+#include "core/string.h"
+#include "splash_data.h"
+#include "config.h"
 
 // PNG chunk reading utilities
 static uint32_t read_uint32_be(const uint8_t* data) {
@@ -540,7 +540,7 @@ void png_decode_to_framebuffer(const uint8_t* png_data, uint32_t data_size,
             if (idat_pos + chunk_length <= sizeof(idat_buffer)) {
                 memcpy(idat_buffer + idat_pos, chunk_data, chunk_length);
                 idat_pos += chunk_length;
-                SERIAL_LOG("PNG: Copied IDAT chunk\n");
+                //SERIAL_LOG("PNG: Copied IDAT chunk\n");
             }
         } else if (chunk_type == 0x49454E44) { // "IEND"
             break;

@@ -1,9 +1,9 @@
 /**
- * QuantumOS - Console Output Implementation
+ * QARMA - Console Output Implementation
  * Basic VGA text mode console for kernel output
  */
 
-#include "../core/kernel.h"
+#include "core/kernel.h"
 #include "io.h"
 
 #define SERIAL_PORT_A 0x3F8

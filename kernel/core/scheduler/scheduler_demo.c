@@ -3,7 +3,7 @@
 #include "../kernel.h"
 #include "../string.h"
 #include "../timer.h"
-#include "../../config.h"
+#include "config.h"
 
 /**
  * Initialize and run the scheduler demonstration

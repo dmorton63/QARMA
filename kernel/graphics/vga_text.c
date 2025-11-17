@@ -1,10 +1,10 @@
 /**
- * QuantumOS - VGA Text Mode Backend
+ * QARMA - VGA Text Mode Backend
  * 80x25 character text display implementation
  */
 
-#include "../graphics/graphics.h"
-#include "../core/io.h"
+#include "graphics/graphics.h"
+#include "core/io.h"
 
 // Forward declaration
 void vga_text_scroll(void);

@@ -15,7 +15,7 @@
 │   │   └── security
 │   ├── kernel.bin
 │   ├── kernel.elf
-│   └── quantum_os.iso
+│   └── qarma.iso
 ├── docs
 │   ├── api
 │   ├── architecture

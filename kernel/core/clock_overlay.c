@@ -1,13 +1,13 @@
 #include "clock_overlay.h"
-#include "../graphics/framebuffer.h"
-#include "../graphics/graphics.h"
-#include "../config.h"
-#include "../core/sleep.h"
-#include "../core/timer.h"
-#include "../qarma_win_handle/qarma_win_handle.h"
-#include "../qarma_win_handle/qarma_win_factory.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
-#include "../core/memory.h"
+#include "graphics/framebuffer.h"
+#include "graphics/graphics.h"
+#include "config.h"
+#include "core/sleep.h"
+#include "core/timer.h"
+#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle/qarma_win_factory.h"
+#include "qarma_win_handle/qarma_window_manager.h"
+#include "core/memory.h"
 
 static uint32_t elapsed_seconds = 0;
 static bool clock_initialized = false;

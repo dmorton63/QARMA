@@ -4,10 +4,10 @@
  */
 
 #include "e1000.h"
-#include "../../core/pci.h"
-#include "../../core/io.h"
-#include "../../core/memory/heap.h"
-#include "../../core/string.h"
+#include "core/pci.h"
+#include "core/io.h"
+#include "core/memory/heap.h"
+#include "core/string.h"
 
 // Define offsetof if not available
 #ifndef offsetof

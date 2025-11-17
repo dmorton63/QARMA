@@ -1,5 +1,5 @@
 /**
- * QuantumOS - Memory Pool Manager Implementation
+ * QARMA - Memory Pool Manager Implementation
  * 
  * Integrates PMM/VMM with subsystem memory management
  */
@@ -7,8 +7,8 @@
 #include "memory_pool.h"
 #include "../memory.h"
 #include "../kernel.h"
-#include "../../graphics/graphics.h"
-#include "../../config.h"
+#include "graphics/graphics.h"
+#include "config.h"
 #include "pmm/pmm.h"
 #include "heap.h"
 

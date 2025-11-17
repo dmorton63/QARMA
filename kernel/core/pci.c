@@ -1,7 +1,7 @@
 #include "pci.h"
-#include "../graphics/graphics.h"
-#include "../keyboard/command.h"
-#include "../drivers/usb/uhci.h"
+#include "graphics/graphics.h"
+#include "keyboard/command.h"
+#include "drivers/usb/uhci.h"
 
 
 // Scan PCI bus 0..255, slot 0..31, func 0..7 and print vendor/device IDs

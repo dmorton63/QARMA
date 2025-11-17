@@ -1,20 +1,20 @@
 /**
- * QuantumOS - Interrupt System
+ * QARMA - Interrupt System
  * Handles IRQ routing, exception dispatch, and system initialization
  */
 
 #include "interrupts.h"
-#include "../core/kernel.h"
-#include "../graphics/graphics.h"
-//#include "../keyboard/keyboard_types.h"
-#include "../core/io.h"
-#include "../config.h"
+#include "core/kernel.h"
+#include "graphics/graphics.h"
+//#include "keyboard/keyboard_types.h"
+#include "core/io.h"
+#include "config.h"
 #include "kernel.h"
-#include "../../kernel_types.h"
-#include "../keyboard/keyboard_types.h"
-#include "../core/clock_overlay.h"
-#include "../core/timer.h"
-#include "../core/input/mouse.h"
+#include "kernel_types.h"
+#include "keyboard/keyboard_types.h"
+#include "core/clock_overlay.h"
+#include "core/timer.h"
+#include "core/input/mouse.h"
 #include "scheduler/task_manager.h"
 // ────────────────
 // External Symbols
@@ -183,14 +183,15 @@ void send_eoi(uint8_t int_no) {
 // ────────────────
 void keyboard_service_handler(regs_t* regs) {
     uint8_t scancode = inb(0x60);
-    // SERIAL_LOG("keyboard_service_handler invoked\n");
-    // SERIAL_LOG_HEX("scancode=0x", scancode);
-    //uint8_t status = inb(0x64);
-    // if (status & 0x01) {
-    //     gfx_print("Keyboard has data\n");
-    //     gfx_print_hex(regs->ebx);
-    // }
-    keyboard_handler(regs,scancode);
+    
+    // Debug logging
+    static int kbd_log_count = 0;
+    if (kbd_log_count < 100) {
+        SERIAL_LOG_HEX("KBD IRQ: 0x", scancode);
+        kbd_log_count++;
+    }
+    
+    keyboard_handler(regs, scancode);
     send_eoi(33);
 }
     
@@ -215,7 +216,7 @@ void interrupts_system_init(void) {
     register_interrupt_handler(33, keyboard_service_handler);
     // register_interrupt_handler(44, mouse_handler); // Disabled to prevent USB/PS2 mouse conflicts
     GFX_LOG_MIN("Keyboard handler registered for IRQ1 (vector 33).\n");
-    GFX_LOG_MIN("Mouse handler disabled (USB mouse in use).\n");
+    //GFX_LOG_MIN("Mouse handler disabled (USB mouse in use).\n");
     gfx_print("GDT and IDT setup complete.\n");
 }
 

@@ -1,8 +1,7 @@
-#include "../../core/blockdev.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-
-extern void gfx_print(const char*);
+#include "core/blockdev.h"
+#include "core/io.h"
+#include "core/string.h"
+#include "config.h"
 
 // ATA/ATAPI I/O ports for primary and secondary bus
 #define ATA_PRIMARY_IO      0x1F0
@@ -76,11 +75,11 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         return -1;
     }
     
-    serial_debug("[CDROM] Read request: LBA=");
+    //serial_debug("[CDROM] Read request: LBA=");
     // Simple decimal print
     uint32_t temp = (uint32_t)lba;
     if (temp == 0) {
-        serial_debug("0");
+        //serial_debug("0");
     } else {
         char digits[12];
         int idx = 0;
@@ -90,10 +89,10 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         }
         for (int k = idx - 1; k >= 0; k--) {
             char ch[2] = {digits[k], 0};
-            serial_debug(ch);
+            //serial_debug(ch);
         }
     }
-    serial_debug(" count=1\n");
+    //serial_debug(" count=1\n");
     
     uint16_t* buffer = (uint16_t*)buf;
     
@@ -101,7 +100,7 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         uint32_t sector = lba + i;
         
         // Wait for drive to be ready
-        serial_debug("[CDROM] Waiting for drive ready...\n");
+        //serial_debug("[CDROM] Waiting for drive ready...\n");
         if (ata_wait_bsy() < 0) return -1;
         
         // Select drive (master = 0xE0, slave = 0xF0)
@@ -113,7 +112,7 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         outb(ata_base + ATA_REG_LBA2, (2048 >> 8) & 0xFF); // Byte count high
         outb(ata_base + ATA_REG_COMMAND, ATA_CMD_PACKET);
         
-        serial_debug("[CDROM] PACKET command sent\n");
+        //serial_debug("[CDROM] PACKET command sent\n");
         
         // Small delay to let command register
         for (volatile int d = 0; d < 100; d++);
@@ -123,17 +122,17 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         
         // Check status before waiting for DRQ
         uint8_t status_before_drq = inb(ata_base + ATA_REG_STATUS);
-        serial_debug("[CDROM] Status before DRQ wait: 0x");
+        //serial_debug("[CDROM] Status before DRQ wait: 0x");
         char hex[3];
         hex[0] = "0123456789ABCDEF"[(status_before_drq >> 4) & 0xF];
         hex[1] = "0123456789ABCDEF"[status_before_drq & 0xF];
         hex[2] = '\0';
-        serial_debug(hex);
-        serial_debug("\n");
+        //serial_debug(hex);
+        //serial_debug("\n");
         
         // Check for error
         if (status_before_drq & ATA_SR_ERR) {
-            serial_debug("[CDROM] Error bit set after PACKET command!\n");
+            //serial_debug("[CDROM] Error bit set after PACKET command!\n");
             uint8_t error = inb(ata_base + ATA_REG_ERROR);
             serial_debug("[CDROM] Error register: 0x");
             hex[0] = "0123456789ABCDEF"[(error >> 4) & 0xF];
@@ -145,7 +144,7 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         
         if (ata_wait_drq() < 0) return -1;
         
-        serial_debug("[CDROM] Sending ATAPI READ(10) packet...\n");
+        //serial_debug("[CDROM] Sending ATAPI READ(10) packet...\n");
         
         // Send ATAPI READ(10) command packet (10 bytes)
         // Format: [opcode] [flags] [LBA 31-24] [LBA 23-16] [LBA 15-8] [LBA 7-0]
@@ -171,13 +170,11 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
             outw(ata_base + ATA_REG_DATA, packet_words[j]);
         }
         
-        serial_debug("[CDROM] Waiting for data...\n");
+        //serial_debug("[CDROM] Waiting for data...\n");
         
         // Wait for data
         if (ata_wait_bsy() < 0) return -1;
         if (ata_wait_drq() < 0) return -1;
-        
-        serial_debug("[CDROM] Reading data...\n");
         
         // Read data (2048 bytes = 1024 words)
         for (int j = 0; j < 1024; j++) {
@@ -185,7 +182,6 @@ static int cdrom_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
         }
         
         buffer += 1024;  // Move to next sector in buffer
-        serial_debug("[CDROM] Sector read complete\n");
     }
     
     return count;
@@ -205,7 +201,7 @@ static blockdev_t cdrom_dev = {
 void cdrom_init(void) {
     extern void serial_debug(const char*);
     serial_debug("[CDROM] Initializing CD-ROM driver\n");
-    gfx_print("[CDROM] Initializing CD-ROM driver\n");
+    //SERIAL_LOG("[CDROM] Initializing CD-ROM driver\n");
     
     // Try both IDE controllers and both master/slave positions
     uint16_t controllers[] = {ATA_PRIMARY_IO, ATA_SECONDARY_IO};
@@ -215,25 +211,25 @@ void cdrom_init(void) {
     
     for (int ctrl = 0; ctrl < 2 && !detected; ctrl++) {
         uint16_t test_base = controllers[ctrl];
-        serial_debug("[CDROM] Trying controller at 0x");
+        //serial_debug("[CDROM] Trying controller at 0x");
         char ctrl_hex[5];
         for (int i = 3; i >= 0; i--) {
             ctrl_hex[3-i] = "0123456789ABCDEF"[(test_base >> (i*4)) & 0xF];
         }
         ctrl_hex[4] = '\0';
-        serial_debug(ctrl_hex);
-        serial_debug("\n");
+        //serial_debug(ctrl_hex);
+        //serial_debug("\n");
         
         for (int drv = 0; drv < 2 && !detected; drv++) {
             uint8_t drive_select = drive_selects[drv];
-            
-            serial_debug("[CDROM]   Trying drive select: 0x");
-            char hex_sel[3];
-            hex_sel[0] = "0123456789ABCDEF"[(drive_select >> 4) & 0xF];
-            hex_sel[1] = "0123456789ABCDEF"[drive_select & 0xF];
-            hex_sel[2] = '\0';
-            serial_debug(hex_sel);
-            serial_debug("\n");
+
+            //serial_debug("[CDROM]   Trying drive select: 0x");
+            //char hex_sel[3];
+            //hex_sel[0] = "0123456789ABCDEF"[(drive_select >> 4) & 0xF];
+            //hex_sel[1] = "0123456789ABCDEF"[drive_select & 0xF];
+            //hex_sel[2] = '\0';
+            //serial_debug(hex_sel);
+            //serial_debug("\n");
             
             // Select drive
             outb(test_base + ATA_REG_DEVSEL, drive_select);
@@ -248,13 +244,13 @@ void cdrom_init(void) {
             
             // Check if device exists
             uint8_t status = inb(test_base + ATA_REG_STATUS);
-            serial_debug("[CDROM]   Status: 0x");
-            char hex[3];
-            hex[0] = "0123456789ABCDEF"[(status >> 4) & 0xF];
-            hex[1] = "0123456789ABCDEF"[status & 0xF];
-            hex[2] = '\0';
-            serial_debug(hex);
-            serial_debug("\n");
+            //serial_debug("[CDROM]   Status: 0x");
+            //char hex[3];
+            //hex[0] = "0123456789ABCDEF"[(status >> 4) & 0xF];
+            //hex[1] = "0123456789ABCDEF"[status & 0xF];
+            //hex[2] = '\0';
+            //serial_debug(hex);
+            //serial_debug("\n");
             
             if (status != 0 && status != 0xFF) {
                 detected = true;
@@ -267,7 +263,7 @@ void cdrom_init(void) {
     
     if (!detected) {
         serial_debug("[CDROM] No CD-ROM drive detected on any controller\n");
-        gfx_print("[CDROM] No CD-ROM drive detected\n");
+        SERIAL_LOG("[CDROM] No CD-ROM drive detected\n");
         return;
     }
     
@@ -280,19 +276,16 @@ void cdrom_init(void) {
     // Wait for response
     if (ata_wait_bsy() < 0) {
         serial_debug("[CDROM] Timeout waiting for IDENTIFY response\n");
-        gfx_print("[CDROM] CD-ROM identification failed\n");
         return;
     }
     
     if (inb(ata_base + ATA_REG_STATUS) & ATA_SR_ERR) {
         serial_debug("[CDROM] CD-ROM identification failed (error bit set)\n");
-        gfx_print("[CDROM] CD-ROM identification failed\n");
         return;
     }
     
     if (ata_wait_drq() < 0) {
         serial_debug("[CDROM] Timeout waiting for DRQ after IDENTIFY\n");
-        gfx_print("[CDROM] CD-ROM identification failed\n");
         return;
     }
     
@@ -303,10 +296,10 @@ void cdrom_init(void) {
     
     cdrom_present = true;
     serial_debug("[CDROM] CD-ROM drive detected successfully!\n");
-    gfx_print("[CDROM] CD-ROM drive detected successfully\n");
+    SERIAL_LOG("[CDROM] CD-ROM drive detected successfully\n");
     
     // Register block device
     blockdev_register(&cdrom_dev);
     serial_debug("[CDROM] Block device registered as 'cdrom0'\n");
-    gfx_print("[CDROM] Block device registered as 'cdrom0'\n");
+    SERIAL_LOG("[CDROM] Block device registered as 'cdrom0'\n");
 }

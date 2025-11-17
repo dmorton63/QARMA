@@ -1,5 +1,5 @@
 /**
- * QuantumOS - Core Allocation Manager Implementation
+ * QARMA - Core Allocation Manager Implementation
  * 
  * Hybrid CPU core allocation with dynamic scaling and guaranteed minimums.
  */
@@ -8,8 +8,8 @@
 #include "kernel.h"
 #include "memory.h"
 #include "memory/heap.h"
-#include "../graphics/graphics.h"
-#include "../parallel/parallel_engine.h"
+#include "graphics/graphics.h"
+#include "parallel/parallel_engine.h"
 
 // Forward declarations from core_manager.h
 typedef struct core_request core_request_t;

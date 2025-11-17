@@ -3,9 +3,9 @@
 #include "usb_mouse.h"
 #include "usb_msc.h"
 #include "uhci.h"
-#include "../../core/memory/heap.h"
-#include "../../config.h"
-#include "../../graphics/graphics.h"
+#include "core/memory/heap.h"
+#include "config.h"
+#include "graphics/graphics.h"
 
 // Global USB device list
 static usb_device_t *usb_device_list = NULL;
@@ -83,8 +83,14 @@ usb_device_t* usb_enumerate_device(uhci_controller_t *uhci, int port) {
     }
 
     // Reset and enable port
-    uhci_reset_port(uhci, port);
-    if (!uhci_port_device_connected(uhci, port)) return NULL;
+    if (!uhci_reset_port(uhci, port)) {
+        SERIAL_LOG("USB: Port reset/enable failed - skipping enumeration\n");
+        return NULL;
+    }
+    if (!uhci_port_device_connected(uhci, port)) {
+        SERIAL_LOG("USB: Device disconnected after reset\n");
+        return NULL;
+    }
     SERIAL_LOG_DEC("USB: Starting enumeration on UHCI port ",port);
     SERIAL_LOG("\n");
     // Allocate device and zero memory

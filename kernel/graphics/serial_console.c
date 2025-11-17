@@ -1,9 +1,9 @@
 /**
- * QuantumOS - Serial Console Backend
+ * QARMA - Serial Console Backend
  * Serial port output for debugging and remote console access
  */
 #include "serial_console.h"
-#include "../core/io.h"
+#include "core/io.h"
 
 #define SERIAL_PORT_A 0x3F8
 #define SERIAL_PORT_B 0x2F8

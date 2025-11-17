@@ -1,11 +1,11 @@
 /**
- * QuantumOS - GDT Setup
+ * QARMA - GDT Setup
  * Ritual initialization of the Global Descriptor Table for protected mode
  */
 
-#include "../kernel_types.h"
-#include "../core/kernel.h"
-#include "../graphics/graphics.h"
+#include "kernel_types.h"
+#include "core/kernel.h"
+#include "graphics/graphics.h"
 
 // ────────────────
 // GDT Structures

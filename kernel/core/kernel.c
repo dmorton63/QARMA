@@ -1,47 +1,55 @@
 /**
- * QuantumOS Kernel - Main Entry Point (Simplified for Keyboard Testing)
+ * QARMA Kernel - Main Entry Point (Simplified for Keyboard Testing)
  * 
  * This is the main kernel entry point focused on getting keyboard input working.
  */
 
 #include "multiboot.h"
 #include "string.h"
-#include "../config.h"
-#include "../keyboard/keyboard.h"
-#include "../shell/shell.h"
-#include "../graphics/graphics.h"
-#include "../graphics/subsystem/video_subsystem.h"
-#include "../core/scheduler/subsystem_registry.h"
-#include "../graphics/framebuffer.h"
+#include "config.h"
+#include "keyboard/keyboard.h"
+#include "shell/shell.h"
+#include "graphics/graphics.h"
+#include "graphics/subsystem/video_subsystem.h"
+#include "core/scheduler/subsystem_registry.h"
+#include "graphics/framebuffer.h"
 #include "kernel.h"
-#include "../graphics/popup.h"
-#include "../graphics/message_box.h"
-#include "../qarma_win_handle/qarma_win_handle.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
-#include "../qarma_win_handle/panic.h"
-#include "../core/memory.h"
-#include "../core/memory/memory_pool.h"
-#include "../core/input/mouse.h"
-#include "../core/pci.h"
-#include "../core/scheduler/task_manager.h"
-#include "../core/scheduler/scheduler_demo.h"
-#include "../fs/file_subsystem/file_subsystem.h"
-#include "../fs/vfs.h"
-#include "../fs/iso9660.h"
-#include "../graphics/png_decoder.h"
-#include "../drivers/block/cdrom.h"
-#include "../core/blockdev.h"
-#include "../core/memory/heap.h"
+#include "graphics/popup.h"
+#include "graphics/message_box.h"
+#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle/qarma_window_manager.h"
+#include "qarma_win_handle/qarma_input_events.h"
+#include "qarma_win_handle/panic.h"
+#include "core/memory.h"
+#include "core/memory/memory_pool.h"
+#include "core/input/mouse.h"
+#include "core/pci.h"
+#include "core/scheduler/task_manager.h"
+#include "core/scheduler/scheduler_demo.h"
+#include "fs/file_subsystem/file_subsystem.h"
+#include "fs/vfs.h"
+#include "fs/iso9660.h"
+#include "graphics/png_decoder.h"
+#include "drivers/block/cdrom.h"
+#include "core/blockdev.h"
+#include "core/memory/heap.h"
+#include "drivers/usb/usb_mouse.h"
+#include "keyboard/command.h"
 
 
-// #include "../core/memory/vmm/vmm.h"
-// #include "../core/memory/heap.h"
-// #include "../core/overlay/overlay.h"
+
+// #include "core/memory/vmm/vmm.h"
+// #include "core/memory/heap.h"
+// #include "core/overlay/overlay.h"
 //#include "../scheduler/qarma_window_manager.h"
 
 //#include "../scheduler/qarma_win_handle.h"
-#include "../splash_app/qarma_splash_app.h"  // Contains splash_app and its functions
-#include "../graphics/png_decoder.h"  // For PNG loading functions
+#include "splash_app/qarma_splash_app.h"  // Contains splash_app and its functions
+#include "qarma_win_handle/login_screen.h"  // Login screen
+#include "qarma_win_handle/main_window.h"   // Main desktop window
+#include "graphics/png_decoder.h"  // For PNG loading functions
+#include "gui/gui.h"  // GUI library for rendering
+#include "gui/boot_messages.h"  // Boot messages window
 
 extern QARMA_WIN_HANDLE global_win_handler;
 extern QARMA_APP_HANDLE splash_app;
@@ -108,7 +116,7 @@ void serial_debug_decimal(uint32_t value) {
  * Main kernel loop for keyboard testing
  */
 // int kernel_main_loop(void) {
-//     gfx_print("\n=== QuantumOS Interactive Shell ===\n");
+//     gfx_print("\n=== QARMA Interactive Shell ===\n");
 //     gfx_print("Keyboard input enabled. Type 'help' for commands.\n\n");
     
 //     // Initialize shell interface
@@ -167,6 +175,14 @@ int kernel_splash_test()
     
     splash_app.shutdown(&splash_app);
     return 0;
+}
+
+// Callback for successful login
+static void on_login_success(const char* username) {
+    SERIAL_LOG("[KERNEL] User logged in: \n");
+    gfx_print("Login successful! Welcome, ");
+    gfx_print((char*)username);
+    gfx_print("\n");
 }
 
 /**
@@ -274,8 +290,8 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
             }
         }
         buf[i] = '\0';
-        gfx_print(buf);
-        gfx_print("\n");
+        //gfx_print(buf);
+        //gfx_print("\n");
         
         // Show memory pool stats while PNG allocation is active
         gfx_print("\n");
@@ -317,7 +333,7 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     iso9660_init();
     SERIAL_LOG("[KERNEL] ISO9660 init completed\n");
     
-    gfx_print("=== QuantumOS v1.0 Starting ===\n");
+    gfx_print("=== QARMA v1.0 Starting ===\n");
     gfx_print("Keyboard Testing Version\n");
     
     // Initialize GDT
@@ -332,316 +348,412 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     
     // Initialize keyboard driver
     gfx_print("Initializing keyboard driver...\n");
-    //draw_splash("QuantumOS Keyboard Test");
+    //draw_splash("QARMA Keyboard Test");
     keyboard_init();
     // Ensure higher-level keyboard processing is enabled by default so
     // the interactive shell and commands are available. Use the `kbd`
     // command at runtime to toggle processing if needed.
     keyboard_set_enabled(true);
     pci_init();
-    gfx_print("===SKIPPING MOUSE INIT===\n");
-    // mouse_init();  // TEMPORARILY DISABLED - causes crash/jump
-    gfx_print("===CONTINUING AFTER MOUSE===\n");
+    gfx_print("Initializing mouse driver...\n");
+    usb_mouse_init();
+    gfx_print("Mouse driver initialized.\n");
     
-    // Initialize E1000 network driver AFTER PCI init
-    SERIAL_LOG("[KERNEL] ===== INITIALIZING E1000 NETWORK DRIVER =====\n");
-    gfx_print("Initializing E1000 NIC driver...\n");
-    extern void e1000_init(void);
-    e1000_init();
-    SERIAL_LOG("[KERNEL] E1000 driver init completed\n");
-    gfx_print("E1000 driver initialized.\n");
+    // Initialize QARMA window manager
+    gfx_print("Initializing window manager...\n");
+    qarma_window_manager_init();
+    gfx_print("Window manager initialized.\n");
     
-    // Initialize CD-ROM driver AFTER PCI init (needed to discover IDE/ATAPI)
-    SERIAL_LOG("[KERNEL] ===== INITIALIZING CD-ROM DRIVER (POST-PCI) =====\n");
-    gfx_print("Initializing CD-ROM driver...\n");
-    cdrom_init();
-    SERIAL_LOG("[KERNEL] CD-ROM init completed\n");
+    // Initialize input event system
+    gfx_print("Initializing input event system...\n");
+    qarma_input_events_init();
+    gfx_print("Input event system initialized.\n");
     
-    // Now mount ISO9660 after PCI has discovered devices
-    SERIAL_LOG("[KERNEL] ===== MOUNTING ISO9660 FILESYSTEM =====\n");
-    gfx_print("Mounting ISO9660 filesystem...\n");
-    blockdev_t* cdrom_dev = blockdev_find("cdrom0");
-    SERIAL_LOG("[KERNEL] Searching for cdrom0 device\n");
-    if (cdrom_dev) {
-        SERIAL_LOG("[KERNEL] CD-ROM device found, mounting\n");
-        iso9660_mount(cdrom_dev, "/cdrom");
-        SERIAL_LOG("[KERNEL] ISO9660 mount completed\n");
-        gfx_print("ISO9660 filesystem mounted successfully\n");
-    } else {
-        SERIAL_LOG("[KERNEL] WARNING: CD-ROM device NOT found\n");
-        gfx_print("WARNING: CD-ROM device not found\n");
-    }
-    
-    // Display PNG splash screen before task manager takes over
-    gfx_print("===LOADING PNG SPLASH===\n");
-    png_image_t* splash_image = load_splash_image();
-    if (splash_image) {
-        gfx_print("PNG: Splash loaded successfully!\n");
-        // TODO: Actually display the image on screen
-        // For now, just show success message
-        video_subsystem_splash_title("PNG Splash Pattern Loaded!", 
-                                    (rgb_color_t){255, 255, 255, 255}, 
-                                    (rgb_color_t){0, 180, 180, 255});
-        png_free(splash_image);
-    } else {
-        gfx_print("PNG: Failed to load splash\n");
-    }
-    gfx_print("===PNG SPLASH DONE===\n");
-    
-    /* Initialize task manager */
-    gfx_print("Initializing task manager...\n");
-    task_manager_init();
-    gfx_print("Task manager initialization complete.\n");
-    
-    /* Initialize and demonstrate advanced scheduler architecture */
-    gfx_print("Initializing advanced modular scheduler...\n");
-    if (scheduler_demo_init() == 0) {
-        gfx_print("Advanced scheduler initialized successfully.\n");
-        
-        gfx_print("Running scheduler demonstration...\n");
-        if (scheduler_demo_run() == 0) {
-            gfx_print("Scheduler demonstration completed successfully.\n");
-            gfx_print("Quantum OS modular subsystem architecture is operational!\n");
-        } else {
-            gfx_print("Scheduler demonstration failed.\n");
-        }
-    } else {
-        gfx_print("Failed to initialize advanced scheduler.\n");
-    }
-    
-    SERIAL_LOG("[KERNEL] Scheduler demo completed, continuing...\n");
-    SERIAL_LOG("[KERNEL] About to print AFTER_SCHEDULER_DEMO\n");
-    gfx_print("===AFTER_SCHEDULER_DEMO===\n");
-    SERIAL_LOG("[KERNEL] Printed AFTER_SCHEDULER_DEMO\n");
-    
-    // now that keyboard and IDT are initialized so
-    // modal popups can use the interrupt-driven keyboard buffer.
+    // Enable interrupts before login screen (needed for keyboard input)
     __asm__ volatile("sti");
-    SERIAL_LOG("[KERNEL] Interrupts enabled\n");
-    //message_box_push("System initialized. Ready."); 
-    gfx_print("Keyboard driver initialized.\n");
-    SERIAL_LOG("[KERNEL] Keyboard message printed\n");
+    SERIAL_LOG("[KERNEL] Interrupts enabled for login screen\n");
     
-    // Draw PNG splash screen from ISO9660 filesystem
-    SERIAL_LOG("[KERNEL] ===== LOADING PNG FROM CD-ROM =====\n");
-    gfx_print("Loading PNG splash image from CD-ROM...\n");
+    // ========================================================================
+    // BOOT MESSAGES WINDOW - Show boot sequence to user
+    // ========================================================================
+    SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW =====\n");
     
-    // Get framebuffer pointer and dimensions
-    SERIAL_LOG("[KERNEL] Getting framebuffer info\n");
-    uint32_t* fb = video_subsystem_get_framebuffer();
-    uint32_t fb_width, fb_height;
-    video_subsystem_get_resolution(&fb_width, &fb_height);
-    SERIAL_LOG("[KERNEL] Framebuffer obtained\n");
+    extern BootMessagesWindow* boot_messages_create(int x, int y, int width, int height);
+    extern void boot_messages_add(BootMessagesWindow* bmw, const char* message);
+    extern void boot_messages_render(BootMessagesWindow* bmw);
+    extern void boot_messages_destroy(BootMessagesWindow* bmw);
     
-    if (fb) {
-        SERIAL_LOG("[KERNEL] Framebuffer valid, using static PNG buffer\n");
-        
-        // Clear framebuffer to black first
-        for (uint32_t i = 0; i < fb_width * fb_height; i++) {
-            fb[i] = 0xFF000000; // Black with full alpha
-        }
-        SERIAL_LOG("[KERNEL] Framebuffer cleared to black\n");
-        
-        // Allocate PNG buffer from VIDEO subsystem pool (2MB)
-        uint8_t* png_buffer = (uint8_t*)memory_pool_alloc_large(SUBSYSTEM_VIDEO, 2048 * 1024, 0);
-        if (!png_buffer) {
-            gfx_print("Failed to allocate PNG buffer\n");
-            return 0;
-        }
-        
-        SERIAL_LOG("[KERNEL] Reading PNG from ISO9660\n");
-        // Read the splash screen from ISO9660
-        int bytes_read = iso9660_read_file("/SPLASH.PNG", png_buffer, 2048 * 1024, 0);
-        SERIAL_LOG("[KERNEL] iso9660_read_file returned: ");
-        char bytes_str[16];
-        int temp_val = bytes_read;
-        int idx_val = 0;
-        if (temp_val <= 0) {
-            bytes_str[idx_val++] = temp_val < 0 ? '-' : '0';
-            if (temp_val < 0) temp_val = -temp_val;
-        }
-        if (temp_val > 0) {
-            char digits_val[16];
-            int d_val = 0;
-            while (temp_val > 0) { digits_val[d_val++] = '0' + (temp_val % 10); temp_val /= 10; }
-            for (int i = d_val-1; i >= 0; i--) bytes_str[idx_val++] = digits_val[i];
-        }
-        bytes_str[idx_val] = '\0';
-        SERIAL_LOG(bytes_str);
-        SERIAL_LOG("\n");
-        
-        if (bytes_read > 0) {
-            SERIAL_LOG("[KERNEL] PNG file loaded from CD-ROM!\n");
-            gfx_print("PNG file loaded from CD-ROM!\n");
-            // Decode PNG to framebuffer
-            png_decode_to_framebuffer((const uint8_t*)png_buffer, bytes_read, fb, fb_width, fb_height);
-            SERIAL_LOG("[KERNEL] PNG decoded to framebuffer\n");
-            gfx_print("PNG splash displayed!\n");
-            
-            // Show memory pool stats while allocations are active
-            gfx_print("\n");
-            memory_pool_print_all_stats();
-        } else {
-            SERIAL_LOG("[KERNEL] Failed to read PNG from CD-ROM\n");
-            gfx_print("Failed to read PNG from CD-ROM, using fallback pattern\n");
-            // Use embedded fallback
-            load_splash_to_framebuffer(fb, fb_width, fb_height);
-        }
-        
-        // Free PNG buffer
-        memory_pool_free(SUBSYSTEM_VIDEO, png_buffer);
-        
-        // Wait for keypress, then clear splash and show text
-        gfx_print("Press any key to continue...\n");
-        
-        // Simple wait for keyboard input
-        extern volatile bool key_pressed;
-        key_pressed = false;
-        while (!key_pressed) {
-            __asm__ volatile("hlt");
-        }
-        
-        // Clear screen and restore text display
-        video_subsystem_clear_screen();
-        gfx_print("Splash cleared. Continuing boot...\n");
-    }
+    // Create boot messages window (centered on screen)
+    extern FramebufferInfo* fb_info;
+    int win_w = 600;
+    int win_h = 400;
+    int win_x = (fb_info->width - win_w) / 2;
+    int win_y = (fb_info->height - win_h) / 2;
     
-    // Display video subsystem debug info
-    video_subsystem_debug_info();
-    
-    gfx_print("Video subsystem test complete.\n");
-    
-    // Demo filesystem subsystem functionality
-    gfx_print("Testing filesystem subsystem...\n");
-    
-    // Register some demo files that exist in our RAM disk
-    filesystem_register_file("boot_config", "/ramdisk/config.txt", FILE_TYPE_CONFIG);
-    filesystem_register_file("kernel_log", "/ramdisk/kernel.log", FILE_TYPE_TEXT);
-    filesystem_register_file("system_info", "/ramdisk/sysinfo.txt", FILE_TYPE_TEXT);
-    
-    // Create and register an in-memory test file to demonstrate working functionality
-    static char test_data[] = "QuantumOS Test File\nFilesystem Subsystem Working!\n";
-    filesystem_register_file("test_memory_file", "memory://test.txt", FILE_TYPE_TEXT);
-    
-    // Use the filesystem subsystem API to set file data
-    if (filesystem_set_file_data("test_memory_file", test_data, sizeof(test_data) - 1)) {
-        gfx_print("Created in-memory test file successfully.\n");
+    BootMessagesWindow* boot_msg_win = boot_messages_create(win_x, win_y, win_w, win_h);
+    if (!boot_msg_win) {
+        SERIAL_LOG("[KERNEL] Failed to create boot messages window\n");
     } else {
-        gfx_print("Failed to create in-memory test file.\n");
-    }
-    
-    // Test file operations with real VFS files
-    if (filesystem_load_file("boot_config")) {
-        gfx_print("Successfully loaded boot_config from RAM disk!\n");
+        SERIAL_LOG("[KERNEL] Boot messages window created\n");
         
-        // Display actual file content
-        size_t file_size;
-        char* file_data = (char*)filesystem_get_file_data("boot_config", &file_size);
-        if (file_data && file_size > 0) {
-            gfx_print("File content preview: ");
-            // Show first 40 characters
-            for (size_t i = 0; i < file_size && i < 40; i++) {
-                if (file_data[i] == '\n') {
-                    gfx_print(" [LF] ");
-                } else if (file_data[i] >= 32 && file_data[i] <= 126) {
-                    char temp[2] = {file_data[i], '\0'};
-                    gfx_print(temp);
+        // Add boot messages showing what we've done so far
+        boot_messages_add(boot_msg_win, "QARMA Boot Sequence");
+        boot_messages_add(boot_msg_win, "======================================");
+        boot_messages_add(boot_msg_win, "");
+        boot_messages_add(boot_msg_win, "[OK] Multiboot information parsed");
+        boot_messages_add(boot_msg_win, "[OK] Memory manager initialized");
+        boot_messages_add(boot_msg_win, "[OK] Heap allocator ready");
+        boot_messages_add(boot_msg_win, "[OK] Framebuffer detected");
+        boot_messages_add(boot_msg_win, "[OK] Graphics subsystem initialized");
+        boot_messages_add(boot_msg_win, "[OK] Video subsystem ready");
+        boot_messages_add(boot_msg_win, "[OK] PNG decoder functional");
+        boot_messages_add(boot_msg_win, "[OK] Filesystem subsystem initialized");
+        boot_messages_add(boot_msg_win, "[OK] VFS mounted");
+        boot_messages_add(boot_msg_win, "[OK] ISO9660 filesystem ready");
+        boot_messages_add(boot_msg_win, "[OK] GDT initialized");
+        boot_messages_add(boot_msg_win, "[OK] IDT and interrupts configured");
+        boot_messages_add(boot_msg_win, "[OK] Keyboard driver loaded");
+        boot_messages_add(boot_msg_win, "[OK] PCI subsystem initialized");
+        boot_messages_add(boot_msg_win, "[OK] USB mouse driver initialized");
+        boot_messages_add(boot_msg_win, "[OK] QARMA window manager started");
+        boot_messages_add(boot_msg_win, "[OK] Input event system ready");
+        boot_messages_add(boot_msg_win, "");
+        boot_messages_add(boot_msg_win, "System initialization complete!");
+        boot_messages_add(boot_msg_win, "");
+        boot_messages_add(boot_msg_win, "Press TAB to focus close button,");
+        boot_messages_add(boot_msg_win, "then ENTER to continue to login.");
+        
+        // Render the window
+        boot_messages_render(boot_msg_win);
+        
+        // Blit to framebuffer
+        uint32_t* fb = (uint32_t*)fb_info->address;
+        if (boot_msg_win->main_window && boot_msg_win->main_window->pixel_buffer) {
+            uint32_t* win_buffer = boot_msg_win->main_window->pixel_buffer;
+            int src_w = boot_msg_win->main_window->size.width;
+            int src_h = boot_msg_win->main_window->size.height;
+            int src_x = boot_msg_win->main_window->x;
+            int src_y = boot_msg_win->main_window->y;
+            
+            for (int y = 0; y < src_h; y++) {
+                for (int x = 0; x < src_w; x++) {
+                    int fb_x = src_x + x;
+                    int fb_y = src_y + y;
+                    if (fb_x >= 0 && fb_x < (int)fb_info->width && 
+                        fb_y >= 0 && fb_y < (int)fb_info->height) {
+                        fb[fb_y * fb_info->width + fb_x] = win_buffer[y * src_w + x];
+                    }
                 }
             }
-            gfx_print("...\n");
         }
-    } else {
-        gfx_print("Failed to load boot_config.\n");
-    }
-    
-    // Test file lookup functionality
-    registered_file_t* test_file = filesystem_lookup_file("system_info");
-    if (test_file) {
-        gfx_print("Found registered file: system_info\n");
         
-        // Try to load and show this file too
-        if (filesystem_load_file("system_info")) {
-            size_t info_size;
-            char* info_data = (char*)filesystem_get_file_data("system_info", &info_size);
-            if (info_data) {
-                gfx_print("System info loaded successfully!\n");
+        SERIAL_LOG("[KERNEL] Boot messages window rendered\n");
+        
+        // Wait for user to acknowledge boot complete (TAB then ENTER)
+        keyboard_enable_window_mode(true);
+        keyboard_set_enabled(false);
+        
+        SERIAL_LOG("[KERNEL] Waiting for user to close boot messages\n");
+        
+        bool boot_msg_closed = false;
+        while (!boot_msg_closed) {
+            key_event_t key_event;
+            if (keyboard_get_window_key_event(&key_event)) {
+                if (!key_event.released) {
+                    // Handle close (Enter when focused)
+                    if (key_event.scancode == KEY_ENTER && boot_msg_win->close_button_ctrl.focused) {
+                        SERIAL_LOG("[KERNEL] Proceeding to login\n");
+                        boot_msg_closed = true;
+                        break;
+                    }
+                    
+                    // Handle tab (focus close button)
+                    if (key_event.scancode == KEY_TAB) {
+                        extern void close_button_set_focus(CloseButton* cb, bool focused);
+                        close_button_set_focus(&boot_msg_win->close_button_ctrl, 
+                                             !boot_msg_win->close_button_ctrl.focused);
+                        boot_messages_render(boot_msg_win);
+                        
+                        // Re-blit to framebuffer
+                        if (boot_msg_win->main_window && boot_msg_win->main_window->pixel_buffer) {
+                            uint32_t* win_buffer = boot_msg_win->main_window->pixel_buffer;
+                            int src_w = boot_msg_win->main_window->size.width;
+                            int src_h = boot_msg_win->main_window->size.height;
+                            int src_x = boot_msg_win->main_window->x;
+                            int src_y = boot_msg_win->main_window->y;
+                            
+                            for (int y = 0; y < src_h; y++) {
+                                for (int x = 0; x < src_w; x++) {
+                                    int fb_x = src_x + x;
+                                    int fb_y = src_y + y;
+                                    if (fb_x >= 0 && fb_x < (int)fb_info->width && 
+                                        fb_y >= 0 && fb_y < (int)fb_info->height) {
+                                        fb[fb_y * fb_info->width + fb_x] = win_buffer[y * src_w + x];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
+            
+            sleep_ms(16); // ~60fps
         }
-    } else {
-        gfx_print("Failed to find system_info (unexpected)\n");
+        
+        // Destroy boot messages window
+        boot_messages_destroy(boot_msg_win);
+        SERIAL_LOG("[KERNEL] Boot messages window closed\n");
+        
+        // Clear screen before showing desktop
+        memset((void*)fb_info->address, 0, fb_info->pitch * fb_info->height);
     }
     
-    // Test accessing the in-memory file data
-    size_t data_size;
-    void* file_data = filesystem_get_file_data("test_memory_file", &data_size);
-    if (file_data) {
-        gfx_print("Successfully accessed test file data (");
-        char size_str[16];
-        char* size_ptr = size_str + 15;
-        *size_ptr = '\0';
-        int size_val = (int)data_size;
-        if (size_val == 0) {
-            *--size_ptr = '0';
-        } else {
-            while (size_val > 0) {
-                *--size_ptr = '0' + (size_val % 10);
-                size_val /= 10;
-            }
-        }
-        gfx_print(size_ptr);
-        gfx_print(" bytes)\n");
-    }
+    // ========================================================================
+    // DESKTOP ENVIRONMENT - New Clean Flow
+    // ========================================================================
+    gfx_print("Starting desktop environment...\n");
+    SERIAL_LOG("[KERNEL] ===== STARTING DESKTOP ENVIRONMENT =====\n");
     
-    // Display filesystem subsystem statistics
-    filesystem_subsystem_stats_t fs_stats;
-    filesystem_subsystem_get_stats(&fs_stats);
-    gfx_print("Filesystem Stats - Registered files: ");
-    
-    // Convert numbers to strings for display
-    char reg_files_str[16], loaded_files_str[16];
-    // Simple number to string conversion
-    int reg_files = (int)fs_stats.total_files_registered;
-    int loaded_files = (int)fs_stats.total_files_loaded;
-    
-    // Convert registered files count
-    char* reg_ptr = reg_files_str + 15;
-    *reg_ptr = '\0';
-    if (reg_files == 0) {
-        *--reg_ptr = '0';
-    } else {
-        while (reg_files > 0) {
-            *--reg_ptr = '0' + (reg_files % 10);
-            reg_files /= 10;
-        }
-    }
-    
-    // Convert loaded files count  
-    char* loaded_ptr = loaded_files_str + 15;
-    *loaded_ptr = '\0';
-    if (loaded_files == 0) {
-        *--loaded_ptr = '0';
-    } else {
-        while (loaded_files > 0) {
-            *--loaded_ptr = '0' + (loaded_files % 10);
-            loaded_files /= 10;
-        }
-    }
-    
-    gfx_print(reg_ptr);
-    gfx_print(", Loaded files: ");
-    gfx_print(loaded_ptr);
-    gfx_print("\n");
-    
-    gfx_print("Filesystem subsystem test complete.\n");
-
-    gfx_print("===END OF KERNEL_MAIN===\n");
-    
+    // Enable interrupts for GUI
     __asm__ volatile("sti");
+    SERIAL_LOG("[KERNEL] Interrupts enabled for desktop\n");
+    
+    extern FramebufferInfo* fb_info;
+    if (!fb_info || !fb_info->address) {
+        SERIAL_LOG("[KERNEL] ERROR: No framebuffer available\n");
+        gfx_print("ERROR: No framebuffer available!\n");
+        while(1) __asm__ volatile("hlt");
+    }
+    
+    // Step 1: Create main desktop window (persistent, full-screen with gradient)
+    SERIAL_LOG("[KERNEL] Creating main desktop window\n");
+    gfx_print("Creating main desktop window...\n");
+    
+    extern MainWindow* main_window_create(void);
+    extern void main_window_render(MainWindow* mw);
+    extern bool main_window_should_exit(MainWindow* mw);
+    extern void main_window_destroy(MainWindow* mw);
+    
+    MainWindow* main_win = main_window_create();
+    if (!main_win) {
+        SERIAL_LOG("[KERNEL] FATAL: Failed to create main window\n");
+        gfx_print("FATAL: Failed to create main window\n");
+        while(1) __asm__ volatile("hlt");
+    }
+    
+    // Render main window once to show gradient
+    main_window_render(main_win);
+    
+    // Blit main window to framebuffer
+    uint32_t* fb = (uint32_t*)fb_info->address;
+    int fb_w = fb_info->width;
+    int fb_h = fb_info->height;
+    
+    if (main_win->win && main_win->win->pixel_buffer) {
+        uint32_t* win_buffer = main_win->win->pixel_buffer;
+        int win_w = main_win->win->size.width;
+        int win_h = main_win->win->size.height;
+        
+        for (int y = 0; y < win_h && y < fb_h; y++) {
+            for (int x = 0; x < win_w && x < fb_w; x++) {
+                fb[y * fb_w + x] = win_buffer[y * win_w + x];
+            }
+        }
+    }
+    
+    SERIAL_LOG("[KERNEL] Main window created and rendered\n");
+    gfx_print("Main window ready.\n");
+    
+    // Step 2: Show login screen overlay
+    SERIAL_LOG("[KERNEL] Creating login overlay\n");
+    gfx_print("Showing login screen...\n");
+    
+    extern LoginScreen* login_screen_create(void);
+    extern void login_screen_set_callback(LoginScreen* login, void (*callback)(const char*));
+    extern void login_screen_update(LoginScreen* login);
+    extern void login_screen_render(LoginScreen* login);
+    extern void login_screen_handle_event(LoginScreen* login, QARMA_INPUT_EVENT* event);
+    extern void login_screen_destroy(LoginScreen* login);
+    extern void keyboard_enable_window_mode(bool enable);
+    extern void keyboard_set_enabled(bool enabled);
+    extern bool keyboard_has_event(void);
+    extern key_event_t keyboard_poll_event(void);
+    extern char scancode_to_ascii(uint8_t scancode, bool shift, bool caps);
+    
+    LoginScreen* login = login_screen_create();
+    if (!login) {
+        SERIAL_LOG("[KERNEL] FATAL: Failed to create login screen\n");
+        gfx_print("FATAL: Failed to create login screen\n");
+        while(1) __asm__ volatile("hlt");
+    }
+    
+    // Set callback for successful login
+    login_screen_set_callback(login, on_login_success);
+    
+    // Enable keyboard for login
+    keyboard_enable_window_mode(true);
+    keyboard_set_enabled(false);
+    
+    SERIAL_LOG("[KERNEL] Entering login loop\n");
+    
+    // Blit main window gradient to framebuffer once (it doesn't change)
+    if (main_win->win && main_win->win->pixel_buffer) {
+        uint32_t* win_buffer = main_win->win->pixel_buffer;
+        int win_w = main_win->win->size.width;
+        int win_h = main_win->win->size.height;
+        
+        for (int y = 0; y < win_h && y < fb_h; y++) {
+            for (int x = 0; x < win_w && x < fb_w; x++) {
+                fb[y * fb_w + x] = win_buffer[y * win_w + x];
+            }
+        }
+    }
+    
+    // Login loop - overlay on main window
+    while (login->main_window != NULL) {
+        // Poll keyboard events
+        while (keyboard_has_event()) {
+            key_event_t key_event = keyboard_poll_event();
+            
+            if (!key_event.released) {
+                QARMA_INPUT_EVENT input_event = {0};
+                input_event.type = QARMA_INPUT_EVENT_KEY_DOWN;
+                input_event.timestamp = get_ticks();
+                input_event.data.key.scancode = key_event.scancode;
+                input_event.data.key.keycode = key_event.scancode;
+                input_event.data.key.modifiers = key_event.modifiers;
+                
+                bool shift = (key_event.modifiers & 0x01) != 0;
+                input_event.data.key.character = scancode_to_ascii(key_event.scancode, shift, false);
+                
+                login_screen_handle_event(login, &input_event);
+                
+                // Send KEY_PRESS for printable characters
+                if (input_event.data.key.character >= 32 && input_event.data.key.character <= 126) {
+                    QARMA_INPUT_EVENT char_event = input_event;
+                    char_event.type = QARMA_INPUT_EVENT_KEY_PRESS;
+                    login_screen_handle_event(login, &char_event);
+                }
+            }
+        }
+        
+        // Update and render login
+        login_screen_update(login);
+        login_screen_render(login);
+        
+        // Blit login window on top of the gradient background
+        if (login->main_window && login->main_window->pixel_buffer) {
+            uint32_t* login_buffer = login->main_window->pixel_buffer;
+            int login_x = login->main_window->x;
+            int login_y = login->main_window->y;
+            int login_w = login->main_window->size.width;
+            int login_h = login->main_window->size.height;
+            
+            for (int y = 0; y < login_h; y++) {
+                for (int x = 0; x < login_w; x++) {
+                    int fb_x = login_x + x;
+                    int fb_y = login_y + y;
+                    if (fb_x >= 0 && fb_x < fb_w && fb_y >= 0 && fb_y < fb_h) {
+                        fb[fb_y * fb_w + fb_x] = login_buffer[y * login_w + x];
+                    }
+                }
+            }
+        }
+        
+        sleep_ms(16);  // ~60fps
+    }
+    
+    SERIAL_LOG("[KERNEL] Login successful, destroying login screen\n");
+    gfx_print("Login successful!\n");
+    
+    // Destroy login screen (frees memory)
+    login_screen_destroy(login);
+    login = NULL;
+    
+    SERIAL_LOG("[KERNEL] Login screen destroyed\n");
+    
+    // Restore main window to framebuffer
+    if (main_win->win && main_win->win->pixel_buffer) {
+        uint32_t* win_buffer = main_win->win->pixel_buffer;
+        int win_w = main_win->win->size.width;
+        int win_h = main_win->win->size.height;
+        
+        for (int y = 0; y < win_h && y < fb_h; y++) {
+            for (int x = 0; x < win_w && x < fb_w; x++) {
+                fb[y * fb_w + x] = win_buffer[y * win_w + x];
+            }
+        }
+    }
+    
+    // Step 3: Main window loop (desktop environment)
+    SERIAL_LOG("[KERNEL] Entering main desktop loop\n");
+    gfx_print("Desktop ready. Press Tab to focus close button, Enter to shutdown.\n");
+    
+    extern void main_window_update(MainWindow* mw);
+    extern void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event);
+    
+    while (!main_window_should_exit(main_win)) {
+        // Poll keyboard events
+        while (keyboard_has_event()) {
+            key_event_t key_event = keyboard_poll_event();
+            
+            if (!key_event.released) {
+                QARMA_INPUT_EVENT input_event = {0};
+                input_event.type = QARMA_INPUT_EVENT_KEY_DOWN;
+                input_event.timestamp = get_ticks();
+                input_event.data.key.scancode = key_event.scancode;
+                input_event.data.key.keycode = key_event.scancode;
+                input_event.data.key.modifiers = key_event.modifiers;
+                
+                main_window_handle_event(main_win, &input_event);
+            }
+        }
+        
+        // Update and render main window
+        main_window_update(main_win);
+        main_window_render(main_win);
+        
+        // Blit main window to framebuffer
+        if (main_win->win && main_win->win->pixel_buffer) {
+            uint32_t* win_buffer = main_win->win->pixel_buffer;
+            int win_w = main_win->win->size.width;
+            int win_h = main_win->win->size.height;
+            
+            for (int y = 0; y < win_h && y < fb_h; y++) {
+                for (int x = 0; x < win_w && x < fb_w; x++) {
+                    fb[y * fb_w + x] = win_buffer[y * win_w + x];
+                }
+            }
+        }
+        
+        sleep_ms(16);  // ~60fps
+    }
+    
+    SERIAL_LOG("[KERNEL] Main window close requested - shutting down\n");
+    gfx_print("Shutting down system...\n");
+    
+    // Cleanup
+    main_window_destroy(main_win);
+    keyboard_set_enabled(false);
+    keyboard_enable_window_mode(false);
+    
+    // Proper system shutdown sequence (same as cmd_shutdown)
+    SERIAL_LOG("[KERNEL] Initiating ACPI shutdown\n");
+    gfx_print("Shutting down...\n");
+    
+    cmd_shutdown(0, NULL);
+    // QEMU/ACPI shutdown - sends shutdown signal to QEMU
+    //outw(0x604, 0x2000);
+    
+    // If that doesn't work (not in QEMU), disable interrupts and halt
+    //__asm__ volatile("cli");
+    //SERIAL_LOG("[KERNEL] System halted\n");
+    //gfx_print("System halted.\n");
+    
+    // Infinite halt loop - nothing should ever execute after this
     while(1) {
         __asm__ volatile("hlt");
     }
-
-    return 0;
 }
 
 /**
@@ -676,11 +788,9 @@ void kernel_panic(const char* message) {
     panic(message);
 }
 
-
-
 const char* splash[] = {
     "╔══════════════════════════════════════╗",
-    "║         Welcome to QuantumOS        ║",
+    "║         Welcome to QARMA        ║",
     "║        The Ritual Has Begun         ║",
     "╚══════════════════════════════════════╝",
 };
@@ -697,5 +807,4 @@ void draw_splash(const char* title) {
         fb[40 - (strlen(title) / 2) + i] = (attr << 8) | title[i];
     }
 }
-
 

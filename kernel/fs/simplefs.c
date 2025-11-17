@@ -1,6 +1,6 @@
 #include "simplefs.h"
-#include "../core/string.h"
-#include "../core/memory.h"
+#include "core/string.h"
+#include "core/memory.h"
 
 #define MAX_FILES 16
 

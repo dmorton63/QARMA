@@ -1,5 +1,5 @@
 /**
- * QuantumOS - Font Data Implementation
+ * QARMA - Font Data Implementation
  * 8x8 bitmap font data for text rendering in graphics modes
  * Font data adapted from vid_layer system
  */

@@ -1,7 +1,7 @@
-# QuantumOS Vision & Roadmap
+# QARMA Vision & Roadmap
 
 ## Core Philosophy
-QuantumOS is designed to be a next-generation operating system with deeply integrated AI, quantum computing capabilities, and revolutionary security architecture based on dynamic memory mapping.
+QARMA is designed to be a next-generation operating system with deeply integrated AI, quantum computing capabilities, and revolutionary security architecture based on dynamic memory mapping.
 
 ---
 

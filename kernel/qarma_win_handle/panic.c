@@ -1,5 +1,5 @@
 #include "panic.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
 
 void panic(const char* msg)
 {

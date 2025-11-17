@@ -1,6 +1,6 @@
 #include "vfs.h"
 #include "fat16.h"
-#include "../drivers/block/ramdisk.h"
+#include "drivers/block/ramdisk.h"
 
 void fs_init(void) {
     ramdisk_init();

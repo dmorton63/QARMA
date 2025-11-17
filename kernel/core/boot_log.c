@@ -1,7 +1,7 @@
 #include "boot_log.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
 #include "string.h"
-#include "../config.h"
+#include "config.h"
 
 #define DEBUG_BUFFER_SIZE 4096
 

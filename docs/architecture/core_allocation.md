@@ -1,4 +1,4 @@
-# QuantumOS Core Allocation Manager
+# QARMA Core Allocation Manager
 
 ## Overview
 

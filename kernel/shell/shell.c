@@ -1,8 +1,8 @@
 #include "shell.h"
-#include "../graphics/graphics.h"
-#include "../keyboard/command.h"
-#include "../core/string.h"
-#include "../keyboard/keyboard.h"
+#include "graphics/graphics.h"
+#include "keyboard/command.h"
+#include "core/string.h"
+#include "keyboard/keyboard.h"
 
 shell_state_t g_shell_state = { .current_path = "/", .initialized = false };
 
@@ -14,7 +14,7 @@ void shell_init(void) {
     strcpy(g_shell_state.current_path, "/");
     g_shell_state.initialized = true;
     
-    gfx_print("QuantumOS Shell Initialized\n");
+    gfx_print("QARMA Shell Initialized\n");
     gfx_print("Type 'help' for available commands\n\n");
     show_prompt(": ");
 }

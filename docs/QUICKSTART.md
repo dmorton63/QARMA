@@ -1,17 +1,17 @@
-# QuantumOS - Quick Start Guide
+# QARMA - Quick Start Guide
 
 ## Testing the AI Command Predictor
 
 ### Boot the OS
 
 ```bash
-cd /home/dmort/quantum_os
+cd /home/dmort/qarma
 make qemu
 ```
 
 ### Available Commands
 
-Once booted, try these commands in the QuantumOS shell:
+Once booted, try these commands in the QARMA shell:
 
 #### View AI Statistics
 ```
@@ -102,7 +102,7 @@ A: This is expected in Phase 1 - cache is not yet integrated with command execut
 A: Check for ID collisions in boot messages
 
 **Q: OS won't boot?**  
-A: Check that quantum_os.iso was built successfully: `ls -lh build/quantum_os.iso`
+A: Check that qarma.iso was built successfully: `ls -lh build/qarma.iso`
 
 ### Documentation
 

@@ -1,5 +1,5 @@
 #include "vmm.h"
-#include "../../../config.h"
+#include "config.h"
 #include "../memory.h"
 #include "../pmm/pmm.h"
 //#include "overlay.h"

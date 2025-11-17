@@ -1,12 +1,12 @@
 /**
- * QuantumOS - Execution Pipeline Implementation
+ * QARMA - Execution Pipeline Implementation
  * 
  * Core-local execution chains with zero synchronization overhead.
  */
 
 #include "execution_pipeline.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 extern void* heap_alloc(size_t size);
 extern void heap_free(void* ptr);

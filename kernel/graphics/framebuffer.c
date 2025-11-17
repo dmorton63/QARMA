@@ -1,18 +1,18 @@
 /**
- * QuantumOS - Framebuffer Graphics Backend
+ * QARMA - Framebuffer Graphics Backend
  * Linear framebuffer support for VESA/GOP modes
  */
 #include "framebuffer.h"
-#include "../graphics/graphics.h"
+#include "graphics/graphics.h"
 #include "font_data.h"
-#include "../core/io.h"
-#include "../core/boot_log.h"
-#include "../config.h"
-#include "../core/math.h"
-#include "../core/memory.h"
-#include "../core/memory/heap.h"
-#include "../qarma_win_handle/qarma_win_handle.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
+#include "core/io.h"
+#include "core/boot_log.h"
+#include "config.h"
+#include "core/math.h"
+#include "core/memory.h"
+#include "core/memory/heap.h"
+#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle/qarma_window_manager.h"
 
 // Debug functions now handled by config.h macros
 

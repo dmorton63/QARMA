@@ -1,8 +1,8 @@
 #include "qarma_splash_app.h"
-#include "../graphics/framebuffer.h"
-#include "../core/memory.h"
-#include "../qarma_win_handle/qarma_window_manager.h"
-#include "../qarma_win_handle/qarma_win_factory.h"
+#include "graphics/framebuffer.h"
+#include "core/memory.h"
+#include "qarma_win_handle/qarma_window_manager.h"
+#include "qarma_win_handle/qarma_win_factory.h"
 #include "qarma_splash_window.h"
 
 extern QARMA_WINDOW_MANAGER qarma_window_manager;

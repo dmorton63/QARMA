@@ -1,5 +1,5 @@
 #include "vfs.h"
-#include "../core/string.h"
+#include "core/string.h"
 
 // Forward declaration for simplefs
 extern void simplefs_init(void);

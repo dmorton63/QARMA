@@ -1,13 +1,13 @@
 /**
- * QuantumOS - Graphics Library Implementation
+ * QARMA - Graphics Library Implementation
  * Clean, unified graphics interface with backend abstraction
  */
 
 #include "graphics.h"
 #include "font_data.h"
-#include "../core/multiboot.h"
-#include "../core/io.h"
-#include "../config.h"
+#include "core/multiboot.h"
+#include "core/io.h"
+#include "config.h"
 
 // External debug functions
 extern void serial_debug(const char* msg);
@@ -377,27 +377,59 @@ uint32_t rgb_to_pixel(rgb_color_t color, uint32_t bpp, uint8_t red_pos, uint8_t 
 
 // Advanced graphics functions (stubs for now)
 void gfx_draw_pixel(uint32_t x, uint32_t y, rgb_color_t color) {
-    (void)x; (void)y; (void)color; // Suppress unused parameter warnings
+    extern void fb_draw_rect(int x, int y, int width, int height, uint32_t color);
+    uint32_t packed = (color.alpha << 24) | (color.red << 16) | (color.green << 8) | color.blue;
+    fb_draw_rect((int)x, (int)y, 1, 1, packed);
 }
 
 void gfx_draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, rgb_color_t color) {
-    (void)x1; (void)y1; (void)x2; (void)y2; (void)color;
+    // Bresenham's line algorithm
+    int dx = (x2 > x1) ? (x2 - x1) : (x1 - x2);
+    int dy = (y2 > y1) ? (y2 - y1) : (y1 - y2);
+    int sx = (x1 < x2) ? 1 : -1;
+    int sy = (y1 < y2) ? 1 : -1;
+    int err = dx - dy;
+    
+    while (1) {
+        gfx_draw_pixel(x1, y1, color);
+        if (x1 == x2 && y1 == y2) break;
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x1 += sx; }
+        if (e2 < dx) { err += dx; y1 += sy; }
+    }
 }
 
 void gfx_draw_rectangle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, rgb_color_t color) {
-    (void)x; (void)y; (void)width; (void)height; (void)color;
+    // Draw outline only
+    gfx_draw_line(x, y, x + width - 1, y, color);                    // Top
+    gfx_draw_line(x, y + height - 1, x + width - 1, y + height - 1, color); // Bottom
+    gfx_draw_line(x, y, x, y + height - 1, color);                   // Left
+    gfx_draw_line(x + width - 1, y, x + width - 1, y + height - 1, color);  // Right
 }
 
 void gfx_draw_filled_rectangle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, rgb_color_t color) {
-    (void)x; (void)y; (void)width; (void)height; (void)color;
+    extern void fb_draw_rect(int x, int y, int width, int height, uint32_t color);
+    uint32_t packed = (color.alpha << 24) | (color.red << 16) | (color.green << 8) | color.blue;
+    fb_draw_rect((int)x, (int)y, (int)width, (int)height, packed);
 }
 
 void gfx_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_color_t bg, font_t* font) {
-    (void)x; (void)y; (void)c; (void)fg; (void)bg; (void)font;
+    extern void framebuffer_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_color_t bg);
+    if (font == NULL) {
+        framebuffer_draw_char(x, y, c, fg, bg);
+    }
 }
 
 void gfx_draw_string(uint32_t x, uint32_t y, const char* str, rgb_color_t fg, rgb_color_t bg, font_t* font) {
-    (void)x; (void)y; (void)str; (void)fg; (void)bg; (void)font;
+    if (!str) return;
+    extern void framebuffer_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_color_t bg);
+    if (font == NULL) {
+        uint32_t cx = x;
+        for (const char* p = str; *p; p++) {
+            framebuffer_draw_char(cx, y, *p, fg, bg);
+            cx += 8; // Default 8x8 font width
+        }
+    }
 }
 
 // Backend initialization functions (implemented in their respective backend files)
@@ -423,7 +455,7 @@ bool graphics_force_vga_mode(void) {
 
 // Font demonstration
 void graphics_demo_fonts(void) {
-    gfx_print("=== QuantumOS Font Demo ===\n");
+    gfx_print("=== QARMA Font Demo ===\n");
     gfx_print("Current mode: ");
     gfx_print_decimal(g_display.mode);
     gfx_print("\n");

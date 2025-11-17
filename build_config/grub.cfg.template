@@ -1,17 +1,17 @@
 set timeout=10
 set default=1
 
-menuentry "QuantumOS (Silent Mode)" {
-  multiboot /boot/quantum_os.elf verbosity=silent
+menuentry "QARMA (Silent Mode)" {
+  multiboot /boot/qarma.elf verbosity=silent
   boot
 }
 
-menuentry "QuantumOS (Normal Mode)" {
-  multiboot /boot/quantum_os.elf verbosity=minimal
+menuentry "QARMA (Normal Mode)" {
+  multiboot /boot/qarma.elf verbosity=minimal
   boot
 }
 
-menuentry "QuantumOS (Verbose Mode)" {
-  multiboot /boot/quantum_os.elf verbosity=verbose
+menuentry "QARMA (Verbose Mode)" {
+  multiboot /boot/qarma.elf verbosity=verbose
   boot
 }

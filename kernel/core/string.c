@@ -1,5 +1,5 @@
 /**
- * QuantumOS String Library Implementation
+ * QARMA String Library Implementation
  * 
  * Implementation of standard C string functions for freestanding kernel.
  */

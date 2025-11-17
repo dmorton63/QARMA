@@ -1,7 +1,7 @@
-#include "../../core/blockdev.h"
-#include "../../core/string.h"
-#include "../../core/stdtools.h"
-#include "../../fs/vfs.h"
+#include "core/blockdev.h"
+#include "core/string.h"
+#include "core/stdtools.h"
+#include "fs/vfs.h"
 
 #define RAMDISK_SIZE (128 * 1024) // 128 KiB
 #define RAMDISK_BLOCK_SIZE 512
@@ -61,7 +61,7 @@ void ramdisk_init(void) {
     uint32_t data_offset = sizeof(simple_fs_header_t);
     
     // File 1: boot config
-    const char* boot_config = "# QuantumOS Boot Configuration\nverbose=1\ndebug=1\nboot_delay=3\n";
+    const char* boot_config = "# QARMA Boot Configuration\nverbose=1\ndebug=1\nboot_delay=3\n";
     simple_file_entry_t* file1 = &fs_header->files[fs_header->file_count++];
     strcpy(file1->name, "config.txt");
     file1->offset = data_offset;
@@ -71,7 +71,7 @@ void ramdisk_init(void) {
     data_offset += file1->size;
     
     // File 2: kernel log
-    const char* kernel_log = "[BOOT] QuantumOS Kernel Starting\n[INIT] Memory manager initialized\n[INIT] VFS mounted\n";
+    const char* kernel_log = "[BOOT] QARMA Kernel Starting\n[INIT] Memory manager initialized\n[INIT] VFS mounted\n";
     simple_file_entry_t* file2 = &fs_header->files[fs_header->file_count++];
     strcpy(file2->name, "kernel.log");
     file2->offset = data_offset;
@@ -81,7 +81,7 @@ void ramdisk_init(void) {
     data_offset += file2->size;
     
     // File 3: system info
-    const char* sys_info = "QuantumOS v1.0\nArchitecture: x86\nMemory: Available\nSubsystems: Video, Filesystem\n";
+    const char* sys_info = "QARMA v1.0\nArchitecture: x86\nMemory: Available\nSubsystems: Video, Filesystem\n";
     simple_file_entry_t* file3 = &fs_header->files[fs_header->file_count++];
     strcpy(file3->name, "sysinfo.txt");
     file3->offset = data_offset;

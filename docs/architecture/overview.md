@@ -1,8 +1,8 @@
-# QuantumOS Architecture Overview
+# QARMA Architecture Overview
 
 ## Executive Summary
 
-QuantumOS represents a paradigm shift in operating system design, incorporating quantum computing principles, advanced parallel processing, embedded artificial intelligence, and revolutionary security mechanisms into a unified system architecture.
+QARMA represents a paradigm shift in operating system design, incorporating quantum computing principles, advanced parallel processing, embedded artificial intelligence, and revolutionary security mechanisms into a unified system architecture.
 
 ## Core Architecture Components
 

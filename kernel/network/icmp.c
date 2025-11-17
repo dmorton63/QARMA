@@ -1,8 +1,8 @@
 #include "icmp.h"
 #include "ipv4.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
-#include "../drivers/net/e1000.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
+#include "drivers/net/e1000.h"
 
 void icmp_init(void) {
     gfx_print("ICMP layer initialized\n");

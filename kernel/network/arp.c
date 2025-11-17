@@ -1,7 +1,7 @@
 #include "arp.h"
 #include "ethernet.h"
-#include "../graphics/graphics.h"
-#include "../core/string.h"
+#include "graphics/graphics.h"
+#include "core/string.h"
 
 static arp_cache_entry_t arp_cache[ARP_CACHE_SIZE];
 

@@ -1,6 +1,6 @@
 #include "overlay.h"
 #include "vmm.h"
-#include "../../../config.h"
+#include "config.h"
 
 #define MAX_OVERLAYS 32
 #define PAGE_SIZE 0x1000
