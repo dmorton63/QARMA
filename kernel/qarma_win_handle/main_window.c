@@ -5,7 +5,9 @@
 #include "qarma_win_handle/qarma_win_factory.h"
 #include "core/memory/heap.h"
 #include "gui/controls/close_button.h"
+#include "gui/controls/label.h"
 #include "gui/status_bar.h"
+#include "quantum/quantum_register_example.h"
 
 // Forward declarations for vtable
 static void main_window_vtable_update(QARMA_WIN_HANDLE* self, QARMA_TICK_CONTEXT* ctx);
@@ -93,6 +95,18 @@ MainWindow* main_window_create(void) {
     mw->win = win;
     mw->should_exit = false;
 
+    // Initialize controls array
+    win->control_count = 0;
+    for (int i = 0; i < QARMA_MAX_CONTROLS_PER_WINDOW; i++) {
+        win->controls[i] = NULL;
+    }
+
+    // Create title bar label (10px from left, 8px from top)
+    label_init(&mw->title_label, 10, 8, win->title, 0xE0E0E0);
+    mw->title_label.base.visible = true;
+    mw->title_label.base.enabled = false;  // Title is not interactive
+    qarma_win_add_control(win, &mw->title_label.base);
+
     // Create close button in top-right corner (20x20 button, 5px margin)
     int close_btn_size = 20;
     int close_btn_x = screen_w - close_btn_size - 5;
@@ -100,9 +114,10 @@ MainWindow* main_window_create(void) {
     close_button_init(&mw->close_btn, close_btn_x, close_btn_y, close_btn_size);
     mw->close_btn.on_click = on_close_clicked;
     mw->close_btn.userdata = mw;
-    
-    // Give button initial focus so it's visible
-    mw->close_btn.focused = true;
+    mw->close_btn.base.visible = true;
+    mw->close_btn.base.enabled = true;
+    mw->close_btn.focused = true;  // Give initial focus
+    qarma_win_add_control(win, &mw->close_btn.base);
 
     return mw;
 }
@@ -128,13 +143,34 @@ void main_window_render(MainWindow* mw) {
     
     draw_vertical_gradient(mw->win->pixel_buffer, w, h, top_color, bottom_color);
 
-    // Render close button
-    close_button_render(&mw->close_btn, mw->win->pixel_buffer, w, h);
+    // Draw title bar background
+    #define TITLE_BAR_HEIGHT 30
+    #define TITLE_BG_COLOR 0x2A2A2E
+    
+    extern void draw_filled_rect(uint32_t* buffer, int buf_width, int x, int y, int width, int height, uint32_t color);
+    draw_filled_rect(mw->win->pixel_buffer, w, 0, 0, w, TITLE_BAR_HEIGHT, TITLE_BG_COLOR);
+
+    // Render all controls (title label, close button, etc.)
+    qarma_win_render_controls(mw->win);
+    
+    // Draw help text at bottom of screen
+    extern void draw_string_to_buffer(uint32_t* buffer, int buf_width, int x, int y, 
+                                      const char* str, uint32_t color);
+    const char* help_text = "Press Q: Quantum Examples | ESC: Exit";
+    int text_y = h - 20;
+    int text_x = 10;
+    draw_string_to_buffer(mw->win->pixel_buffer, w, text_x, text_y, help_text, 0xCCCCCC);
 }
 
 void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
     if (!mw || !event) return;
 
+    // Try dispatching to controls first
+    if (qarma_win_dispatch_event(mw->win, event)) {
+        return;  // Control handled it
+    }
+
+    // Handle window-level keyboard shortcuts
     if (event->type == QARMA_INPUT_EVENT_KEY_DOWN) {
         // Tab key - toggle focus on close button
         if (event->data.key.scancode == 0x0F) {  // Tab
@@ -150,8 +186,23 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
         else if (event->data.key.scancode == 0x01) {  // ESC
             mw->should_exit = true;
         }
+        // Q key - Run quantum register examples
+        else if (event->data.key.scancode == 0x10) {  // Q
+            // Clear the window content first
+            for (int i = 0; i < mw->win->size.width * mw->win->size.height; i++) {
+                mw->win->pixel_buffer[i] = 0x000000;  // Black background
+            }
+            
+            // Run examples (output goes to GFX_LOG which draws to screen)
+            quantum_register_run_examples();
+            
+            // Wait for user to read output (about 5 seconds)
+            extern void sleep_ms(uint32_t ms);
+            sleep_ms(5000);
+            
+            // Window will redraw on next render cycle
+        }
     }
-    // TODO: Handle mouse events for clicking close button
 }
 
 void main_window_destroy(MainWindow* mw) {

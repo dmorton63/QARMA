@@ -8,6 +8,7 @@
 // Main desktop window - full screen with close button
 typedef struct {
     QARMA_WIN_HANDLE* win;
+    Label title_label;
     CloseButton close_btn;
     bool should_exit;
 } MainWindow;

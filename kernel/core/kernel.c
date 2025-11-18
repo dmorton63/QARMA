@@ -453,10 +453,20 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
         keyboard_enable_window_mode(true);
         keyboard_set_enabled(false);
         
-        SERIAL_LOG("[KERNEL] Waiting for user to close boot messages\n");
+        SERIAL_LOG("[KERNEL] Waiting for user to close boot messages (auto-close in 3s)\n");
         
         bool boot_msg_closed = false;
+        uint32_t wait_count = 0;
+        const uint32_t auto_close_delay = 10;  // ~100ms - immediate for testing
+        
         while (!boot_msg_closed) {
+            // Auto-close after delay
+            if (wait_count++ >= auto_close_delay) {
+                SERIAL_LOG("[KERNEL] Auto-closing boot window\n");
+                boot_msg_closed = true;
+                break;
+            }
+            
             key_event_t key_event;
             if (keyboard_get_window_key_event(&key_event)) {
                 if (!key_event.released) {
@@ -503,6 +513,12 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
         // Destroy boot messages window
         boot_messages_destroy(boot_msg_win);
         SERIAL_LOG("[KERNEL] Boot messages window closed\n");
+        
+        // AUTO-RUN QUANTUM EXAMPLES FOR TESTING
+        extern void quantum_register_run_examples(void);
+        SERIAL_LOG("[KERNEL] Auto-running quantum examples...\n");
+        quantum_register_run_examples();
+        SERIAL_LOG("[KERNEL] Quantum examples complete\n");
         
         // Clear screen before showing desktop
         memset((void*)fb_info->address, 0, fb_info->pitch * fb_info->height);

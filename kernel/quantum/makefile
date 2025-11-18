@@ -7,12 +7,13 @@ AS      := nasm
 BUILD_DIR := ../../build/kernel/quantum
 
 # Flags
-CFLAGS  := -ffreestanding -O2 -Wall -Wextra -I../.. -m32
+INCLUDES := -I../../headers $(foreach dir,$(shell find ../../headers -type d),-I$(dir))
+CFLAGS  := -ffreestanding -O2 -Wall -Wextra $(INCLUDES) -m32
 ASFLAGS := -f elf
 LDFLAGS := -m elf_i386
 
 # Sources
-SRC_C   := quantum_kernel.c
+SRC_C   := quantum_kernel.c quantum_register.c quantum_register_example.c quantum_ai_observer.c quantum_adaptive.c quantum_scheduler.c quantum_cross_learning.c
 OBJ_C   := $(addprefix $(BUILD_DIR)/,$(SRC_C:.c=.o))
 TARGET  := $(BUILD_DIR)/quantum.o
 

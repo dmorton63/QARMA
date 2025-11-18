@@ -5,7 +5,7 @@
  * entanglement, and quantum error correction.
  */
 
-#include "quantum_kernel.h"
+#include "quantum/quantum_kernel.h"
 //#include "core/kernel.h"
 #include "core/core_manager.h"
 #include "graphics/graphics.h"
@@ -206,14 +206,14 @@ quantum_state_t quantum_process_measure_state(quantum_process_t* process) {
 }
 
 /**
- * Initialize quantum scheduler
+ * Initialize quantum process scheduler (different from quantum_scheduler.c)
  */
-void quantum_scheduler_init(void) {
-    GFX_LOG_MIN("Initializing quantum scheduler...\n");
+void quantum_process_scheduler_init(void) {
+    GFX_LOG_MIN("Initializing quantum process scheduler...\n");
     
     g_current_quantum_process = NULL;
     
-    GFX_LOG_MIN("Quantum scheduler ready.\n");
+    GFX_LOG_MIN("Quantum process scheduler ready.\n");
 }
 
 /**
