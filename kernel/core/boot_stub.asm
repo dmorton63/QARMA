@@ -203,20 +203,31 @@ long_mode_start:
     mov gs, ax
     mov ss, ax
     
-    ; Set up 64-bit stack
+    ; Jump to higher-half code
+    mov rax, .higher_half
+    jmp rax
+    
+.higher_half:
+    ; Now running in higher-half, can use virtual addresses
+    
+    ; Set up 64-bit stack (higher-half address)
     mov rsp, boot_stack + 32768
     
     ; Clear the frame pointer
     xor rbp, rbp
     
+    ; Load multiboot info from physical addresses (they're identity-mapped)
+    mov rax, PHYS(multiboot_magic)
+    mov edi, [rax]                   ; First argument
+    
+    mov rax, PHYS(multiboot_info)
+    mov esi, [rax]                   ; Second argument (32-bit from bootloader)
+    
     ; Validate multiboot magic
-    mov eax, [multiboot_magic]
-    cmp eax, 0x36D76289              ; Multiboot2 magic
+    cmp edi, 0x36D76289              ; Multiboot2 magic
     jne .bad_multiboot
     
     ; Call kernel main (System V AMD64 ABI: args in RDI, RSI)
-    mov edi, [multiboot_magic]       ; First argument
-    mov rsi, qword [multiboot_info]  ; Second argument (need full 64-bit)
     call quantum_kernel_main
     
     ; If kernel returns, halt
@@ -250,7 +261,7 @@ gdt64_end:
 
 gdt64_descriptor:
     dw gdt64_end - gdt64 - 1         ; Limit
-    dq gdt64                         ; Base
+    dq PHYS(gdt64)                   ; Base (physical address)
 
 ; ============================================================================
 ; Data Storage
