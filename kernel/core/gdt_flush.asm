@@ -1,15 +1,14 @@
 ; QuantumOS - GDT Assembly Functions
 ; Assembly functions for loading GDT and setting up segments
 
-[BITS 32]
+[BITS 64]
 
 global gdt_flush
 
 ; gdt_flush - Load new GDT and update segment registers
-; Parameter: address of GDT pointer structure
+; Parameter: RDI = address of GDT pointer structure (System V AMD64 calling convention)
 gdt_flush:
-    mov eax, [esp+4]    ; Get GDT pointer from stack
-    lgdt [eax]          ; Load new GDT
+    lgdt [rdi]          ; Load new GDT
     
     ; Update segment registers
     mov ax, 0x10        ; Kernel data segment selector (GDT entry 2)
@@ -19,8 +18,9 @@ gdt_flush:
     mov gs, ax
     mov ss, ax
     
-    ; Far jump to update CS register with kernel code segment
-    jmp 0x08:.flush    ; Kernel code segment selector (GDT entry 1)
-    
-.flush:
-    ret
+    ; Far return to update CS register with kernel code segment
+    pop rdi             ; Save return address
+    mov rax, 0x08       ; Kernel code segment selector
+    push rax
+    push rdi
+    retfq               ; Far return to update CS

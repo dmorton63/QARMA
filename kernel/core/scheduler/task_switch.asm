@@ -1,8 +1,8 @@
-; task_switch.asm - Low-level context switching for i686
+; task_switch.asm - Low-level context switching for x86_64
 ; This file provides assembly functions for saving and restoring CPU context
 ; during task switches in the Quantum OS kernel.
 
-[BITS 32]
+[BITS 64]
 
 SECTION .text
 
@@ -15,22 +15,31 @@ global task_save_context
 global task_restore_context
 
 ; CPU context structure offsets (must match cpu_context_t in task_manager.h)
-%define CTX_EAX     0
-%define CTX_EBX     4  
-%define CTX_ECX     8
-%define CTX_EDX     12
-%define CTX_ESI     16
-%define CTX_EDI     20
-%define CTX_EBP     24
-%define CTX_ESP     28
-%define CTX_EIP     32
-%define CTX_EFLAGS  36
-%define CTX_CS      40
-%define CTX_DS      44
-%define CTX_ES      48
-%define CTX_FS      52
-%define CTX_GS      56
-%define CTX_SS      60
+; 64-bit registers are 8 bytes each
+%define CTX_RAX     0
+%define CTX_RBX     8  
+%define CTX_RCX     16
+%define CTX_RDX     24
+%define CTX_RSI     32
+%define CTX_RDI     40
+%define CTX_RBP     48
+%define CTX_RSP     56
+%define CTX_RIP     64
+%define CTX_RFLAGS  72
+%define CTX_R8      80
+%define CTX_R9      88
+%define CTX_R10     96
+%define CTX_R11     104
+%define CTX_R12     112
+%define CTX_R13     120
+%define CTX_R14     128
+%define CTX_R15     136
+%define CTX_CS      144
+%define CTX_DS      146
+%define CTX_ES      148
+%define CTX_FS      150
+%define CTX_GS      152
+%define CTX_SS      154
 
 ; Task structure offsets (must match task_t in task_manager.h)
 ; task_id(4) + name(32) + state(4) + priority(4) + flags(4) = 48 bytes
@@ -40,142 +49,147 @@ global task_restore_context
 ; task_switch_context_asm(task_t *from_task, task_t *to_task)
 ; Perform complete context switch between tasks
 ;
-; Parameters:
-;   [esp+4] = from_task (can be NULL for first task)
-;   [esp+8] = to_task
+; Parameters (System V AMD64):
+;   RDI = from_task (can be NULL for first task)
+;   RSI = to_task
 ;
 task_switch_context_asm:
     ; Disable interrupts during context switch
     cli
     
-    ; Save current registers
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    
-    ; Get parameters
-    mov eax, [esp + 32]     ; from_task (esp+4 + 7*4 pushed registers)
-    mov ebx, [esp + 36]     ; to_task   (esp+8 + 7*4 pushed registers)
+    ; Get parameters (already in RDI, RSI)
+    mov rax, rdi            ; from_task
+    mov rbx, rsi            ; to_task
     
     ; Test if from_task is NULL (first task switch)
-    test eax, eax
+    test rax, rax
     jz .load_new_task
     
     ; Save current context to from_task
-    add eax, TASK_CONTEXT_OFFSET    ; Point to context field
+    add rax, TASK_CONTEXT_OFFSET    ; Point to context field
     
-    ; Save general registers (already on stack, pop and save)
-    pop dword [eax + CTX_EBP]
-    pop dword [eax + CTX_EDI]
-    pop dword [eax + CTX_ESI]
-    pop dword [eax + CTX_EDX]
-    pop dword [eax + CTX_ECX]
-    pop dword [eax + CTX_EBX]
-    pop dword [eax + CTX_EAX]
-    
-    ; Save stack pointer (after our function call)
-    mov [eax + CTX_ESP], esp
+    ; Save general registers
+    mov [rax + CTX_RAX], rax
+    mov [rax + CTX_RBX], rbx
+    mov [rax + CTX_RCX], rcx
+    mov [rax + CTX_RDX], rdx
+    mov [rax + CTX_RSI], rsi
+    mov [rax + CTX_RDI], rdi
+    mov [rax + CTX_RBP], rbp
+    mov [rax + CTX_RSP], rsp
+    mov [rax + CTX_R8], r8
+    mov [rax + CTX_R9], r9
+    mov [rax + CTX_R10], r10
+    mov [rax + CTX_R11], r11
+    mov [rax + CTX_R12], r12
+    mov [rax + CTX_R13], r13
+    mov [rax + CTX_R14], r14
+    mov [rax + CTX_R15], r15
     
     ; Save instruction pointer (return address)
-    mov ecx, [esp]
-    mov [eax + CTX_EIP], ecx
+    mov rcx, [rsp]
+    mov [rax + CTX_RIP], rcx
     
     ; Save flags
-    pushf
-    pop dword [eax + CTX_EFLAGS]
+    pushfq
+    pop qword [rax + CTX_RFLAGS]
     
     ; Save segment registers
-    mov [eax + CTX_CS], cs
-    mov [eax + CTX_DS], ds
-    mov [eax + CTX_ES], es
-    mov [eax + CTX_FS], fs
-    mov [eax + CTX_GS], gs
-    mov [eax + CTX_SS], ss
-    
-    jmp .load_new_task
-
-.no_save:
-    ; Clean up stack if we didn't save
-    add esp, 28  ; 7 registers * 4 bytes
+    mov [rax + CTX_CS], cs
+    mov [rax + CTX_DS], ds
+    mov [rax + CTX_ES], es
+    mov [rax + CTX_FS], fs
+    mov [rax + CTX_GS], gs
+    mov [rax + CTX_SS], ss
     
 .load_new_task:
     ; Load context from to_task
-    add ebx, TASK_CONTEXT_OFFSET    ; Point to context field
+    add rbx, TASK_CONTEXT_OFFSET    ; Point to context field
     
     ; Load segment registers first
-    mov ax, [ebx + CTX_DS]
+    mov ax, [rbx + CTX_DS]
     mov ds, ax
-    mov ax, [ebx + CTX_ES]
+    mov ax, [rbx + CTX_ES]
     mov es, ax
-    mov ax, [ebx + CTX_FS]
+    mov ax, [rbx + CTX_FS]
     mov fs, ax
-    mov ax, [ebx + CTX_GS]
+    mov ax, [rbx + CTX_GS]
     mov gs, ax
-    mov ax, [ebx + CTX_SS]
+    mov ax, [rbx + CTX_SS]
     mov ss, ax
     
     ; Load stack pointer
-    mov esp, [ebx + CTX_ESP]
+    mov rsp, [rbx + CTX_RSP]
     
     ; Load flags
-    push dword [ebx + CTX_EFLAGS]
-    popf
+    push qword [rbx + CTX_RFLAGS]
+    popfq
     
     ; Load general registers
-    mov eax, [ebx + CTX_EAX]
-    mov ecx, [ebx + CTX_ECX]
-    mov edx, [ebx + CTX_EDX]
-    mov esi, [ebx + CTX_ESI]
-    mov edi, [ebx + CTX_EDI]
-    mov ebp, [ebx + CTX_EBP]
+    mov rax, [rbx + CTX_RAX]
+    mov rcx, [rbx + CTX_RCX]
+    mov rdx, [rbx + CTX_RDX]
+    mov rsi, [rbx + CTX_RSI]
+    mov rdi, [rbx + CTX_RDI]
+    mov rbp, [rbx + CTX_RBP]
+    mov r8, [rbx + CTX_R8]
+    mov r9, [rbx + CTX_R9]
+    mov r10, [rbx + CTX_R10]
+    mov r11, [rbx + CTX_R11]
+    mov r12, [rbx + CTX_R12]
+    mov r13, [rbx + CTX_R13]
+    mov r14, [rbx + CTX_R14]
+    mov r15, [rbx + CTX_R15]
     
-    ; Load EBX last since we're using it
-    push dword [ebx + CTX_EIP]      ; Push return address
-    mov ebx, [ebx + CTX_EBX]
+    ; Load RBX last since we're using it
+    push qword [rbx + CTX_RIP]      ; Push return address
+    mov rbx, [rbx + CTX_RBX]
     
     ; Enable interrupts and jump to new task
     sti
-    ret         ; Jump to EIP that we pushed
+    ret         ; Jump to RIP that we pushed
 
 ;
 ; task_save_context(cpu_context_t *context)
 ; Save current CPU state to context structure
 ;
-; Parameters:
-;   [esp+4] = context pointer
+; Parameters (System V AMD64):
+;   RDI = context pointer
 ;
 task_save_context:
-    mov eax, [esp + 4]      ; Get context pointer
-    
     ; Save general registers
-    mov [eax + CTX_EAX], eax
-    mov [eax + CTX_EBX], ebx
-    mov [eax + CTX_ECX], ecx
-    mov [eax + CTX_EDX], edx
-    mov [eax + CTX_ESI], esi
-    mov [eax + CTX_EDI], edi
-    mov [eax + CTX_EBP], ebp
-    mov [eax + CTX_ESP], esp
+    mov [rdi + CTX_RAX], rax
+    mov [rdi + CTX_RBX], rbx
+    mov [rdi + CTX_RCX], rcx
+    mov [rdi + CTX_RDX], rdx
+    mov [rdi + CTX_RSI], rsi
+    mov [rdi + CTX_RDI], rdi
+    mov [rdi + CTX_RBP], rbp
+    mov [rdi + CTX_RSP], rsp
+    mov [rdi + CTX_R8], r8
+    mov [rdi + CTX_R9], r9
+    mov [rdi + CTX_R10], r10
+    mov [rdi + CTX_R11], r11
+    mov [rdi + CTX_R12], r12
+    mov [rdi + CTX_R13], r13
+    mov [rdi + CTX_R14], r14
+    mov [rdi + CTX_R15], r15
     
-    ; Save return address as EIP
-    mov ebx, [esp]
-    mov [eax + CTX_EIP], ebx
+    ; Save return address as RIP
+    mov rbx, [rsp]
+    mov [rdi + CTX_RIP], rbx
     
     ; Save flags
-    pushf
-    pop dword [eax + CTX_EFLAGS]
+    pushfq
+    pop qword [rdi + CTX_RFLAGS]
     
     ; Save segment registers
-    mov [eax + CTX_CS], cs
-    mov [eax + CTX_DS], ds
-    mov [eax + CTX_ES], es
-    mov [eax + CTX_FS], fs
-    mov [eax + CTX_GS], gs
-    mov [eax + CTX_SS], ss
+    mov [rdi + CTX_CS], cs
+    mov [rdi + CTX_DS], ds
+    mov [rdi + CTX_ES], es
+    mov [rdi + CTX_FS], fs
+    mov [rdi + CTX_GS], gs
+    mov [rdi + CTX_SS], ss
     
     ret
 
@@ -184,42 +198,48 @@ task_save_context:
 ; Restore CPU state from context structure
 ; Note: This function does not return to caller!
 ;
-; Parameters:
-;   [esp+4] = context pointer
+; Parameters (System V AMD64):
+;   RDI = context pointer
 ;
 task_restore_context:
-    mov eax, [esp + 4]      ; Get context pointer
-    
     ; Load segment registers
-    mov bx, [eax + CTX_DS]
+    mov bx, [rdi + CTX_DS]
     mov ds, bx
-    mov bx, [eax + CTX_ES]
+    mov bx, [rdi + CTX_ES]
     mov es, bx
-    mov bx, [eax + CTX_FS]
+    mov bx, [rdi + CTX_FS]
     mov fs, bx
-    mov bx, [eax + CTX_GS]
+    mov bx, [rdi + CTX_GS]
     mov gs, bx
-    mov bx, [eax + CTX_SS]
+    mov bx, [rdi + CTX_SS]
     mov ss, bx
     
     ; Load stack pointer
-    mov esp, [eax + CTX_ESP]
+    mov rsp, [rdi + CTX_RSP]
     
     ; Load flags
-    push dword [eax + CTX_EFLAGS]
-    popf
+    push qword [rdi + CTX_RFLAGS]
+    popfq
     
     ; Push return address for final jump
-    push dword [eax + CTX_EIP]
+    push qword [rdi + CTX_RIP]
     
-    ; Load general registers (EAX last since we're using it)
-    mov ebx, [eax + CTX_EBX]
-    mov ecx, [eax + CTX_ECX]
-    mov edx, [eax + CTX_EDX]
-    mov esi, [eax + CTX_ESI]
-    mov edi, [eax + CTX_EDI]
-    mov ebp, [eax + CTX_EBP]
-    mov eax, [eax + CTX_EAX]
+    ; Load general registers (RAX/RDI last since we're using them)
+    mov rbx, [rdi + CTX_RBX]
+    mov rcx, [rdi + CTX_RCX]
+    mov rdx, [rdi + CTX_RDX]
+    mov rsi, [rdi + CTX_RSI]
+    mov rbp, [rdi + CTX_RBP]
+    mov r8, [rdi + CTX_R8]
+    mov r9, [rdi + CTX_R9]
+    mov r10, [rdi + CTX_R10]
+    mov r11, [rdi + CTX_R11]
+    mov r12, [rdi + CTX_R12]
+    mov r13, [rdi + CTX_R13]
+    mov r14, [rdi + CTX_R14]
+    mov r15, [rdi + CTX_R15]
+    mov rax, [rdi + CTX_RAX]
+    mov rdi, [rdi + CTX_RDI]
     
     ; Jump to restored context
     ret

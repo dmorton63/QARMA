@@ -1,33 +1,45 @@
-[BITS 32]
+[BITS 64]
 section .text
 extern keyboard_service_handler
 global irqkeyboard
 irqkeyboard:
 
     cli
-    pusha
-    push ds
-    push es
-    push fs
-    push gs
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
 
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-
-    push esp
+    mov rdi, rsp         ; Pass stack pointer as first arg (System V AMD64)
     call keyboard_service_handler
 
-    add esp, 4
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
     sti
-    iret
+    iretq
 
 
