@@ -4,6 +4,13 @@
 
 BITS 32
 
+; Memory layout constants
+KERNEL_VMA equ 0xFFFFFFFF80000000
+KERNEL_LMA equ 0x100000
+
+; Macro to convert virtual address to physical
+%define PHYS(addr) ((addr) - KERNEL_VMA + KERNEL_LMA)
+
 ; ============================================================================
 ; Multiboot2 Header
 ; ============================================================================
@@ -54,11 +61,11 @@ extern quantum_kernel_main
 
 _start:
     ; Save multiboot info (EAX = magic, EBX = info pointer)
-    mov [multiboot_magic], eax
-    mov [multiboot_info], ebx
+    mov [PHYS(multiboot_magic)], eax
+    mov [PHYS(multiboot_info)], ebx
     
     ; Set up boot stack
-    mov esp, boot_stack + 32768
+    mov esp, PHYS(boot_stack) + 32768
     
     ; Clear interrupts
     cli
@@ -77,7 +84,7 @@ _start:
     mov cr4, eax
     
     ; Load PML4
-    mov eax, boot_pml4
+    mov eax, PHYS(boot_pml4)
     mov cr3, eax
     
     ; Enable long mode (EFER.LME = 1)
@@ -92,10 +99,10 @@ _start:
     mov cr0, eax
     
     ; Load 64-bit GDT
-    lgdt [gdt64_descriptor]
+    lgdt [PHYS(gdt64_descriptor)]
     
-    ; Far jump to 64-bit code segment
-    jmp 0x08:long_mode_start
+    ; Far jump to 64-bit code segment (use physical address)
+    jmp 0x08:PHYS(long_mode_start)
 
 .no_long_mode:
     ; Hang if CPU doesn't support long mode
@@ -145,33 +152,33 @@ check_long_mode:
 ; ============================================================================
 setup_page_tables:
     ; Clear page tables
-    mov edi, boot_pml4
+    mov edi, PHYS(boot_pml4)
     mov ecx, 3072                    ; 3 × 4096 / 4 = 3072 dwords
     xor eax, eax
     rep stosd
     
     ; PML4[0] → PDPT (identity map first 2MB)
-    mov eax, boot_pdpt
+    mov eax, PHYS(boot_pdpt)
     or eax, 0x03                     ; Present + Writable
-    mov [boot_pml4], eax
+    mov [PHYS(boot_pml4)], eax
     
     ; PML4[511] → PDPT (higher-half kernel)
-    mov eax, boot_pdpt
+    mov eax, PHYS(boot_pdpt)
     or eax, 0x03
-    mov [boot_pml4 + 511*8], eax
+    mov [PHYS(boot_pml4) + 511*8], eax
     
     ; PDPT[0] → PD (identity map)
-    mov eax, boot_pd
+    mov eax, PHYS(boot_pd)
     or eax, 0x03
-    mov [boot_pdpt], eax
+    mov [PHYS(boot_pdpt)], eax
     
     ; PDPT[510] → PD (higher-half at -2GB)
-    mov eax, boot_pd
+    mov eax, PHYS(boot_pd)
     or eax, 0x03
-    mov [boot_pdpt + 510*8], eax
+    mov [PHYS(boot_pdpt) + 510*8], eax
     
     ; Map first 2MB using 2MB pages in PD
-    mov edi, boot_pd
+    mov edi, PHYS(boot_pd)
     mov eax, 0x83                    ; Present + Writable + Page Size (2MB)
     mov ecx, 512                     ; 512 entries
 .map_pd:

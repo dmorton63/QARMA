@@ -5,43 +5,47 @@ OUTPUT_FORMAT("elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 
+/* Define constants */
+KERNEL_VMA = 0xFFFFFFFF80000000;
+KERNEL_LMA = 0x100000;
+
 SECTIONS
 {
-    /* Kernel loaded physically at 2MB to avoid low memory */
-    /* But linked to run at higher-half address */
-    . = 0xFFFFFFFF80000000 + 0x200000;
+    /* Everything is loaded at 1MB physical, but linked at high virtual */
+    . = KERNEL_VMA + KERNEL_LMA;
     
     kernel_start = .;
+    kernel_phys_start = . - KERNEL_VMA;
     
     /* Multiboot header must be in first 8KB and 8-byte aligned */
-    .multiboot ALIGN(8) :
+    .multiboot ALIGN(8) : AT(ADDR(.multiboot) - KERNEL_VMA)
     {
        KEEP(*(.multiboot))
     }
     
     /* Text section - executable code */
-    .text ALIGN(4K) :
+    .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_VMA)
     {
         *(.text)
         *(.text.*)
     }
     
     /* Read-only data */
-    .rodata ALIGN(4K) :
+    .rodata ALIGN(4K) : AT(ADDR(.rodata) - KERNEL_VMA)
     {
         *(.rodata)
         *(.rodata.*)
     }
     
     /* Data section - initialized data */
-    .data ALIGN(4K) :
+    .data ALIGN(4K) : AT(ADDR(.data) - KERNEL_VMA)
     {
         *(.data)
         *(.data.*)
     }
     
     /* BSS section - uninitialized data */
-    .bss ALIGN(4K) :
+    .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_VMA)
     {
         *(COMMON)
         *(.bss)
