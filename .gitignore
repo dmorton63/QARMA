@@ -32,3 +32,6 @@ test_fb_16bit.c
 # Temporary files
 *.tmp
 *.temp
+# Disk images
+*.img
+qarma_disk.img
