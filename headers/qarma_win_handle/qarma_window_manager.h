@@ -14,9 +14,13 @@ struct QARMA_WINDOW_MANAGER{
     void (*update_all)(struct QARMA_WINDOW_MANAGER*, QARMA_TICK_CONTEXT*);
     void (*render_all)(struct QARMA_WINDOW_MANAGER*);
     void (*destroy_all)(struct QARMA_WINDOW_MANAGER*);
+    QARMA_WIN_HANDLE* (*hit_test)(struct QARMA_WINDOW_MANAGER*, int x, int y);
 };
 
 
 void qarma_window_manager_init();
+
+// Mouse event routing - dispatches to correct window based on hit test
+void qarma_window_manager_handle_mouse_event(struct QARMA_INPUT_EVENT* event);
 
 extern QARMA_WINDOW_MANAGER qarma_window_manager;

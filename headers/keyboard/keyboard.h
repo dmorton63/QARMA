@@ -23,6 +23,7 @@ typedef struct __attribute__((packed)) {
 
 
 bool keyboard_init(void);
+void keyboard_register_shell_handler(void); // Must be called after event system init
 //void keyboard_handler(regs_t* regs);
 void keyboard_send_eoi(uint32_t int_no);
 void keyboard_process_scancode(uint8_t scancode);
@@ -47,12 +48,9 @@ char keyboard_get_char(void);
 bool keyboard_has_scancode(void);
 uint8_t keyboard_get_scancode(void);
 
-// Window keyboard buffer - captures ALL key events for window/mouse control
-void keyboard_enable_window_mode(bool enable);
-bool keyboard_is_window_mode_enabled(void);
-bool keyboard_has_window_key_event(void);
-bool keyboard_get_window_key_event(key_event_t* out);
-uint16_t keyboard_get_window_key_count(void);
+// Keyboard focus management - determines which component receives keyboard events
+void keyboard_set_focus(void* target);
+void* keyboard_get_focus(void);
 
 // Peek APIs: read buffered scancodes/chars without consuming them. These are
 // used by modal UI to decide when to act without removing keys from the

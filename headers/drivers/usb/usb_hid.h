@@ -3,6 +3,21 @@
 
 #include "usb.h"
 
+// USB HID device-specific timing constants (in microseconds)
+// Based on Linux kernel Razer driver timing requirements
+#define USB_HID_MOUSE_WAIT_MIN_US 600
+#define USB_HID_MOUSE_WAIT_MAX_US 800
+
+// Razer Mamba specific timing
+#define RAZER_MAMBA_WAIT_MIN_US 600
+#define RAZER_MAMBA_WAIT_MAX_US 800
+#define RAZER_MAMBA_REPORT_LEN 0x5A  // 90 bytes
+#define RAZER_MAMBA_ROW_LEN 15
+
+// Wireless receiver timing (if applicable)
+#define USB_HID_WIRELESS_WAIT_MIN_US 31000
+#define USB_HID_WIRELESS_WAIT_MAX_US 31100
+
 // HID Class Descriptor
 typedef struct __attribute__((packed)) {
     uint8_t  bLength;
@@ -53,7 +68,8 @@ typedef struct {
 
 // Function prototypes
 int usb_hid_init(void);
-int usb_hid_probe_device(usb_device_t *device);
+void usb_hid_probe_device(void* controller, uint8_t slot, uint8_t port);
+int usb_hid_probe_device_legacy(usb_device_t *device);
 int usb_hid_set_protocol(usb_hid_device_t *hid_dev, uint8_t protocol);
 int usb_hid_set_idle(usb_hid_device_t *hid_dev, uint8_t duration, uint8_t report_id);
 int usb_hid_get_report_descriptor(usb_hid_device_t *hid_dev);

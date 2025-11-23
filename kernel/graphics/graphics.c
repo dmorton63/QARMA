@@ -16,6 +16,20 @@ extern void serial_debug_hex(uint32_t value);
 extern void message_box_logf(const char* fmt, ...);
 extern void message_box_log(const char* msg);
 
+// Console output redirection
+typedef void (*console_output_callback_t)(const char*);
+static console_output_callback_t g_console_output_callback = NULL;
+
+void gfx_set_console_callback(console_output_callback_t callback) {
+    SERIAL_LOG("[GFX] Console callback ");
+    if (callback) {
+        SERIAL_LOG("SET\n");
+    } else {
+        SERIAL_LOG("CLEARED\n");
+    }
+    g_console_output_callback = callback;
+}
+
 // Function declarations for font rendering (implemented in fonts.c)
 extern void draw_bitmap_char(uint32_t fb_x, uint32_t fb_y, char c, rgb_color_t fg_color, rgb_color_t bg_color, font_descriptor_t* font);
 extern font_descriptor_t* get_font(font_type_t type);
@@ -111,8 +125,13 @@ void graphics_init(multiboot_info_t* mb_info) {
 void graphics_set_mode(display_mode_t mode) {
     g_display.mode = mode;
     
+    SERIAL_LOG("[GFX] Setting mode ");
+    SERIAL_LOG_HEX("", mode);
+    SERIAL_LOG("\n");
+    
     switch (mode) {
         case DISPLAY_MODE_TEXT_VGA:
+            SERIAL_LOG("[GFX_MODE] Setting VGA text backends\n");
             backend_putchar = vga_text_putchar;
             backend_clear = vga_text_clear;
             backend_set_cursor = vga_text_set_cursor;
@@ -120,9 +139,11 @@ void graphics_set_mode(display_mode_t mode) {
             g_display.cursor_x = 0;
             g_display.cursor_y = 0;
             if (backend_set_cursor) backend_set_cursor(0, 0);
+            SERIAL_LOG("[GFX] VGA text mode backend set\n");
             break;
             
         case DISPLAY_MODE_FRAMEBUFFER:
+            SERIAL_LOG("[GFX_MODE] Setting framebuffer backends\n");
             backend_putchar = framebuffer_putchar;
             backend_clear = framebuffer_clear;
             backend_set_cursor = framebuffer_set_cursor;
@@ -131,15 +152,20 @@ void graphics_set_mode(display_mode_t mode) {
             g_display.cursor_y = 0;
             if (backend_set_cursor) backend_set_cursor(0, 0);
             if (backend_clear) backend_clear();
+            SERIAL_LOG("[GFX] Framebuffer mode backend set to ");
+            SERIAL_LOG_HEX("", (uint32_t)backend_putchar);
+            SERIAL_LOG("\n");
              
             break;
             
         case DISPLAY_MODE_SERIAL_CONSOLE:
         default:
+            SERIAL_LOG("[GFX_MODE] Setting serial console backends\n");
             backend_putchar = serial_putchar;
             backend_clear = NULL;
             backend_set_cursor = NULL;
             backend_scroll = NULL;
+            SERIAL_LOG("[GFX] Serial console mode backend set\n");
             break;
     }
 }
@@ -159,14 +185,30 @@ void alternative_set_mode(display_mode_t mode) {
 
 // Core printing functions
 void gfx_putchar(char c) {
-    if (backend_putchar) {
-        backend_putchar(c);
+    // If console callback is set, don't output to backend
+    if (g_console_output_callback) {
+        return;
     }
+    
+    // If backend is NULL, something went wrong - output to serial only to avoid breaking display
+    if (!backend_putchar) {
+        serial_putchar(c);
+        return;
+    }
+    
+    backend_putchar(c);
 }
 
 void gfx_print(const char* str) {
     if (!str) return;
-    g_display.mode = DISPLAY_MODE_SERIAL_CONSOLE;
+    
+    // If console callback is set, redirect output there
+    if (g_console_output_callback) {
+        g_console_output_callback(str);
+        return;
+    }
+    
+    // NOTE: Don't force serial mode here - use current display mode
     // Always route prints into the message box (so they are visible
     // in the UI). Avoid drawing into the desktop framebuffer/VGA to
     // prevent debug output from overwriting UI; if the system is in
@@ -174,16 +216,11 @@ void gfx_print(const char* str) {
     // extern void message_box_log(const char* msg);
     // message_box_log(str);
 
-    if (g_display.mode == DISPLAY_MODE_SERIAL_CONSOLE) {
-        while (*str) {
-            gfx_putchar(*str++);
-        }
-    } else {
-            while (*str) {
-                gfx_putchar(*str++);
-            }
-        }
+    // Use whatever mode is currently set
+    while (*str) {
+        gfx_putchar(*str++);
     }
+}
  void gfx_printf(const char* format, ...) {
     va_list args;
     va_start(args, format);

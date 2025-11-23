@@ -85,6 +85,10 @@ bool compositor_point_in_window(compositor_window_t* win, int x, int y);
 bool compositor_point_in_title_bar(compositor_window_t* win, int x, int y);
 compositor_window_t* compositor_find_window_at(int x, int y);
 
+// Cursor control
+void compositor_set_cursor_enabled(bool enabled);
+void compositor_render_cursor_only(int x, int y);
+
 // Default styles
 window_style_t compositor_get_default_style(void);
 

@@ -1,0 +1,13 @@
+// ERROR TEST: Duplicate global variable declaration
+// Expected error: Variable 'x' already declared
+// Note: Parser may catch this before semantic analysis
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT x = 10;
+    INT x = 20;  // ERROR: 'x' already declared
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say(x);
+}

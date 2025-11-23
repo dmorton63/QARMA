@@ -1,0 +1,15 @@
+// ERROR TEST: Using local variable before declaration
+// Expected error: Variable 'y' not defined
+// In NOMAIN, variables must be declared before use
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    INT x = 5;
+    result = x + y;  // ERROR: 'y' not declared yet
+    INT y = 10;
+    say(result);
+}

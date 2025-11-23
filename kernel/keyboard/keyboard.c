@@ -5,6 +5,7 @@
 #include "graphics/graphics.h"
 #include "core/io.h"
 #include "graphics/irq_logger.h"
+#include "qarma_win_handle/qarma_input_events.h"
 
 // Global flag for detecting any keypress
 volatile bool key_pressed = false;
@@ -52,13 +53,9 @@ static uint16_t scancode_head = 0;
 static uint16_t scancode_tail = 0;
 static uint16_t scancode_count = 0;
 
-// Window keyboard buffer - captures ALL key events for window system
-#define WIN_KEY_BUF_SIZE 256
-static key_event_t win_key_buf[WIN_KEY_BUF_SIZE];
-static uint16_t win_key_head = 0;
-static uint16_t win_key_tail = 0;
-static uint16_t win_key_count = 0;
-static bool win_key_enabled = false;
+// Keyboard focus - which component should receive keyboard events
+// NULL = shell/console, non-NULL = focused window/component
+static void* keyboard_focus_target = NULL;
 
 bool keyboard_has_scancode(void) {
     return scancode_count > 0;
@@ -72,67 +69,18 @@ uint8_t keyboard_get_scancode(void) {
     return v;
 }
 
-// Window keyboard buffer functions
-void keyboard_enable_window_mode(bool enable) {
-    SERIAL_LOG(enable ? "ENABLING window mode" : "DISABLING window mode");
-    win_key_enabled = enable;
-    if (enable) {
-        // Clear buffer when enabling - zero out entire buffer
-        for (int i = 0; i < WIN_KEY_BUF_SIZE; i++) {
-            win_key_buf[i].scancode = 0;
-            win_key_buf[i].extended = 0;
-            win_key_buf[i].released = 0;
-            win_key_buf[i].modifiers = 0;
-        }
-        win_key_head = 0;
-        win_key_tail = 0;
-        win_key_count = 0;
-        SERIAL_LOG("Window mode enabled, buffer cleared and zeroed");
+// Keyboard focus management
+void keyboard_set_focus(void* target) {
+    keyboard_focus_target = target;
+    if (target) {
+        SERIAL_LOG("[KEYBOARD] Focus set to component\n");
+    } else {
+        SERIAL_LOG("[KEYBOARD] Focus set to shell/console\n");
     }
 }
 
-bool keyboard_is_window_mode_enabled(void) {
-    return win_key_enabled;
-}
-
-bool keyboard_has_window_key_event(void) {
-    // No cli/sti needed - reading count is atomic and we can tolerate stale reads
-    return win_key_count > 0;
-}
-
-uint16_t keyboard_get_window_key_count(void) {
-    // No cli/sti needed - reading count is atomic
-    return win_key_count;
-}
-
-bool keyboard_get_window_key_event(key_event_t* out) {
-    if (!out) return false;
-    
-    static int get_log = 0;
-    if (get_log < 20) {
-        SERIAL_LOG_DEC("GET_EVENT: count=", win_key_count);
-        get_log++;
-    }
-    
-    // Check without cli - if we race, worst case we return false
-    if (win_key_count == 0) {
-        return false;
-    }
-    
-    // Read and advance - this needs to be quick but not interrupt-blocking
-    // The interrupt handler only writes, we only read/advance head
-    *out = win_key_buf[win_key_head];
-    
-    if (get_log < 25) {
-        SERIAL_LOG("  RETURNING TRUE!");
-        SERIAL_LOG_HEX("  Reading scancode=0x", out->scancode);
-        SERIAL_LOG_DEC("  head=", win_key_head);
-        SERIAL_LOG_DEC("  tail=", win_key_tail);
-    }
-    
-    win_key_head = (win_key_head + 1) % WIN_KEY_BUF_SIZE;
-    win_key_count--;
-    return true;
+void* keyboard_get_focus(void) {
+    return keyboard_focus_target;
 }
 
 // Peek next scancode without consuming it. Returns true if a scancode is
@@ -179,6 +127,102 @@ bool keyboard_peek_char(char *out) {
 }
 
 
+// Shell keyboard event handler - processes keyboard events for shell/console
+static void shell_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data) {
+    static int shell_log = 0;
+    if (shell_log < 5) {
+        SERIAL_LOG("[SHELL_HANDLER] Called\n");
+        shell_log++;
+    }
+    
+    // Don't process if event was already handled by console or other handler
+    if (event->handled) {
+        return;
+    }
+    
+    // Only process if shell has focus (focus_target == NULL)
+    if (keyboard_focus_target != NULL) {
+        if (shell_log < 10) {
+            SERIAL_LOG("[SHELL_HANDLER] Shell does not have focus, ignoring\n");
+        }
+        return;
+    }
+    
+    // Only process KEY_DOWN events
+    if (event->type != QARMA_INPUT_EVENT_KEY_DOWN) {
+        return;
+    }
+    
+    SERIAL_LOG("[SHELL_HANDLER] Processing key\n");
+    
+    uint8_t scancode = (uint8_t)event->data.key.scancode;
+    char ascii = (char)event->data.key.character;
+    bool ctrl = (event->data.key.modifiers & QARMA_MOD_CTRL) != 0;
+    
+    // Handle special keys
+    switch (scancode) {
+        case KEY_BACKSPACE:
+            if (kb_state.buffer_count > 0) {
+                kb_state.buffer_count--;
+                kb_state.input_buffer[kb_state.buffer_count] = '\0';
+                gfx_print("\b \b");
+            }
+            event->handled = true;
+            return;
+            
+        case KEY_ENTER:
+            kb_state.input_buffer[kb_state.buffer_count] = '\0';
+            gfx_print("\n");
+            if (kb_state.buffer_count > 0) {
+                execute_command(kb_state.input_buffer);
+            }
+            keyboard_clear_buffer();
+            show_prompt("/");
+            event->handled = true;
+            return;
+            
+        case KEY_PGUP:
+        case KEY_PGDN:
+        case KEY_UP:
+        case KEY_DOWN:
+            event->handled = true;
+            return;
+    }
+    
+    // Handle Ctrl combinations
+    if (ctrl) {
+        switch (scancode) {
+            case 0x2E: // Ctrl+C
+                keyboard_clear_buffer();
+                gfx_print("^C\n");
+                show_prompt("/");
+                event->handled = true;
+                return;
+                
+            case 0x26: // Ctrl+L
+                gfx_clear_screen();
+                show_prompt("/");
+                event->handled = true;
+                return;
+        }
+    }
+    
+    // Handle regular character input
+    if (ascii != 0 && kb_state.buffer_count < KEYBOARD_BUFFER_SIZE - 1) {
+        static int char_log = 0;
+        if (char_log < 10) {
+            SERIAL_LOG("[SHELL] Printing char: '");
+            serial_debug_hex(ascii);
+            SERIAL_LOG("'\n");
+            char_log++;
+        }
+        kb_state.input_buffer[kb_state.buffer_count] = ascii;
+        kb_state.buffer_count++;
+        gfx_putchar(ascii);
+        event->handled = true;
+    }
+}
+
 bool keyboard_init(void) {
     GFX_LOG_MIN("Initializing keyboard subsystem...\n");
 
@@ -207,6 +251,13 @@ bool keyboard_init(void) {
     return true;
 }
 
+// Register shell keyboard handler - must be called AFTER qarma_input_events_init()
+void keyboard_register_shell_handler(void) {
+    extern QARMA_INPUT_EVENT_LISTENER* qarma_input_event_listen(QARMA_INPUT_EVENT_TYPE event_type, QARMA_INPUT_EVENT_HANDLER handler, void* user_data, uint32_t priority);
+    qarma_input_event_listen(QARMA_INPUT_EVENT_KEY_DOWN, shell_keyboard_handler, NULL, 100);
+    SERIAL_LOG("[KEYBOARD] Shell keyboard handler registered\n");
+}
+
 
 
 void keyboard_handler(regs_t* regs, uint8_t scancode) {
@@ -219,32 +270,30 @@ void keyboard_handler(regs_t* regs, uint8_t scancode) {
     static uint32_t interrupt_count = 0;
     interrupt_count++;
     
-    // Debug: Log first few keyboard interrupts
-    if (interrupt_count <= 5) {
+    // Debug: Log ALL keyboard interrupts for now
+    if (interrupt_count <= 200) {
         SERIAL_LOG_HEX("[KBD_HANDLER] Interrupt #", interrupt_count);
         SERIAL_LOG_HEX("[KBD_HANDLER] Scancode: ", scancode);
     }
     
-    keyboard_process_scancode(scancode);    
-
-    //gfx_print_decimal(scancode);
-    // Debug: Show first few interrupts
-    // if (interrupt_count <= 5) {
-    //     gfx_print("Keyboard interrupt #");
-    //     gfx_print_decimal(interrupt_count);
-    //     gfx_print("\n");
-    // }
-            // if (int_no >= 40) outb(0xA0, 0x20); // Slave PIC
+    // Send EOI immediately to allow more interrupts
     keyboard_send_eoi(regs->int_no);
-
-        // if (int_no >= 32 && int_no < 48) {
+    
+    // Now process the scancode (this may take longer)
+    keyboard_process_scancode(scancode);
 
 }
 
 void keyboard_send_eoi(uint32_t int_no) {
+    static int eoi_log = 0;
     if (int_no >= 32 && int_no < 48) {
         if (int_no >= 40) outb(0xA0, 0x20); // Slave PIC
         outb(0x20, 0x20);                   // Master PIC
+        
+        if (eoi_log < 20) {
+            SERIAL_LOG("[KBD_EOI] Sent EOI\n");
+            eoi_log++;
+        }
     }
 }
 
@@ -263,60 +312,73 @@ void keyboard_process_scancode(uint8_t scancode) {
         return;  // Don't process 0xE0 itself
     }
     
-    // Build key event structure (initialize all fields explicitly)
-    key_event_t event;
-    event.scancode = scancode & 0x7F;  // Remove release bit, keep only 7 bits
-    event.extended = extended_scancode ? 1 : 0;
-    event.released = (scancode & KEY_RELEASE) ? 1 : 0;
+    // Update modifier states first
+    uint8_t base_scancode = scancode & 0x7F;
+    bool is_release = (scancode & KEY_RELEASE) != 0;
     
-    // Capture current modifier state
-    event.modifiers = 0;
+    switch (base_scancode) {
+        case KEY_CTRL:
+            kb_state.modifiers.ctrl_left = !is_release;
+            break;
+        case KEY_LSHIFT:
+            kb_state.modifiers.shift_left = !is_release;
+            break;
+        case KEY_RSHIFT:
+            kb_state.modifiers.shift_right = !is_release;
+            break;
+        case KEY_ALT:
+            kb_state.modifiers.alt_left = !is_release;
+            break;
+        case KEY_CAPS:
+            if (!is_release) {
+                kb_state.modifiers.caps_lock = !kb_state.modifiers.caps_lock;
+            }
+            break;
+    }
+    
+    // Build modifier flags for event
+    uint32_t modifiers = 0;
     if (kb_state.modifiers.shift_left || kb_state.modifiers.shift_right) {
-        event.modifiers |= MODIFIER_SHIFT;
+        modifiers |= QARMA_MOD_SHIFT;
     }
     if (kb_state.modifiers.ctrl_left || kb_state.modifiers.ctrl_right) {
-        event.modifiers |= MODIFIER_CTRL;
+        modifiers |= QARMA_MOD_CTRL;
     }
     if (kb_state.modifiers.alt_left || kb_state.modifiers.alt_right) {
-        event.modifiers |= MODIFIER_ALT;
+        modifiers |= QARMA_MOD_ALT;
+    }
+    if (kb_state.modifiers.caps_lock) {
+        modifiers |= QARMA_MOD_CAPS;
     }
     
-    // If window mode is enabled, capture ALL key events
-    if (win_key_enabled && win_key_count < WIN_KEY_BUF_SIZE - 1) {
-        static int win_log_count = 0;
-        if (win_log_count < 50) {
-            SERIAL_LOG_HEX("WIN_BUF write event, scancode=0x", event.scancode);
-            SERIAL_LOG_DEC("  extended=", event.extended);
-            SERIAL_LOG_DEC("  released=", event.released);
-            win_log_count++;
-        }
-        
-        win_key_buf[win_key_tail] = event;
-        win_key_tail = (win_key_tail + 1) % WIN_KEY_BUF_SIZE;
-        win_key_count++;
+    // Create and dispatch keyboard event through QARMA event system
+    extern QARMA_INPUT_EVENT qarma_input_event_create_key(QARMA_INPUT_EVENT_TYPE type, uint32_t scancode, uint32_t keycode, uint32_t modifiers, void* target);
+    extern void qarma_input_event_dispatch(QARMA_INPUT_EVENT* event);
+    
+    QARMA_INPUT_EVENT_TYPE event_type = is_release ? QARMA_INPUT_EVENT_KEY_UP : QARMA_INPUT_EVENT_KEY_DOWN;
+    QARMA_INPUT_EVENT kbd_event = qarma_input_event_create_key(event_type, base_scancode, base_scancode, modifiers, keyboard_focus_target);
+    
+    // Add character if it's printable and not a release
+    if (!is_release && !extended_scancode) {
+        char ascii = scancode_to_ascii(base_scancode,
+            kb_state.modifiers.shift_left || kb_state.modifiers.shift_right,
+            kb_state.modifiers.caps_lock);
+        kbd_event.data.key.character = (uint32_t)ascii;
     }
     
-    // Mock mouse disabled - focusing on USB mouse
-    // extern void mock_mouse_handle_key_event(key_event_t event);
-    // mock_mouse_handle_key_event(event);
+    static int dispatch_log = 0;
+    if (dispatch_log < 20) {
+        SERIAL_LOG("[KBD_PROC] Dispatching event, scancode=");
+        serial_debug_hex(base_scancode);
+        SERIAL_LOG("\n");
+        dispatch_log++;
+    }
     
-    // If this was an extended scancode, don't let it fall through to normal processing
+    qarma_input_event_dispatch(&kbd_event);
+    
+    // Reset extended flag
     if (extended_scancode) {
-        extended_scancode = false;  // Reset for next scancode
-        return;  // Don't process extended codes as regular keys
-    }
-
-    // If keyboard processing is disabled, do not dispatch to the higher-
-    // level handlers. This allows modal UI (popups) to be bypassed or the
-    // shell to continue seeing raw input without interference.
-    if (!keyboard_enabled) return;
-
-    if (scancode & KEY_RELEASE) {
-        // Key release
-        keyboard_handle_key_release(scancode & ~KEY_RELEASE);
-    } else {
-        // Key press
-        keyboard_handle_key_press(scancode);
+        extended_scancode = false;
     }
 }
 
@@ -559,13 +621,24 @@ void keyboard_set_debug(bool enable) {
     (void)enable;
 }
 
-// Convenience wrappers for event polling
+// Legacy function stubs for compatibility
+void keyboard_enable_window_mode(bool enable) {
+    // Deprecated - now handled by keyboard_set_focus()
+    keyboard_set_focus(enable ? (void*)1 : NULL);
+}
+
+bool keyboard_get_window_key_event(key_event_t* out) {
+    // Deprecated - keyboard events now go through QARMA event system
+    return false;
+}
+
 bool keyboard_has_event(void) {
-    return keyboard_has_window_key_event();
+    // Deprecated - check event queue instead
+    return false;
 }
 
 key_event_t keyboard_poll_event(void) {
+    // Deprecated - use QARMA event system
     key_event_t event = {0};
-    keyboard_get_window_key_event(&event);
     return event;
 }

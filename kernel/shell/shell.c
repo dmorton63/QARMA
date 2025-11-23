@@ -1,8 +1,12 @@
 #include "shell.h"
 #include "graphics/graphics.h"
+#include "graphics/framebuffer.h"
 #include "keyboard/command.h"
 #include "core/string.h"
 #include "keyboard/keyboard.h"
+#include "core/input/mouse.h"
+#include "qarma_win_handle/qarma_window_manager.h"
+#include "qarma_win_handle/qarma_win_handle.h"
 
 shell_state_t g_shell_state = { .current_path = "/", .initialized = false };
 
@@ -14,9 +18,12 @@ void shell_init(void) {
     strcpy(g_shell_state.current_path, "/");
     g_shell_state.initialized = true;
     
+    SERIAL_LOG("[SHELL] Initializing shell\n");
     gfx_print("QARMA Shell Initialized\n");
     gfx_print("Type 'help' for available commands\n\n");
+    SERIAL_LOG("[SHELL] Showing prompt\n");
     show_prompt(": ");
+    SERIAL_LOG("[SHELL] Init complete\n");
 }
 
 void show_prompt(const char* path) {
@@ -52,31 +59,28 @@ void screen_put_char(char c) {
 }
 
 void shell_run(void) {
+    // Get framebuffer info for window rendering
+    extern FramebufferInfo* fb_info;
+    uint32_t* fb = fb_info ? (uint32_t*)fb_info->address : NULL;
+    int fb_w = fb_info ? fb_info->width : 0;
+    int fb_h = fb_info ? fb_info->height : 0;
+    
+    SERIAL_LOG("[SHELL] Entering main loop\n");
+    
+    // **IMPORTANT**: Shell is now DEPRECATED - console compositor handles all input
+    // This loop only exists for backwards compatibility and should do nothing
+    // All keyboard input is routed through qarma_input_events to the console window
+    
     while (1) {
-    struct keyboard_state* kb_state = get_keyboard_state();        
-        if (kb_state->command_ready) {
-            // Null-terminate the buffer
-            kb_state->input_buffer[kb_state->buffer_tail] = '\0';
-
-            // Echo the command
-            gfx_print("\n");
-            gfx_print("Command received: ");
-            gfx_print(kb_state->input_buffer);
-            gfx_print("\n");
-
-            // Process the command
-            process_command(kb_state->input_buffer);
-
-            // Reset buffer
-            kb_state->buffer_head = 0;
-            kb_state->buffer_tail = 0;
-            kb_state->buffer_count = 0;
-            kb_state->command_ready = false;
-
-            // Show prompt again
-            show_prompt(g_shell_state.current_path);
-        }
-
-        //__asm__ volatile("hlt");
+        // Just sleep - compositor handles everything
+        extern void sleep_ms(uint32_t ms);
+        sleep_ms(100);
+        
+        // DON'T poll keyboard or consume input - compositor handles it
+        // DON'T check kb_state->command_ready - it interferes with console
+        
+        // Yield to scheduler to allow task switches (enables quantum AI observation)
+        extern void task_yield(void);
+        task_yield();
     }
 }

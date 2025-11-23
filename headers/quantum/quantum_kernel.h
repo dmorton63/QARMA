@@ -91,6 +91,14 @@ typedef struct {
 
 // Quantum kernel initialization
 void quantum_kernel_init(void);
+
+/**
+ * Enable/disable quantum processing
+ */
+void quantum_enable(void);
+void quantum_disable(void);
+bool quantum_is_enabled(void);
+const char* quantum_get_status(void);
 void quantum_drivers_init(void);
 
 // Quantum process management

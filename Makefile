@@ -10,7 +10,7 @@ OBJCOPY  = i686-elf-objcopy
 CFLAGS   = -std=c99 -ffreestanding -O2 -Wall -Wextra -O0 -g \
            -fno-exceptions -fno-builtin -fno-stack-protector \
            -m32 -nostdlib -nostdinc -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
-           -MMD -MP
+           -MMD -MP -DDEBUG_SERIAL
 ASFLAGS  = -g -f elf32 -Wall
 LDFLAGS  = -T kernel/linker.ld -nostdlib -m elf_i386
 
@@ -67,7 +67,7 @@ $(BUILD_DIR)/%.bin: %.asm | prepare_dirs
 
 $(QUANTUM_OBJ):
 	@echo "[quantum] Building quantum.o..."
-	@$(MAKE) -C $(QUANTUM_DIR)
+	@$(MAKE) -C $(QUANTUM_DIR)q
 
 # Link kernel
 $(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker.ld
@@ -76,7 +76,7 @@ $(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker.
 	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
 
 # Create ISO image
-$(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg $(ISO_DIR)/splash.png
+$(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg
 	@echo "Creating QARMA OS ISO..."
 	@mkdir -p $(ISO_DIR)/boot/grub
 	@cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/qarma.elf
@@ -86,10 +86,10 @@ $(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg $(ISO_DIR)/splas
 # Configuration
 QEMU_CPUS ?= 8
 
-# Run in QEMU
+# Run in QEMU  
 qemu: $(BUILD_DIR)/qarma.iso
 	@echo "Booting QARMA OS in QEMU ($(QEMU_CPUS) CPUs)..."
-	qemu-system-i386 -drive file=$<,format=raw,media=cdrom,if=ide -m 256M -vga std -smp $(QEMU_CPUS)
+	qemu-system-i386 -cdrom $(BUILD_DIR)/qarma.iso -boot d -m 512M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0
 
 # Debug with GDB
 debug: $(BUILD_DIR)/qarma.iso

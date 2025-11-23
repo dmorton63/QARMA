@@ -100,6 +100,12 @@ void cmd_pipeline(int argc, char** argv);
 void cmd_window(int argc, char** argv);
 void cmd_winloop(int argc, char** argv);
 
+// AI commands
+void cmd_aisave(int argc, char** argv);
+void cmd_aiload(int argc, char** argv);
+void cmd_aistats(int argc, char** argv);
+void cmd_quantum(int argc, char** argv);
+
 int atoi(const char* str);
 // Utility functions
 const char* get_mode_string(shell_mode_t mode);

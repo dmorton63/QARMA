@@ -1,0 +1,12 @@
+[DATA_STORAGE]
+[GLOBAL]
+
+function multiply(INT x, INT y) -> INT {
+    RETURN x * y;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    INT result = multiply(7, 6);
+    say_f("7 * 6 = ", result);
+}

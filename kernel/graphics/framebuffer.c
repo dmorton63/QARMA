@@ -16,6 +16,9 @@
 
 // Debug functions now handled by config.h macros
 
+// Title bar height - area to exclude from scrolling and clearing
+static uint32_t g_title_bar_height = 30;
+
 // Forward declarations
 void framebuffer_scroll(void);
 void framebuffer_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_color_t bg);
@@ -30,8 +33,8 @@ const rgb_color_t COLOR_DEEP_BLUE = { .red = 0x00, .green = 0x33, .blue = 0x66, 
 static uint32_t* framebuffer_ptr = NULL;
 // Expose a raw pointer used by fb_* helpers
 uint32_t* fb_ptr = NULL;
-// Backing store for composition
-static uint32_t* backing_store = NULL;
+// Backing store for composition (exposed for double buffering)
+uint32_t* backing_store = NULL;
 static bool fb_dirty = false;
 uint32_t fb_width = 0;
 uint32_t fb_height = 0;
@@ -92,7 +95,7 @@ void framebuffer_init(void) {
     }
 
     cursor_x = 0;
-    cursor_y = 0;
+    cursor_y = 0;  // Start at row 0 (offset is added when drawing)
 
     // Update display info for TEXT operations (characters, not pixels)
     info->width = fb_width / FONT_WIDTH;    // Characters per line
@@ -112,7 +115,15 @@ void framebuffer_init(void) {
     BOOT_LOG_DEC("Text rows: ", info->height);
     // Keep framebuffer pointer for graphics operations
     info->cursor_x = 0;
-    info->cursor_y = 0;
+    info->cursor_y = 0;  // Start at row 0 (offset is added when drawing)
+
+    // Clear framebuffer to black first
+    for (uint32_t y = 0; y < fb_height; y++) {
+        for (uint32_t x = 0; x < fb_width; x++) {
+            uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
+            framebuffer_ptr[offset] = 0x00000000; // Black
+        }
+    }
 
     // Allocate backing store for composition
     size_t pixels = fb_width * fb_height;
@@ -132,20 +143,14 @@ void framebuffer_init(void) {
 
     }
     if (backing_store) {
-        // Initialize backing store with current framebuffer content
+        // Initialize backing store to black
         for (uint32_t y = 0; y < fb_height; y++) {
             for (uint32_t x = 0; x < fb_width; x++) {
                 uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
-                backing_store[offset] = framebuffer_ptr[offset];
+                backing_store[offset] = 0x00000000; // Black
             }
         }
     }
-
-    // DEBUG: Force draw some test characters directly to verify framebuffer works
-    framebuffer_draw_char(0, 0, 'T', (rgb_color_t){255,255,255,255}, (rgb_color_t){0,0,0,255});
-    framebuffer_draw_char(8, 0, 'E', (rgb_color_t){255,255,255,255}, (rgb_color_t){0,0,0,255});
-    framebuffer_draw_char(16, 0, 'S', (rgb_color_t){255,255,255,255}, (rgb_color_t){0,0,0,255});
-    framebuffer_draw_char(24, 0, 'T', (rgb_color_t){255,255,255,255}, (rgb_color_t){0,0,0,255});
 }
 
 void framebuffer_putchar(char c) {
@@ -180,7 +185,7 @@ void framebuffer_putchar(char c) {
                 cursor_x--;
                 rgb_color_t bg = color_to_rgb(info->bg_color);
                 framebuffer_draw_char(cursor_x * FONT_WIDTH,
-                                      cursor_y * FONT_HEIGHT,
+                                      cursor_y * FONT_HEIGHT + g_title_bar_height,
                                       ' ', bg, bg);
             }
             break;
@@ -200,10 +205,10 @@ void framebuffer_putchar(char c) {
         default:
             if (c >= 32 && c <= 126) {
                 rgb_color_t fg = {255, 255, 255, 255}; // white
-                rgb_color_t bg = {0, 0, 0, 255};       // black
+                rgb_color_t bg = {0, 0, 0, 0};         // transparent (alpha=0)
 
                 framebuffer_draw_char(cursor_x * FONT_WIDTH,
-                                      cursor_y * FONT_HEIGHT,
+                                      cursor_y * FONT_HEIGHT + g_title_bar_height,
                                       c, fg, bg);
 
                 cursor_x++;
@@ -228,18 +233,20 @@ void framebuffer_clear(void) {
     display_info_t* info = graphics_get_display_info();
 
     if (!framebuffer_ptr) return;
+    uint32_t* target = backing_store ? backing_store : framebuffer_ptr;
 
     rgb_color_t bg = color_to_rgb(info->bg_color);
     uint32_t pixel = rgb_to_pixel(bg, fb_bpp, 16, 8, 0); // R=16, G=8, B=0 for RGBA
 
-    // Clear entire framebuffer
-    for (uint32_t y = 0; y < fb_height; y++) {
+    // Clear backing store BELOW title bar only
+    for (uint32_t y = g_title_bar_height; y < fb_height; y++) {
         for (uint32_t x = 0; x < fb_width; x++) {
             uint32_t offset = (y * fb_pitch) / 4 + x;
-            framebuffer_ptr[offset] = pixel;
+            target[offset] = pixel;
         }
     }
 
+    // Reset cursor to row 0 (offset is added when drawing)
     cursor_x = 0;
     cursor_y = 0;
     info->cursor_x = 0;
@@ -384,27 +391,28 @@ void framebuffer_scroll(void) {
     display_info_t* info = graphics_get_display_info();
 
     if (!framebuffer_ptr) return;
+    uint32_t* target = backing_store ? backing_store : framebuffer_ptr;
 
     uint32_t line_height = FONT_HEIGHT;
     (void)fb_bpp; // Suppress unused warning
 
-    // Move all lines up by one character line
-    for (uint32_t y = 0; y < fb_height - line_height; y++) {
+    // Move all lines up by one character line (starting BELOW title bar)
+    for (uint32_t y = g_title_bar_height; y < fb_height - line_height; y++) {
         for (uint32_t x = 0; x < fb_width; x++) {
             uint32_t src_offset = ((y + line_height) * fb_pitch) / 4 + x;
             uint32_t dst_offset = (y * fb_pitch) / 4 + x;
-            framebuffer_ptr[dst_offset] = framebuffer_ptr[src_offset];
+            target[dst_offset] = target[src_offset];
         }
     }
 
-    // Clear the last line
+    // Clear the last line (below title bar)
     rgb_color_t bg = color_to_rgb(info->bg_color);
     uint32_t pixel = rgb_to_pixel(bg, fb_bpp, 16, 8, 0);
 
     for (uint32_t y = fb_height - line_height; y < fb_height; y++) {
         for (uint32_t x = 0; x < fb_width; x++) {
             uint32_t offset = (y * fb_pitch) / 4 + x;
-            framebuffer_ptr[offset] = pixel;
+            target[offset] = pixel;
         }
     }
     if (cursor_x * FONT_WIDTH >= fb_width) {
@@ -418,7 +426,7 @@ void framebuffer_scroll(void) {
 
 // Framebuffer-specific drawing functions
 void framebuffer_draw_pixel(uint32_t x, uint32_t y, rgb_color_t color) {
-    if (!framebuffer_ptr || x >= fb_width || y >= fb_height) return;
+    if (x >= fb_width || y >= fb_height) return;
 
     // Convert rgb_color_t to packed 32-bit pixel (BGRA format)
     uint32_t pixel = (color.blue << 0) | (color.green << 8) | (color.red << 16) | (color.alpha << 24);
@@ -426,13 +434,19 @@ void framebuffer_draw_pixel(uint32_t x, uint32_t y, rgb_color_t color) {
     // Calculate offset in bytes, then divide by 4 to index into uint32_t*
     uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
 
-    framebuffer_ptr[offset] = pixel;
+    // Always write to backing store for double buffering
+    if (backing_store) {
+        backing_store[offset] = pixel;
+    } else if (framebuffer_ptr) {
+        // Fallback to direct write if no backing store
+        framebuffer_ptr[offset] = pixel;
+    }
 }
 
 extern const uint8_t vga_font[128][8];
 
 void framebuffer_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_color_t bg) {
-    if (!framebuffer_ptr || x >= fb_width || y >= fb_height) return;
+    if (x >= fb_width || y >= fb_height) return;
     const uint8_t* glyph = vga_font[(uint8_t)c];
     uint32_t fg_pixel = (fg.blue << 0) | (fg.green << 8) | (fg.red << 16) | (fg.alpha << 24);
     uint32_t bg_pixel = (bg.blue << 0) | (bg.green << 8) | (bg.red << 16) | (bg.alpha << 24);
@@ -445,7 +459,16 @@ void framebuffer_draw_char(uint32_t x, uint32_t y, char c, rgb_color_t fg, rgb_c
             uint32_t pixel_y = y + row;
             if (pixel_x < fb_width && pixel_y < fb_height) {
                 uint32_t offset = (pixel_y * fb_pitch + pixel_x * (fb_bpp / 8)) / 4;
-                framebuffer_ptr[offset] = (bits & (1 << col)) ? fg_pixel : bg_pixel;
+                uint32_t* target = backing_store ? backing_store : framebuffer_ptr;
+                if (!target) continue;
+                
+                // If background is transparent (alpha=0), only draw foreground pixels
+                if (bits & (1 << col)) {
+                    target[offset] = fg_pixel;
+                } else if (bg.alpha > 0) {
+                    target[offset] = bg_pixel;
+                }
+                // else: skip drawing background pixel (leave what's underneath)
             }
         }
     }
@@ -556,19 +579,58 @@ void fb_mark_dirty(void) {
     fb_dirty = true;
 }
 
+// Simple and fast: copy entire back buffer to front buffer (present frame)
+void framebuffer_swap(void) {
+    extern void serial_debug(const char* msg);
+    
+    if (!framebuffer_ptr || !backing_store) {
+        serial_debug("[FB_SWAP] ERROR: NULL ptr\n");
+        return;
+    }
+    
+    static int swap_count = 0;
+    if (++swap_count <= 20) {
+        serial_debug("[FB_SWAP] Swapping\n");
+    }
+    
+    // Copy entire framebuffer
+    size_t total_bytes = fb_pitch * fb_height;
+    memcpy(framebuffer_ptr, backing_store, total_bytes);
+    
+    // Force write barrier - ensure all writes complete before returning
+    __asm__ volatile (
+        "sfence\n\t"      // Store fence - serialize store operations
+        "mfence"          // Full memory fence - serialize all memory operations
+        ::: "memory"
+    );
+    
+    // Poke VGA DAC to force QEMU display update detection
+    // Read and write back the DAC mask register at port 0x3C6
+    extern uint8_t inb(uint16_t port);
+    extern void outb(uint16_t port, uint8_t value);
+    uint8_t dac_mask = inb(0x3C6);
+    outb(0x3C6, dac_mask);
+}
+
 // Simple rectangle drawing functions for popup support
 
 // static int alpha_count = 0;
 // static int solid_count = 0;
 
 void fb_draw_rect(int x, int y, int width, int height, uint32_t color) {
+    extern uint32_t* backing_store;
     for (int j = 0; j < height; ++j) {
         for (int i = 0; i < width; ++i) {
             int px = x + i;
             int py = y + j;
             if (IN_BOUNDS(px,fb_width) && IN_BOUNDS(py,fb_height)) {
                 uint32_t offset = (py * fb_pitch + px * (fb_bpp / 8)) / 4;
-                fb_ptr[offset] = color;
+                // Write to backing store for double buffering
+                if (backing_store) {
+                    backing_store[offset] = color;
+                } else {
+                    fb_ptr[offset] = color;
+                }
             }
         }
     }
@@ -577,6 +639,8 @@ void fb_draw_rect(int x, int y, int width, int height, uint32_t color) {
 
 void fb_draw_rect_alpha(int x, int y, int width, int height, QARMA_COLOR color) {
     uint32_t pitch_pixels = fb_pitch / 4;
+    uint32_t* target = backing_store ? backing_store : fb_ptr;
+    if (!target) return;
 
     for (int j = 0; j < height; ++j) {
         for (int i = 0; i < width; ++i) {
@@ -585,7 +649,7 @@ void fb_draw_rect_alpha(int x, int y, int width, int height, QARMA_COLOR color) 
 
             if (IN_BOUNDS(px, fb_width) && IN_BOUNDS(py, fb_height)) {
                 uint32_t offset = py * pitch_pixels + px;
-                uint32_t dst = fb_ptr[offset];
+                uint32_t dst = target[offset];
 
                 // Extract destination RGB
                 uint8_t dst_r = dst & 0xFF;
@@ -598,20 +662,23 @@ void fb_draw_rect_alpha(int x, int y, int width, int height, QARMA_COLOR color) 
                 uint8_t out_g = (uint8_t)(color.g * alpha + dst_g * (1 - alpha));
                 uint8_t out_b = (uint8_t)(color.b * alpha + dst_b * (1 - alpha));
 
-                fb_ptr[offset] = out_r | (out_g << 8) | (out_b << 16) | (0xFF << 24);
+                target[offset] = out_r | (out_g << 8) | (out_b << 16) | (0xFF << 24);
             }
         }
     }
 }
 
 void fb_draw_rect_outline(int x, int y, int width, int height, uint32_t color) {
+    uint32_t* target = backing_store ? backing_store : fb_ptr;
+    if (!target) return;
+    
     // Top and bottom
     for (int i = 0; i < width; ++i) {
         if (IN_BOUNDS(x + i, (int)fb_width)) {
             if (IN_BOUNDS(y, (int)fb_height))
-                fb_ptr[(y * fb_pitch + (x + i) * (fb_bpp / 8)) / 4] = color;
+                target[(y * fb_pitch + (x + i) * (fb_bpp / 8)) / 4] = color;
             if (IN_BOUNDS(y + height - 1, (int)fb_height))
-                fb_ptr[((y + height - 1) * (int)fb_pitch + (x + i) * (fb_bpp / 8)) / 4] = color;
+                target[((y + height - 1) * (int)fb_pitch + (x + i) * (fb_bpp / 8)) / 4] = color;
         }
     }
 
@@ -619,9 +686,9 @@ void fb_draw_rect_outline(int x, int y, int width, int height, uint32_t color) {
     for (int j = 0; j < height; ++j) {
         if (IN_BOUNDS(y + j, fb_height)) {
             if (IN_BOUNDS(x, fb_width))
-                fb_ptr[((y + j) * fb_pitch + x * (fb_bpp / 8)) / 4] = color;
+                target[((y + j) * fb_pitch + x * (fb_bpp / 8)) / 4] = color;
             if (IN_BOUNDS(x + width - 1, fb_width))
-                fb_ptr[((y + j) * fb_pitch + (x + width - 1) * (fb_bpp / 8)) / 4] = color;
+                target[((y + j) * fb_pitch + (x + width - 1) * (fb_bpp / 8)) / 4] = color;
         }
     }
 }
@@ -629,7 +696,12 @@ void fb_draw_rect_outline(int x, int y, int width, int height, uint32_t color) {
 uint32_t fb_get_pixel(int x, int y) {
     if (IN_BOUNDS(x, fb_width) && IN_BOUNDS(y, fb_height)) {
         uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
-        return fb_ptr[offset];
+        // Read from backing store for consistency
+        if (backing_store) {
+            return backing_store[offset];
+        } else if (fb_ptr) {
+            return fb_ptr[offset];
+        }
     }
     return 0; // Default or error color
 }

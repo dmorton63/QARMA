@@ -60,8 +60,16 @@ typedef struct task {
     uint32_t total_runtime;         /* Total CPU time used */
     uint32_t wake_time;             /* Wake up time (for sleeping tasks) */
     
+    /* Quantum AI execution tracking */
+    uint32_t execution_count;       /* Number of times task has executed */
+    uint64_t runtime_sum;           /* Sum of all execution times (for avg) */
+    uint32_t runtime_variance;      /* Variance in execution times */
+    uint32_t last_execution_time;   /* Last measured execution time */
+    size_t memory_usage;            /* Estimated memory usage */
+    
     void *entry_point;              /* Task entry function */
     void *user_data;                /* User-defined data pointer */
+    void *quantum_reg;              /* Quantum register for AI observation */
     
     /* Parent/child relationships */
     struct task *parent;            /* Parent task */

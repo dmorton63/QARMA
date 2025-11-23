@@ -5,6 +5,7 @@
  */
 
 #include "window_compositor.h"
+#include "console_compositor.h"
 #include "graphics/graphics.h"
 #include "core/input/mouse.h"
 
@@ -55,59 +56,36 @@ void render_stats_content(QARMA_WIN_HANDLE* win, int x, int y, int w, int h) {
 }
 
 void window_test_demo(void) {
-    gfx_print("\n╔═══════════════════════════════════════╗\n");
-    gfx_print("║      Window System Demo Test         ║\n");
-    gfx_print("╚═══════════════════════════════════════╝\n\n");
+    extern void serial_debug(const char* msg);
+    serial_debug("[WINDOW_DEMO] Starting window_test_demo\n");
     
-    // Initialize compositor if not already done
-    static bool initialized = false;
-    if (!initialized) {
-        compositor_init();
-        initialized = true;
-        gfx_print("Compositor initialized.\n");
-    }
+    // Compositor and console already initialized on boot
+    // Just ensure console is visible
+    serial_debug("[WINDOW_DEMO] Ensuring console is visible\n");
+    extern void console_compositor_show(void);
+    console_compositor_show();
     
-    // Create three test windows
-    gfx_print("Creating test windows...\n");
-    
+    // Create three test windows (silent - no gfx_print to avoid corrupting framebuffer)
+    serial_debug("[WINDOW_DEMO] Creating windows\n");
     compositor_window_t* win1 = compositor_create_window("Hello Window", 100, 100, 300, 150);
     if (win1) {
         win1->on_render_content = render_hello_content;
-        gfx_print("  Created window 1: Hello Window\n");
     }
     
     compositor_window_t* win2 = compositor_create_window("Info Window", 200, 200, 280, 180);
     if (win2) {
         win2->on_render_content = render_info_content;
-        gfx_print("  Created window 2: Info Window\n");
     }
     
     compositor_window_t* win3 = compositor_create_window("Stats", 450, 150, 250, 140);
     if (win3) {
         win3->on_render_content = render_stats_content;
-        gfx_print("  Created window 3: Stats Window\n");
     }
     
-    gfx_print("\nWindows created successfully!\n");
-    gfx_print("Total windows: ");
-    window_compositor_t* comp = get_compositor();
-    char buf[8];
-    buf[0] = '0' + comp->window_count;
-    buf[1] = '\0';
-    gfx_print(buf);
-    gfx_print("\n\n");
-    
-    // Render all windows
-    gfx_print("Rendering windows...\n");
+    // Render all windows (double buffered - will swap to display)
+    serial_debug("[WINDOW_DEMO] Rendering all windows\n");
     compositor_render_all();
-    
-    gfx_print("\n╔═══════════════════════════════════════╗\n");
-    gfx_print("║    Windows are now visible!          ║\n");
-    gfx_print("║    Use mouse to drag title bars      ║\n");
-    gfx_print("╚═══════════════════════════════════════╝\n\n");
-    
-    gfx_print("Mouse should be active - try dragging windows!\n");
-    gfx_print("Windows persist until destroyed.\n");
+    serial_debug("[WINDOW_DEMO] Initial render complete\n");
 }
 
 // Mouse cursor rendering

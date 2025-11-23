@@ -34,5 +34,7 @@ void usb_mouse_report_callback(usb_transfer_t *transfer);
 void usb_mouse_process_report(usb_mouse_report_t *report);
 void usb_mouse_detach(void);
 bool usb_mouse_is_connected(void);
+void usb_mouse_set_polling_enabled(bool enabled);
+uint32_t usb_mouse_get_report_count(void);
 
 #endif // USB_MOUSE_H

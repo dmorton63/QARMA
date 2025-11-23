@@ -6,6 +6,7 @@
 #include "command_predictor.h"
 #include "core/string.h"  // For string operations
 #include "core/timer.h"   // For timestamps
+#include "config.h"       // For SERIAL_LOG macros
 
 // Command cache storage
 static command_cache_entry_t command_cache[MAX_CACHED_COMMANDS];
@@ -201,4 +202,98 @@ void command_cache_print_stats(void) {
     gfx_print_hex((uint32_t)stats.hit_rate);
     gfx_print("%\n");
     gfx_print("====================================\n\n");
+}
+
+// Export cache for persistence
+void command_predictor_export_cache(void** data, uint32_t* size) {
+    extern void* heap_alloc(size_t size);
+    
+    if (!data || !size) return;
+    
+    *data = NULL;
+    *size = 0;
+    
+    // Calculate size of valid entries
+    uint32_t valid_count = 0;
+    for (int i = 0; i < MAX_CACHED_COMMANDS; i++) {
+        if (command_cache[i].valid) {
+            valid_count++;
+        }
+    }
+    
+    if (valid_count == 0) {
+        SERIAL_LOG("Command Predictor: No cache data to export\n");
+        return;
+    }
+    
+    // Calculate total size
+    uint32_t total_size = sizeof(uint32_t) + // valid_count
+                         (valid_count * sizeof(command_cache_entry_t));
+    
+    // Allocate buffer
+    uint8_t* buffer = (uint8_t*)heap_alloc(total_size);
+    if (!buffer) {
+        SERIAL_LOG("Command Predictor: Failed to allocate export buffer\n");
+        return;
+    }
+    
+    // Write valid_count
+    *((uint32_t*)buffer) = valid_count;
+    
+    // Write valid entries
+    command_cache_entry_t* entries = (command_cache_entry_t*)(buffer + sizeof(uint32_t));
+    uint32_t idx = 0;
+    for (int i = 0; i < MAX_CACHED_COMMANDS; i++) {
+        if (command_cache[i].valid) {
+            entries[idx++] = command_cache[i];
+        }
+    }
+    
+    *data = buffer;
+    *size = total_size;
+    
+    SERIAL_LOG("Command Predictor: Exported ");
+    SERIAL_LOG_DEC("", valid_count);
+    SERIAL_LOG(" cache entries (");
+    SERIAL_LOG_DEC("", total_size);
+    SERIAL_LOG(" bytes)\n");
+}
+
+// Import cache from persistence
+int command_predictor_import_cache(const void* data, uint32_t size) {
+    if (!data || size < sizeof(uint32_t)) {
+        SERIAL_LOG("Command Predictor: Invalid import data\n");
+        return -1;
+    }
+    
+    // Read valid_count
+    uint32_t valid_count = *((uint32_t*)data);
+    
+    // Validate size
+    uint32_t expected_size = sizeof(uint32_t) + 
+                            (valid_count * sizeof(command_cache_entry_t));
+    if (size != expected_size) {
+        SERIAL_LOG("Command Predictor: Size mismatch in import data\n");
+        return -1;
+    }
+    
+    // Clear existing cache
+    command_cache_clear();
+    
+    // Import entries
+    command_cache_entry_t* entries = (command_cache_entry_t*)((uint8_t*)data + sizeof(uint32_t));
+    uint32_t imported = 0;
+    
+    for (uint32_t i = 0; i < valid_count && i < MAX_CACHED_COMMANDS; i++) {
+        command_cache[i] = entries[i];
+        imported++;
+    }
+    
+    stats.cache_size = imported;
+    
+    SERIAL_LOG("Command Predictor: Imported ");
+    SERIAL_LOG_DEC("", imported);
+    SERIAL_LOG(" cache entries\n");
+    
+    return 0;
 }

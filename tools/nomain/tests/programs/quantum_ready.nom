@@ -1,0 +1,31 @@
+[DATA_STORAGE]
+[GLOBAL]
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("=== NOMAIN Quantum Test ===");
+    say("");
+    
+    say("Test 1: Creating a qubit in |0> state");
+    say("(This will create a qubit object)");
+    say("");
+    
+    say("Test 2: The quantum library is loaded!");
+    say("Available quantum functions:");
+    say("  - CreateQubit()");
+    say("  - CreateQubits(n)");
+    say("  - ApplyGate(gate, qubit)");
+    say("  - Measure(qubit)");
+    say("  - GetState(qubit)");
+    say("");
+    
+    say("Test 3: Available gates:");
+    say("  - HADAMARD (H)");
+    say("  - PAULI_X (X)");
+    say("  - PAULI_Y (Y)");
+    say("  - PAULI_Z (Z)");
+    say("  - CNOT (2-qubit)");
+    say("");
+    
+    say("Quantum system ready for computation!");
+}

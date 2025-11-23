@@ -1,0 +1,13 @@
+// ERROR TEST: Modifying CONST variable
+// Expected error: Cannot assign to CONST variable
+
+[DATA_STORAGE]
+[GLOBAL]
+    CONST INT MAX_VALUE = 100;
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say_f("Max value: ", MAX_VALUE);
+    MAX_VALUE = 200;  // ERROR: Cannot modify CONST variable
+    say_f("New value: ", MAX_VALUE);
+}

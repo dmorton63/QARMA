@@ -1,0 +1,24 @@
+[DATA_STORAGE]
+[GLOBAL]
+    STRING name;
+    INT age;
+    FLOAT height;
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("=== User Input Test ===");
+    say("");
+    
+    name = INPUT("What is your name? ");
+    age = INPUT_INT("How old are you? ");
+    height = INPUT_FLOAT("What is your height in meters? ");
+    
+    say("");
+    say("=== Your Information ===");
+    say_f("Name: ", name);
+    say_f("Age: ", age);
+    say_f("Height: ", height, " meters");
+    
+    INT birth_year = 2025 - age;
+    say_f("You were born around ", birth_year);
+}

@@ -6,11 +6,19 @@
 
 #include "window_compositor.h"
 #include "graphics/graphics.h"
+#include "graphics/framebuffer.h"
 #include "core/memory/heap.h"
 #include "core/string.h"
+#include "core/input/mouse.h"
+
+// External framebuffer info
+extern uint32_t fb_width;
+extern uint32_t fb_height;
+extern mouse_state_t mouse_state;
 
 // Global compositor instance
 static window_compositor_t g_compositor = {0};
+static bool g_z_order_dirty = true;
 
 // ────────────────────────────────────────────────────────────────────────────
 // Initialization
@@ -142,6 +150,7 @@ void compositor_raise_window(compositor_window_t* win) {
     
     // Set this window's z-order to top
     win->z_order = max_z + 1;
+    g_z_order_dirty = true;  // Mark for re-sort on next render
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -186,6 +195,19 @@ compositor_window_t* compositor_find_window_at(int x, int y) {
 // Mouse Interaction
 // ────────────────────────────────────────────────────────────────────────────
 
+// Helper: Check if point is in close button
+static bool compositor_point_in_close_button(compositor_window_t* win, int px, int py) {
+    if (!win->style.has_close_button) return false;
+    
+    int btn_x = win->base.x + win->base.size.width - 20;
+    int btn_y = win->base.y + 4;
+    int btn_w = 16;
+    int btn_h = 16;
+    
+    return (px >= btn_x && px < btn_x + btn_w &&
+            py >= btn_y && py < btn_y + btn_h);
+}
+
 void compositor_handle_mouse(mouse_state_t* mouse) {
     if (!mouse) return;
     
@@ -193,9 +215,28 @@ void compositor_handle_mouse(mouse_state_t* mouse) {
     if (g_compositor.dragging_window) {
         if (mouse->left_pressed) {
             // Continue dragging
-            g_compositor.dragging_window->base.x = mouse->x - g_compositor.dragging_window->drag_offset_x;
-            g_compositor.dragging_window->base.y = mouse->y - g_compositor.dragging_window->drag_offset_y;
-            g_compositor.dragging_window->base.dirty = true;
+            compositor_window_t* win = g_compositor.dragging_window;
+            int new_x = mouse->x - win->drag_offset_x;
+            int new_y = mouse->y - win->drag_offset_y;
+            
+            // Clamp window position to screen bounds
+            // Prevent negative coordinates which cause rendering issues
+            int min_x = 0;  // Don't allow window to go off left edge
+            int max_x = (int)fb_width - 100;  // Keep at least 100px visible on right
+            int min_y = 0;  // Don't allow dragging above screen
+            int max_y = (int)fb_height - WINDOW_TITLE_BAR_HEIGHT;
+            
+            if (new_x < min_x) new_x = min_x;
+            if (new_x > max_x) new_x = max_x;
+            if (new_y < min_y) new_y = min_y;
+            if (new_y > max_y) new_y = max_y;
+            
+            // Only mark dirty if position actually changed
+            if (win->base.x != new_x || win->base.y != new_y) {
+                win->base.x = new_x;
+                win->base.y = new_y;
+                win->base.dirty = true;
+            }
         } else {
             // Release drag
             g_compositor.dragging_window->is_dragging = false;
@@ -205,17 +246,37 @@ void compositor_handle_mouse(mouse_state_t* mouse) {
         return;
     }
     
+    // Check for mouse click
+    static bool was_pressed = false;
+    bool clicked = !mouse->left_pressed && was_pressed;  // Button released
+    was_pressed = mouse->left_pressed;
+    
+    if (clicked) {
+        // Check for close button click
+        compositor_window_t* win = compositor_find_window_at(mouse->x, mouse->y);
+        if (win && compositor_point_in_close_button(win, mouse->x, mouse->y)) {
+            gfx_print("Closing window: ");
+            gfx_print(win->base.title ? win->base.title : "(untitled)");
+            gfx_print("\n");
+            compositor_destroy_window(win);
+            return;
+        }
+    }
+    
     // Check for new drag start
     if (mouse->left_pressed) {
         compositor_window_t* win = compositor_find_window_at(mouse->x, mouse->y);
         if (win && compositor_point_in_title_bar(win, mouse->x, mouse->y)) {
-            // Start dragging
-            win->is_dragging = true;
-            win->state = WIN_STATE_DRAGGING;
-            win->drag_offset_x = mouse->x - win->base.x;
-            win->drag_offset_y = mouse->y - win->base.y;
-            g_compositor.dragging_window = win;
-            compositor_focus_window(win);
+            // Don't drag if clicking close button
+            if (!compositor_point_in_close_button(win, mouse->x, mouse->y)) {
+                // Start dragging
+                win->is_dragging = true;
+                win->state = WIN_STATE_DRAGGING;
+                win->drag_offset_x = mouse->x - win->base.x;
+                win->drag_offset_y = mouse->y - win->base.y;
+                g_compositor.dragging_window = win;
+                compositor_focus_window(win);
+            }
         } else if (win) {
             // Just focus the window
             compositor_focus_window(win);
@@ -316,20 +377,183 @@ void compositor_render_window(compositor_window_t* win) {
     }
 }
 
-void compositor_render_all(void) {
-    // Sort windows by z-order (bubble sort for simplicity)
-    for (uint32_t i = 0; i < g_compositor.window_count; i++) {
-        for (uint32_t j = i + 1; j < g_compositor.window_count; j++) {
-            if (g_compositor.windows[i]->z_order > g_compositor.windows[j]->z_order) {
-                compositor_window_t* temp = g_compositor.windows[i];
-                g_compositor.windows[i] = g_compositor.windows[j];
-                g_compositor.windows[j] = temp;
+// Cursor rendering control
+static bool cursor_enabled = true;
+static int last_cursor_x = -1;
+static int last_cursor_y = -1;
+
+// Background buffer for cursor (15x20 pixels)
+#define CURSOR_BG_WIDTH 15
+#define CURSOR_BG_HEIGHT 20
+static rgb_color_t cursor_bg_buffer[CURSOR_BG_HEIGHT][CURSOR_BG_WIDTH];
+static bool cursor_bg_saved = false;
+
+// Forward declaration
+static void compositor_render_cursor(int x, int y);
+static void compositor_save_cursor_background(int x, int y);
+static void compositor_restore_cursor_background(int x, int y);
+
+// Helper to get pixel as rgb_color_t
+static rgb_color_t framebuffer_get_pixel(int x, int y) {
+    extern uint32_t fb_get_pixel(int x, int y);
+    uint32_t pixel = fb_get_pixel(x, y);
+    rgb_color_t color;
+    color.blue = (pixel >> 0) & 0xFF;
+    color.green = (pixel >> 8) & 0xFF;
+    color.red = (pixel >> 16) & 0xFF;
+    color.alpha = 255;
+    return color;
+}
+
+void compositor_set_cursor_enabled(bool enabled) {
+    cursor_enabled = enabled;
+}
+
+// Save background under cursor
+static void compositor_save_cursor_background(int x, int y) {
+    if (x < 0 || y < 0) return;
+    
+    for (int dy = 0; dy < CURSOR_BG_HEIGHT; dy++) {
+        for (int dx = 0; dx < CURSOR_BG_WIDTH; dx++) {
+            int px = x + dx;
+            int py = y + dy;
+            if (px >= 0 && px < (int)fb_width && py >= 0 && py < (int)fb_height) {
+                cursor_bg_buffer[dy][dx] = framebuffer_get_pixel(px, py);
+            } else {
+                cursor_bg_buffer[dy][dx] = (rgb_color_t){0, 0, 0, 0};
+            }
+        }
+    }
+    cursor_bg_saved = true;
+}
+
+// Restore background under cursor
+static void compositor_restore_cursor_background(int x, int y) {
+    if (x < 0 || y < 0 || !cursor_bg_saved) return;
+    
+    for (int dy = 0; dy < CURSOR_BG_HEIGHT; dy++) {
+        for (int dx = 0; dx < CURSOR_BG_WIDTH; dx++) {
+            int px = x + dx;
+            int py = y + dy;
+            if (px >= 0 && px < (int)fb_width && py >= 0 && py < (int)fb_height) {
+                framebuffer_draw_pixel(px, py, cursor_bg_buffer[dy][dx]);
+            }
+        }
+    }
+}
+
+// Lightweight cursor-only rendering (doesn't redraw windows)
+void compositor_render_cursor_only(int x, int y) {
+    if (cursor_enabled) {
+        // Restore old cursor position background to backing store
+        if (last_cursor_x >= 0 && last_cursor_y >= 0) {
+            compositor_restore_cursor_background(last_cursor_x, last_cursor_y);
+        }
+        
+        // Save background at new position from backing store
+        compositor_save_cursor_background(x, y);
+        
+        // Draw new cursor to backing store
+        compositor_render_cursor(x, y);
+        
+        // Remember position
+        last_cursor_x = x;
+        last_cursor_y = y;
+        
+        // DOUBLE BUFFERING: Swap to visible framebuffer
+        extern void framebuffer_swap(void);
+        framebuffer_swap();
+    }
+}
+
+// Render mouse cursor
+static void compositor_render_cursor(int x, int y) {
+    if (!cursor_enabled) return;
+    
+    // Bounds check
+    if (x < 0 || y < 0 || x >= (int)fb_width - 15 || y >= (int)fb_height - 20) {
+        return; // Don't render cursor near edges to avoid overflow
+    }
+    
+    // Simple arrow cursor (11x16 pixels)
+    const int cursor_size = 11;
+    rgb_color_t white = {255, 255, 255, 255};
+    rgb_color_t black = {0, 0, 0, 255};
+    
+    // Draw cursor outline (black border)
+    for (int dy = 0; dy < cursor_size + 4; dy++) {
+        int width = (cursor_size + 4 - dy) / 2;
+        if (width < 1) width = 1;
+        for (int dx = 0; dx < width; dx++) {
+            if (x + dx >= 0 && x + dx < (int)fb_width && 
+                y + dy >= 0 && y + dy < (int)fb_height) {
+                framebuffer_draw_pixel(x + dx, y + dy, black);
             }
         }
     }
     
-    // Render from back to front
+    // Draw cursor fill (white)
+    for (int dy = 1; dy < cursor_size + 2; dy++) {
+        int width = (cursor_size + 2 - dy) / 2;
+        if (width < 1) break;
+        for (int dx = 1; dx < width - 1; dx++) {
+            if (x + dx >= 0 && x + dx < (int)fb_width && 
+                y + dy >= 0 && y + dy < (int)fb_height) {
+                framebuffer_draw_pixel(x + dx, y + dy, white);
+            }
+        }
+    }
+}
+
+void compositor_render_all(void) {
+    extern void serial_debug(const char* msg);
+    serial_debug("[COMPOSITOR_RENDER] Called\n");
+    
+    // CRITICAL: Clear backing store to desktop background first
+    // This prevents window trails during dragging
+    extern void fb_draw_rect(int x, int y, int width, int height, uint32_t color);
+    rgb_color_t desktop_bg = {176, 196, 222, 255};  // Powder blue
+    uint32_t bg_color = (desktop_bg.alpha << 24) | (desktop_bg.red << 16) | 
+                        (desktop_bg.green << 8) | desktop_bg.blue;
+    fb_draw_rect(0, 0, fb_width, fb_height, bg_color);
+    
+    // Sort windows by z-order (optimized - only sort if needed)
+    if (g_z_order_dirty && g_compositor.window_count > 1) {
+        // Bubble sort for simplicity
+        for (uint32_t i = 0; i < g_compositor.window_count - 1; i++) {
+            bool swapped = false;
+            for (uint32_t j = 0; j < g_compositor.window_count - 1 - i; j++) {
+                if (g_compositor.windows[j]->z_order > g_compositor.windows[j + 1]->z_order) {
+                    compositor_window_t* temp = g_compositor.windows[j];
+                    g_compositor.windows[j] = g_compositor.windows[j + 1];
+                    g_compositor.windows[j + 1] = temp;
+                    swapped = true;
+                }
+            }
+            if (!swapped) break;  // Early exit if already sorted
+        }
+        g_z_order_dirty = false;
+    }
+    
+    // Render from back to front to backing store
     for (uint32_t i = 0; i < g_compositor.window_count; i++) {
         compositor_render_window(g_compositor.windows[i]);
     }
+    
+    // Invalidate cursor background since we just redrew everything
+    cursor_bg_saved = false;
+    
+    // Render cursor on top of everything to backing store
+    if (cursor_enabled) {
+        extern mouse_state_t mouse_state;
+        // Save background and draw cursor
+        compositor_save_cursor_background(mouse_state.x, mouse_state.y);
+        compositor_render_cursor(mouse_state.x, mouse_state.y);
+        last_cursor_x = mouse_state.x;
+        last_cursor_y = mouse_state.y;
+    }
+    
+    // DOUBLE BUFFERING: Swap back buffer to visible framebuffer in one operation
+    extern void framebuffer_swap(void);
+    framebuffer_swap();
 }

@@ -1,0 +1,28 @@
+[DATA_STORAGE]
+[GLOBAL]
+    QUBIT q;
+    INT result;
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("=== Quantum Superposition Demo ===");
+    say("");
+    
+    say("Creating qubit in |0> state...");
+    q = CreateQubit();
+    say_f("Initial state: ", GetState(q));
+    say("");
+    
+    say("Applying Hadamard gate (creates superposition)...");
+    q = ApplyGate("HADAMARD", q);
+    say_f("After H gate: ", GetState(q));
+    say("");
+    
+    say("Measuring qubit...");
+    result = Measure(q);
+    say_f("Measured: |", result, ">");
+    say_f("State after measurement: ", GetState(q));
+    say("");
+    
+    say("Quantum computation complete!");
+}

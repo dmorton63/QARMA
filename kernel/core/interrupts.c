@@ -133,6 +133,17 @@ void timer_handler(struct regs* r) {
     /* Task manager timer tick for scheduling */
     task_timer_tick();
 
+    // Poll USB keyboard every tick (10ms at 100Hz)
+    extern void usb_keyboard_poll_xhci(void);
+    usb_keyboard_poll_xhci();
+    
+    // Poll USB mouse less frequently to avoid cursor racing ahead
+    // Every 5 ticks = 50ms polling rate
+    if (tick_count % 5 == 0) {
+        extern void usb_mouse_poll_xhci(void);
+        usb_mouse_poll_xhci();
+    }
+
     // if(tick_count % 10 == 0) {
     //     // Every second at 100Hz
     //     gfx_print("Tick\n");

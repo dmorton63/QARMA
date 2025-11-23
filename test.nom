@@ -1,0 +1,16 @@
+[DATA_STORAGE]
+CONST PI = 3.14159
+
+[APPLICATION-STARTUP]
+function main() [VOID]
+    say("Hello from Nomain IDE!")
+    
+    INT x = 42
+    FLOAT y = PI * 2.0
+    
+    IF x > 40 THEN
+        say_f("x is greater than 40: ", x)
+    ELSE
+        say("x is small")
+    
+    RETURN

@@ -4,6 +4,9 @@
 #include "../timer.h"
 #include "config.h"
 #include "../string.h"
+#include "quantum/quantum_kernel.h"
+#include "quantum/quantum_ai_observer.h"
+#include "quantum/quantum_register.h"
 
 /* Task manager global state */
 static struct {
@@ -171,6 +174,13 @@ task_t* task_create(const char *name, task_entry_func_t entry_point,
     task->total_runtime = 0;
     task->wake_time = 0;
     
+    /* Initialize quantum AI tracking */
+    task->execution_count = 0;
+    task->runtime_sum = 0;
+    task->runtime_variance = 0;
+    task->last_execution_time = 0;
+    task->memory_usage = stack_size;
+    
     /* Set entry point and user data */
     task->entry_point = entry_point;
     task->user_data = user_data;
@@ -231,6 +241,60 @@ static void task_setup_initial_stack(task_t *task, task_entry_func_t entry_point
 }
 
 /**
+ * Create a quantum workload profile from task characteristics
+ */
+static quantum_workload_profile_t task_create_workload_profile(task_t *task)
+{
+    quantum_workload_profile_t profile;
+    
+    /* Calculate qubit count based on task complexity */
+    /* Factors: priority (inverse), stack size, execution variance */
+    uint32_t complexity = 2;  /* Base complexity */
+    
+    /* Higher priority = more complex quantum state (inverse priority value) */
+    complexity += (TASK_PRIORITY_IDLE - task->priority);
+    
+    /* Large stack = more complex task */
+    if (task->stack_size >= 8192) complexity += 2;
+    else if (task->stack_size >= 4096) complexity += 1;
+    
+    /* High variance = needs more qubits to represent uncertainty */
+    if (task->runtime_variance > 1000) complexity += 1;
+    
+    profile.qubit_count = (complexity < 2) ? 2 : ((complexity > 8) ? 8 : complexity);
+    
+    /* Average execution time (in microseconds for precision) */
+    if (task->execution_count > 0) {
+        /* Safe 64-bit division on 32-bit platform */
+        uint32_t avg_high = (uint32_t)(task->runtime_sum >> 32);
+        uint32_t avg_low = (uint32_t)(task->runtime_sum & 0xFFFFFFFF);
+        if (avg_high == 0) {
+            profile.avg_execution_time = avg_low / task->execution_count;
+        } else {
+            /* For large sums, use approximation to avoid overflow */
+            profile.avg_execution_time = (avg_low / task->execution_count) + 
+                                        (avg_high * (0xFFFFFFFF / task->execution_count));
+        }
+    } else {
+        profile.avg_execution_time = task->time_slice * 1000; /* Estimate from time slice */
+    }
+    
+    /* Variance in execution time */
+    profile.variance = task->runtime_variance;
+    
+    /* Has evaluation if task has run before */
+    profile.has_evaluation = (task->execution_count > 0) ? 1 : 0;
+    
+    /* Requires all results for critical/high priority tasks */
+    profile.requires_all = (task->priority <= TASK_PRIORITY_HIGH) ? 1 : 0;
+    
+    /* Data size from memory usage */
+    profile.data_size = task->memory_usage;
+    
+    return profile;
+}
+
+/**
  * Start a task (move from CREATED to READY state)
  */
 int task_start(task_t *task)
@@ -279,6 +343,49 @@ void task_schedule(void)
         
         /* Update task states */
         if (prev_task) {
+            /* Update task execution statistics */
+            uint32_t elapsed = prev_task->time_slice - prev_task->time_remaining;
+            prev_task->execution_count++;
+            prev_task->runtime_sum += elapsed;
+            prev_task->last_execution_time = elapsed;
+            prev_task->total_runtime += elapsed;
+            
+            /* Calculate variance if we have enough samples */
+            if (prev_task->execution_count > 1) {
+                /* Safe 64-bit division on 32-bit platform */
+                uint32_t avg;
+                uint32_t sum_high = (uint32_t)(prev_task->runtime_sum >> 32);
+                uint32_t sum_low = (uint32_t)(prev_task->runtime_sum & 0xFFFFFFFF);
+                if (sum_high == 0) {
+                    avg = sum_low / prev_task->execution_count;
+                } else {
+                    avg = (sum_low / prev_task->execution_count) + 
+                          (sum_high * (0xFFFFFFFF / prev_task->execution_count));
+                }
+                int32_t diff = (int32_t)elapsed - (int32_t)avg;
+                /* Simple variance update (not true variance but good enough) */
+                prev_task->runtime_variance = (prev_task->runtime_variance * 3 + (diff * diff)) / 4;
+            }
+            
+            /* Quantum AI: Observe task completion if quantum is enabled */
+            if (quantum_is_enabled() && prev_task->quantum_reg) {
+                QARMA_QUANTUM_REGISTER* reg = (QARMA_QUANTUM_REGISTER*)prev_task->quantum_reg;
+                
+                /* Calculate quality based on execution efficiency */
+                /* Full time slice used = efficient (0.9), preempted early = less efficient */
+                float time_usage_ratio = (float)elapsed / (float)prev_task->time_slice;
+                float quality = 0.5f + (time_usage_ratio * 0.4f);  /* Range: 0.5 to 0.9 */
+                
+                /* Bonus for consistent execution times (low variance) */
+                if (prev_task->execution_count > 5 && prev_task->runtime_variance < 500) {
+                    quality += 0.1f;  /* Predictable tasks get quality boost */
+                }
+                
+                quantum_ai_observe_complete(reg, elapsed, quality);
+                qarma_quantum_register_destroy(reg);
+                prev_task->quantum_reg = NULL;
+            }
+            
             if (prev_task->state == TASK_STATE_RUNNING) {
                 prev_task->state = TASK_STATE_READY;
                 task_add_to_ready_queue(prev_task);
@@ -293,6 +400,31 @@ void task_schedule(void)
         
         /* Reset time slice */
         next_task->time_remaining = next_task->time_slice;
+        
+        /* Quantum AI: Observe task start if quantum is enabled */
+        if (quantum_is_enabled()) {
+            SERIAL_LOG("[TASK_SCHEDULE] Quantum enabled, observing task start\n");
+            /* Create detailed workload profile from task characteristics */
+            quantum_workload_profile_t profile = task_create_workload_profile(next_task);
+            
+            /* Create quantum register sized for task complexity */
+            QARMA_QUANTUM_REGISTER* task_reg = qarma_quantum_register_create(profile.qubit_count);
+            if (task_reg) {
+                SERIAL_LOG("[TASK_SCHEDULE] Quantum register created, starting observation\n");
+                /* Register the profile with the AI observer (extracts profile from register) */
+                quantum_ai_profile_register(task_reg);
+                
+                /* Start observation with full profile context */
+                quantum_ai_observe_start(task_reg);
+                
+                /* Store register pointer in task for completion observation */
+                next_task->quantum_reg = (void*)task_reg;
+            } else {
+                SERIAL_LOG("[TASK_SCHEDULE] ERROR: Failed to create quantum register\n");
+            }
+        } else {
+            SERIAL_LOG("[TASK_SCHEDULE] Quantum disabled, skipping observation\n");
+        }
         
         /* Perform context switch */
         task_switch_context(prev_task, next_task);
@@ -359,17 +491,68 @@ void task_timer_tick(void)
 
 /**
  * Select next task to run based on priority scheduling with round-robin
+ * Enhanced with quantum AI recommendations when enabled
  */
 static task_t* task_select_next(void)
 {
-    /* Check ready queues from highest to lowest priority */
-    for (int i = 0; i < 5; i++) {
-        task_t *task = task_mgr.ready_queue_head[i];
-        if (task) {
-            /* Move to end for round-robin within priority */
-            task_queue_remove(&task_mgr.ready_queue_head[i], 
-                             &task_mgr.ready_queue_tail[i], task);
-            return task;
+    task_t *best_candidate = NULL;
+    int best_priority = -1;
+    float best_ai_score = 0.0f;
+    
+    /* If quantum AI is enabled, use AI recommendations to optimize selection */
+    if (quantum_is_enabled()) {
+        /* Scan all ready queues and score candidates */
+        for (int i = 0; i < 5; i++) {
+            task_t *task = task_mgr.ready_queue_head[i];
+            while (task) {
+                /* Create profile for this candidate */
+                quantum_workload_profile_t profile = task_create_workload_profile(task);
+                
+                /* Get AI recommendation for this workload */
+                QARMA_COLLAPSE_STRATEGY strategy = quantum_ai_recommend_strategy(&profile);
+                
+                /* Calculate score: priority weight + AI confidence bonus */
+                /* Higher priority = lower i value = better base score */
+                float priority_weight = (5.0f - (float)i) * 2.0f;
+                
+                /* AI adds 0-3 points based on confidence in recommendation */
+                float confidence = quantum_ai_get_confidence(&profile, strategy);
+                float ai_bonus = 0.0f;
+                if (confidence > 0.8f) {
+                    ai_bonus = 3.0f;  /* AI has high confidence */
+                } else if (confidence > 0.5f) {
+                    ai_bonus = 1.5f;  /* AI has moderate confidence */
+                }
+                
+                float total_score = priority_weight + ai_bonus;
+                
+                /* Track best candidate */
+                if (total_score > best_ai_score || best_candidate == NULL) {
+                    best_candidate = task;
+                    best_priority = i;
+                    best_ai_score = total_score;
+                }
+                
+                task = task->next;
+            }
+        }
+        
+        /* Remove and return AI-selected task */
+        if (best_candidate) {
+            task_queue_remove(&task_mgr.ready_queue_head[best_priority], 
+                             &task_mgr.ready_queue_tail[best_priority], best_candidate);
+            return best_candidate;
+        }
+    } else {
+        /* Traditional priority-based round-robin when quantum disabled */
+        for (int i = 0; i < 5; i++) {
+            task_t *task = task_mgr.ready_queue_head[i];
+            if (task) {
+                /* Move to end for round-robin within priority */
+                task_queue_remove(&task_mgr.ready_queue_head[i], 
+                                 &task_mgr.ready_queue_tail[i], task);
+                return task;
+            }
         }
     }
     

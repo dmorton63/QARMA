@@ -1,0 +1,14 @@
+// ERROR TEST: Division by zero
+// Expected error: Runtime error - Division by zero
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    INT x = 10;
+    INT y = 0;
+    result = x / y;  // ERROR: Division by zero
+    say(result);
+}

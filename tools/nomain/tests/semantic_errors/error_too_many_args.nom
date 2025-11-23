@@ -1,0 +1,16 @@
+// ERROR TEST: Wrong number of arguments (too many)
+// Expected error: Function expects 2 arguments, got 3
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    result = add(1, 2, 3);  // ERROR: Too many arguments
+    say(result);
+}

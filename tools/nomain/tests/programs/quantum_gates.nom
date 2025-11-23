@@ -1,0 +1,32 @@
+[DATA_STORAGE]
+[GLOBAL]
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("=== Bell State (Quantum Entanglement) Demo ===");
+    say("");
+    
+    say("Creating 2 qubits in |00> state...");
+    QUBIT q1 = CreateQubit();
+    QUBIT q2 = CreateQubit();
+    say("");
+    
+    say("Applying Hadamard to qubit 1...");
+    q1 = ApplyGate("H", q1);
+    say_f("Qubit 1: ", GetState(q1));
+    say("");
+    
+    say("Applying Pauli-X to qubit 2...");
+    q2 = ApplyGate("X", q2);
+    say_f("Qubit 2: ", GetState(q2));
+    say("");
+    
+    say("Measuring qubits...");
+    INT m1 = Measure(q1);
+    INT m2 = Measure(q2);
+    say_f("Qubit 1 measured: |", m1, ">");
+    say_f("Qubit 2 measured: |", m2, ">");
+    say("");
+    
+    say("Quantum gates applied successfully!");
+}

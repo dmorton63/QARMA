@@ -1,0 +1,13 @@
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    result = add(5, 3);
+    say_f("5 + 3 = ", result);
+}

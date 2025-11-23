@@ -1,6 +1,10 @@
 #include "qarma_window_manager.h"
+#include "qarma_input_events.h"
+#include "window_compositor.h"
+#include "console_compositor.h"
 #include "panic.h"
 #include "graphics/graphics.h"
+#include "core/input/mouse.h"
 #include "config.h"
 
 // For SERIAL_LOG macro
@@ -91,6 +95,151 @@ static void remove_window(QARMA_WINDOW_MANAGER* mgr, uint32_t id) {
     }
 }
 
+// Hit test: Find topmost window at given coordinates
+// Windows are stored front-to-back, so we search in reverse order
+static QARMA_WIN_HANDLE* hit_test(QARMA_WINDOW_MANAGER* mgr, int x, int y) {
+    // Search from top to bottom (reverse order)
+    for (int i = mgr->count - 1; i >= 0; i--) {
+        QARMA_WIN_HANDLE* win = mgr->windows[i];
+        if (!win || !(win->flags & QARMA_FLAG_VISIBLE)) {
+            continue;
+        }
+        
+        // Check if point is inside window bounds
+        if (x >= win->x && x < win->x + win->size.width &&
+            y >= win->y && y < win->y + win->size.height) {
+            return win;
+        }
+    }
+    
+    return NULL;  // No window hit, desktop/background
+}
+
+// Helper: Convert QARMA_INPUT_EVENT to mouse_state_t for compositor
+static void convert_event_to_mouse_state(QARMA_INPUT_EVENT* event, mouse_state_t* mouse) {
+    mouse->x = event->data.mouse.x;
+    mouse->y = event->data.mouse.y;
+    mouse->dx = event->data.mouse.delta_x;
+    mouse->dy = event->data.mouse.delta_y;
+    
+    // Convert button bitfield to individual flags
+    uint8_t buttons = event->data.mouse.buttons;
+    mouse->left_pressed = (buttons & 0x01) != 0;
+    mouse->right_pressed = (buttons & 0x02) != 0;
+    mouse->middle_pressed = (buttons & 0x04) != 0;
+}
+
+// Global mouse event handler - routes events to correct window
+void qarma_window_manager_handle_mouse_event(QARMA_INPUT_EVENT* event) {
+    if (!event) return;
+    
+    // Only handle mouse events
+    if (event->type < QARMA_INPUT_EVENT_MOUSE_MOVE || 
+        event->type > QARMA_INPUT_EVENT_MOUSE_LEAVE) {
+        return;
+    }
+    
+    static uint32_t event_count = 0;
+    event_count++;
+    if (event_count <= 5 || event_count % 100 == 0) {
+        SERIAL_LOG("[WM_MOUSE] Event #");
+        SERIAL_LOG_DEC("", event_count);
+        SERIAL_LOG(" type=");
+        SERIAL_LOG_HEX("", event->type);
+        SERIAL_LOG("\n");
+    }
+    
+    // Convert unified event to mouse_state_t for compositor
+    mouse_state_t mouse_state;
+    convert_event_to_mouse_state(event, &mouse_state);
+    
+    // Handle window compositor mouse interaction (dragging, close buttons, etc.)
+    extern void compositor_handle_mouse(mouse_state_t* mouse);
+    compositor_handle_mouse(&mouse_state);
+    
+    // Render windows on significant events (not on every mouse move)
+    // Render when: dragging, clicking buttons, or scrolling
+    bool should_render_all = false;
+    if (event->type == QARMA_INPUT_EVENT_MOUSE_DOWN ||
+        event->type == QARMA_INPUT_EVENT_MOUSE_UP ||
+        event->type == QARMA_INPUT_EVENT_MOUSE_SCROLL) {
+        should_render_all = true;
+    }
+    
+    // Also render if actively dragging (compositor will have dragging_window set)
+    extern window_compositor_t* get_compositor(void);
+    window_compositor_t* comp = get_compositor();
+    if (comp != NULL && comp->dragging_window != NULL) {
+        // Throttle renders during dragging MORE aggressively - every 4th event
+        // This prevents the compositor from blocking USB event processing
+        static uint32_t drag_render_skip = 0;
+        if (++drag_render_skip % 4 == 0) {
+            should_render_all = true;
+        }
+    }
+    
+    if (should_render_all && comp != NULL) {
+        extern void compositor_render_all(void);
+        compositor_render_all();
+    } else if (event->type == QARMA_INPUT_EVENT_MOUSE_MOVE && comp->dragging_window == NULL) {
+        // Only render cursor separately if not dragging
+        // When dragging, full render is done above which includes cursor
+        extern void compositor_render_cursor_only(int x, int y);
+        compositor_render_cursor_only(mouse_state.x, mouse_state.y);
+    }
+    
+    // Hit test to find target window in QARMA window manager
+    QARMA_WIN_HANDLE* target = qarma_window_manager.hit_test(&qarma_window_manager, 
+                                                               event->data.mouse.x, 
+                                                               event->data.mouse.y);
+    
+    if (target) {
+        // Set target for this event
+        event->target = target;
+        
+        // Dispatch to window's controls
+        if (target->flags & QARMA_FLAG_INTERACTIVE) {
+            extern bool qarma_win_dispatch_event(QARMA_WIN_HANDLE* win, QARMA_INPUT_EVENT* event);
+            qarma_win_dispatch_event(target, event);
+        }
+    } else {
+        // Desktop/background handler could go here
+        event->target = NULL;
+    }
+}
+
+// Global keyboard event handler for console
+void qarma_console_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data) {
+    // LOG IMMEDIATELY - before ANY checks
+    extern void serial_debug(const char* msg);
+    serial_debug("[CONSOLE_HANDLER] Called\n");
+    
+    (void)user_data;
+    
+    if (!event || event->type != QARMA_INPUT_EVENT_KEY_DOWN) {
+        serial_debug("[CONSOLE_HANDLER] Not KEY_DOWN\n");
+        return;
+    }
+    
+    uint8_t scancode = event->data.key.scancode;
+    char character = event->data.key.character;
+    
+    // Ctrl+T - toggle console
+    if (scancode == 0x14 && (event->data.key.modifiers & QARMA_MOD_CTRL)) {  // Ctrl+T
+        serial_debug("[CONSOLE_HANDLER] Ctrl+T - toggle\n");
+        console_compositor_toggle();
+        event->handled = true;
+        return;
+    }
+    
+    // Event routing now handled by target filter - only receive events when console has focus
+    serial_debug("[CONSOLE_HANDLER] Console has focus (target=");
+    SERIAL_LOG_HEX("", (uint32_t)event->target);
+    serial_debug(")\n");
+    console_compositor_handle_key(scancode, character);
+    event->handled = true;  // Mark as handled to stop propagation
+}
+
 void qarma_window_manager_init() {
     qarma_window_manager.count = 0;
     qarma_window_manager.add_window = add_window;
@@ -98,5 +247,6 @@ void qarma_window_manager_init() {
     qarma_window_manager.update_all = update_all;
     qarma_window_manager.render_all = render_all;
     qarma_window_manager.destroy_all = destroy_all;
+    qarma_window_manager.hit_test = hit_test;
 }
 

@@ -1,0 +1,2824 @@
+[H[J[1;1Herror: can't find command `/*'.
+error: can't find command `*'.
+[?25l[m[H[J[1;1H[2;30HGNU GRUB  version 2.12
+
+[m[4;2H+----------------------------------------------------------------------------+[5;2H|[5;79H|[6;2H|[6;79H|[7;2H|[7;79H|[8;2H|[8;79H|[9;2H|[9;79H|[10;2H|[10;79H|[11;2H|[11;79H|[12;2H|[12;79H|[13;2H|[13;79H|[14;2H|[14;79H|[15;2H|[15;79H|[16;2H|[16;79H|[17;2H+----------------------------------------------------------------------------+[m[18;2H[19;2H[m     Use the ^ and v keys to select which entry is highlighted.          
+      Press enter to boot the selected OS, `e' to edit the commands       
+      before booting or `c' for a command-line.                           [5;80H [m[5;3H QARMA (Silent Mode)                                                        [m[5;78H[m[m[6;3H QARMA (Normal Mode)                                                        [m[6;78H[m[7m[7;3H*QARMA (Verbose Mode)                                                       [m[7;78H[m[m[8;3H Video Test                                                                 [m[8;78H[m[m[9;3H                                                                            [m[9;78H[m[m[10;3H                                                                            [m[10;78H[m[m[11;3H                                                                            [m[11;78H[m[m[12;3H                                                                            [m[12;78H[m[m[13;3H                                                                            [m[13;78H[m[m[14;3H                                                                            [m[14;78H[m[m[15;3H                                                                            [m[15;78H[m[m[16;3H                                                                            [m[16;78H[m[16;80H [7;78H[22;1H   The highlighted entry will be executed automatically in 1s.                 [7;78H[22;1H   The highlighted entry will be executed automatically in 0s.                 [7;78H[?25h[H[J[1;1H[H[J[1;1Hgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+zgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Vgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ygraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+
+[vmm_init] identity mapping ready
+PDE[0] = 01C40003
+PDE[1] = 01C41003
+graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Vgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ygraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+zgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+dgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+(graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+dgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ygraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+pgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+pgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+dgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
++graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+fgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+bgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+fgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+fgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+)graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+
+graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Vgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+cgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+sgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+pgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+cgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+sgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+sgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+:graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+xgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Cgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+0graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+
+[MBOOT] Starting multiboot_parse_info
+[MBOOT] Magic validated
+[MBOOT] Checking cmdline
+[MBOOT] Checking memory flags
+[MBOOT] Parsing memory map
+[MBOOT] In multiboot_parse_memory_map
+[MBOOT] Starting memory map loop
+[MBOOT] Memory map loop complete, marking kernel region
+[MBOOT] multiboot_parse_memory_map complete
+[MBOOT] Detecting framebuffer
+Mapping framebuffer...
+Setting up page table for framebuffer...
+Enabling paging with PD at: 01C3F000
+
+Paging enabled.
+Paging enabled with framebuffer mapping
+[MBOOT] Flushing debug buffer
+Multiboot info assigned
+Verbosity parsed from cmdline
+Lower memory: 639Upper memory: 523128Memory map parsed and PMM initialized
+Framebuffer info parsed and graphics system updated
+[MBOOT] multiboot_parse_info complete
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected at FD000000
+
+GFX_INIT: Framebuffer detected, using framebuffer mode[GFX] Setting mode 00000001
+
+[GFX_MODE] Setting framebuffer backends
+[GFX] Framebuffer mode backend set to 0011ED50
+
+GFX_INIT: Graphics system initializedFB_INIT: Framebuffer available
+FB_INIT: Need 4096000
+ bytes for 1024000
+ pixels
+FB_INIT: Backing store allocated at 8642560
+=== Memory Pool Manager Init ===
+VIDEO: Initializing video subsystem
+VIDEO: Initializing video drivers
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected, using framebuffer mode[GFX] Setting mode 00000001
+
+[GFX_MODE] Setting framebuffer backends
+[GFX] Framebuffer mode backend set to 0011ED50
+
+GFX_INIT: Graphics system initializedVIDEO: Setting video mode
+VIDEO: Framebuffer connected
+VIDEO: Video subsystem initialized successfully
+TASK: Initializing task manager with real switching\nTASK: Created task ID=00000001
+ name=idle\nTASK: Started task ID=00000001
+\nTASK: Idle task created and started\nTASK: Task manager initialized with real switching\n[KERNEL] Task manager initialized
+===EARLY PNG TEST START===
+PNG: decode() called
+PNG: Signature valid
+PNG: Creating image structure
+Memory Pool: Attempting large allocation via heap: 4096 KB
+Memory Pool: heap_alloc succeeded
+PNG: Pixel buffer allocated, generating checkerboard
+SUCCESS: PNG image loaded and decoded!
+[MEMPOOL] print_all_stats called
+[MEMPOOL] Showing stats for subsystem
+[MEMPOOL] Stats - allocated: 00001000
+ KB, peak: 00001000
+ KB
+[MEMPOOL] print_all_stats finished
+PNG test complete - image freed
+===EARLY PNG TEST END===
+[KERNEL] About to init filesystem subsystem
+[FILESYSTEM] Subsystem initialized successfully
+[KERNEL] Filesystem subsystem initialized
+[KERNEL] About to initialize VFS
+[KERNEL] VFS init completed
+[KERNEL] Initializing filesystem drivers...
+[ATA] Initializing ATA driver...
+[ATA] No disk detected
+[KERNEL] Filesystem drivers initialized
+[KERNEL] ===== INITIALIZING ISO9660 FILESYSTEM =====
+[KERNEL] ISO9660 init completed
+PIC1 mask=0x000000FC
+PIC2 mask=0x000000FF
+PCI: Starting PCI initialization
+PCI: Starting PCI bus scan
+Unknown USB controller type
+Prog IF: 00000030
+
+PCI: PCI initialization complete
+USB Mouse: Starting USB stack init...
+XHCI: Initializing USB 3.0 (XHCI) driver...
+XHCI: Scanning PCI bus for XHCI controllers
+XHCI: Found XHCI controller at bus=00000000
+ slot=00000004
+ func=00000000
+
+XHCI: MMIO base address: FEBB0000
+
+VMM: Mapping MMIO region - phys=FEBB0000
+ size=00010000
+ pages=00000010
+
+VMM: MMIO region mapped successfully
+XHCI: MMIO region mapped successfully
+XHCI: HCI Version: 00000000
+
+XHCI: Extended capabilities at offset: 00000020
+
+XHCI: Max slots=00000040
+ ports=00000008
+ interrupters=00000010
+
+XHCI: Resetting controller...
+XHCI: Reset complete
+XHCI: Starting controller...
+01031D00
+ phys=01031D00
+
+00000000
+01031D01
+ to address FEBB0058
+
+01032D00
+ phys=01032D00
+
+01033500
+ ERST phys=01034500
+
+01034500
+ ERDP=01033500
+
+00000000
+01031D01
+
+00000000
+01032D00
+
+XHCI: USBCMD written, waiting for controller to start...
+00000000
+
+XHCI: Controller started successfully
+XHCI: Detecting devices on ports...
+00000005
+
+00000003
+
+00000005
+
+00000006
+
+00000003
+
+00000006
+
+XHCI: Enumerating devices
+00000005
+
+XHCI: Enabling slot
+00000009
+
+00000000
+ cycle=00000001
+
+FEBB2000
+
+00000022
+
+00000022
+
+00000021
+
+00000001
+
+00000001
+
+00000001
+ port=00000005
+
+0000000B
+
+00000001
+ cycle=00000001
+
+FEBB2000
+
+00000021
+
+00000001
+
+XHCI: Device addressed successfully
+00000001
+
+0000000C
+
+00000002
+ cycle=00000001
+
+FEBB2000
+
+00000021
+
+00000001
+
+XHCI: Endpoint configured successfully
+00000005
+
+USB HID: Probing XHCI device slot=00000001
+ port=00000005
+
+USB HID: Initializing XHCI keyboard on slot 00000001
+
+USB Keyboard: Initializing XHCI keyboard
+USB Keyboard: XHCI keyboard initialized on slot 00000001
+
+[USB_KEYBOARD] Init complete, buffer at 010371C5
+
+00000006
+
+XHCI: Enabling slot
+00000009
+
+00000003
+ cycle=00000001
+
+FEBB2000
+
+00000021
+
+00000001
+
+00000002
+
+00000002
+ port=00000006
+
+0000000B
+
+00000004
+ cycle=00000001
+
+FEBB2000
+
+00000021
+
+00000001
+
+XHCI: Device addressed successfully
+00000002
+
+0000000C
+
+00000005
+ cycle=00000001
+
+FEBB2000
+
+00000021
+
+00000001
+
+XHCI: Endpoint configured successfully
+00000006
+
+USB HID: Probing XHCI device slot=00000002
+ port=00000006
+
+USB HID: Initializing XHCI mouse on slot 00000002
+
+USB Mouse: Initializing XHCI mouse
+USB Mouse: XHCI mouse initialized on slot 00000002
+
+[USB_MOUSE] Init complete, buffer at 01039E85
+
+XHCI: Initialization complete
+USB HID: Initializing HID subsystem
+USB: Starting device enumeration
+USB: Attempting to enumerate port 0
+
+USB: usb_enumerate_device called with uhci=01D632E0
+ port=0
+
+UHCI: Resetting port 0
+UHCI: Status before reset: 0000FFFF
+UHCI: Port reset asserted
+UHCI: Port reset cleared
+UHCI: Cleared status change bits: 0000FFFF
+UHCI: Port auto-enabled, status: 0000FFFF
+USB: Starting enumeration on UHCI port 0
+
+USB: Assigned port=0
+ address=1
+ state=3
+ controller=01D632E0
+
+USB: Port status = 0000FFFF
+USB: Detected LOW-SPEED device
+USB: Starting two-stage device descriptor enumeration
+USB: Attempting partial device descriptor (8 bytes)
+USB: Partial device descriptor succeeded
+USB: Device bMaxPacketSize0=00000000
+USB: Attempting full device descriptor (18 bytes)
+USB: Full device descriptor succeeded
+USB: Device bcdUSB=00000000
+USB: idVendor=00000000
+USB: idProduct=00000000
+USB: Device class=00000000
+USB: subClass=00000000
+USB: protocol=00000000
+USB: Device Descriptor bcdUSB=0x0 idVendor=0x0 idProduct=0x0
+USB: Device class=0x0 subClass=0x0 protocol=0x0
+UHCI: Port already enabled
+USB: Assigned address 1
+
+USB: Config wTotalLength=0
+USB: bNumInterfaces=0
+USB: bConfigurationValue=0
+USB: Config wTotalLength=0 bNumInterfaces=0 bConfigurationValue=0
+USB-MSC: config wTotalLength=00000000
+
+
+USB HID: Probing device for HID interfaces
+USB Keyboard: Probing device for keyboard interface
+USB Mouse: Probing device for mouse interface
+USB HID: Device is not a recognized HID device
+USB: Device found on port 0
+
+USB: Attempting to enumerate port 1
+
+USB: usb_enumerate_device called with uhci=01D632E0
+ port=1
+
+UHCI: Resetting port 1
+UHCI: Status before reset: 0000FFFF
+UHCI: Port reset asserted
+UHCI: Port reset cleared
+UHCI: Cleared status change bits: 0000FFFF
+UHCI: Port auto-enabled, status: 0000FFFF
+USB: Starting enumeration on UHCI port 1
+
+USB: Assigned port=1
+ address=2
+ state=3
+ controller=01D632E0
+
+USB: Port status = 0000FFFF
+USB: Detected LOW-SPEED device
+USB: Starting two-stage device descriptor enumeration
+USB: Attempting partial device descriptor (8 bytes)
+USB: Partial device descriptor succeeded
+USB: Device bMaxPacketSize0=00000000
+USB: Attempting full device descriptor (18 bytes)
+USB: Full device descriptor succeeded
+USB: Device bcdUSB=00000000
+USB: idVendor=00000000
+USB: idProduct=00000000
+USB: Device class=00000000
+USB: subClass=00000000
+USB: protocol=00000000
+USB: Device Descriptor bcdUSB=0x0 idVendor=0x0 idProduct=0x0
+USB: Device class=0x0 subClass=0x0 protocol=0x0
+UHCI: Port already enabled
+USB: Assigned address 2
+
+USB: Config wTotalLength=0
+USB: bNumInterfaces=0
+USB: bConfigurationValue=0
+USB: Config wTotalLength=0 bNumInterfaces=0 bConfigurationValue=0
+USB-MSC: config wTotalLength=00000000
+
+
+USB HID: Probing device for HID interfaces
+USB Keyboard: Probing device for keyboard interface
+USB Mouse: Probing device for mouse interface
+USB HID: Device is not a recognized HID device
+USB: Device found on port 1
+
+USB Keyboard: Initializing...
+[QARMA_INPUT_EVENTS] Event system initialized
+[INIT] Registering window manager mouse event handler...
+[INIT] Window manager mouse handler registered
+[INIT] Registering console keyboard handler...
+[INIT] Console keyboard handler registered
+[KEYBOARD] Shell keyboard handler registered
+[INIT] Registering debug mouse event handler...
+[INIT] Debug mouse handler registered (will log first 100 events with state every 10th)
+[AI_PERSIST] Initializing persistence layer
+[AI_PERSIST] Loading quantum learning from: /disk/qlearn.dat
+[AI_PERSIST] File not found
+[AI_PERSIST] Loading command cache from: /disk/cmdcache.dat
+[AI_PERSIST] File not found
+[KERNEL] ===== STARTING DESKTOP ENVIRONMENT =====
+[1
+:10
+ms] [XHCI_QUEUE] Slot 1
+ queued 100
+ transfers, index=99
+ cycle=1
+
+[USB_KEYBOARD] Queued 128 initial transfers after init
+[USB_KEYBOARD] Buffer address: 0x010371C5
+
+KBD IRQ: 0x00000061
+[KBD_HANDLER] Interrupt #00000001
+[KBD_HANDLER] Scancode: 00000061
+[KBD_PROC] Dispatching event, scancode=00000061
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[KERNEL] Interrupts enabled for desktop
+[KERNEL] Setting up desktop
+[KERNEL] Desktop ready
+[KERNEL] Bypassing login screen
+[KERNEL] Screen cleared
+[KERNEL] Creating desktop window
+[WINFACTORY] Creating window
+[WINFACTORY] malloc returned
+[WINFACTORY] Initializing window structure
+[WINFACTORY] Pixel buffer allocated
+[WINFACTORY] Adding to window manager
+[WINMGR] add_window called
+[WINMGR] Checking vtable
+[WINMGR] Checking traits
+[WINMGR] Checking window count
+[WINMGR] Adding window to array
+[WINMGR] Window added successfully
+[WINFACTORY] Window created successfully
+[WINMGR] add_window called
+[WINMGR] Checking vtable
+[WINMGR] Checking traits
+[WINMGR] Checking window count
+[WINMGR] Adding window to array
+[WINMGR] Window added successfully
+[KERNEL] Desktop window created
+[KERNEL] Desktop window rendered
+[KERNEL] Blitting desktop to framebuffer
+[KERNEL] Desktop blitted to framebuffer
+[KEYBOARD] Focus set to component
+[KERNEL] GUI keyboard mode enabled
+[KERNEL] Keyboard buffer cleared
+[KEYBOARD] Focus set to shell/console
+[KERNEL] Console mode enabled with desktop visible
+[SHELL] Initializing shell
+[SHELL] Showing prompt
+[SHELL] Init complete
+[KERNEL] User logged in: admin
+[KERNEL] Starting shell with desktop
+[5
+:50
+ms] [XHCI_QUEUE] Slot 2
+ queued 100
+ transfers, index=99
+ cycle=1
+
+[USB_MOUSE] Queued 128 initial transfers after init
+[USB_MOUSE] Buffer address: 0x01039E85
+
+USB KB: Report mod=00000000
+ key0=00000028
+
+[KBD_PROC] Dispatching event, scancode=0000001C
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[KBD_PROC] Dispatching event, scancode=0000001C
+[500
+:5000
+ms] [USB_MOUSE] WARNING: No new reports after 100 polls! Stuck at 0
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE] MOVE: pos=(0
+,1
+) delta=(0
+,1
+) buttons=0x00000000
+
+[WM_MOUSE] Event #1
+ type=00000100
+
+USB Mouse: dx=00000000
+ dy=00000001
+ pos=(0
+,1
+)
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE] MOVE: pos=(0
+,2
+) delta=(0
+,1
+) buttons=0x00000000
+
+[WM_MOUSE] Event #2
+ type=00000100
+
+USB Mouse: dx=00000000
+ dy=00000001
+ pos=(0
+,2
+)
+[MOUSE_MOVE] dx=0 dy=4 report_bytes: 00000000
+ 00000000
+ 00000004
+
+[MOUSE] MOVE: pos=(0
+,6
+) delta=(0
+,4
+) buttons=0x00000000
+
+[WM_MOUSE] Event #3
+ type=00000100
+
+USB Mouse: dx=00000003
+ dy=0000000A
+ pos=(0
+,6
+)
+[MOUSE_MOVE] dx=3 dy=10 report_bytes: 00000000
+ 00000003
+ 0000000A
+
+[MOUSE] MOVE: pos=(3
+,16
+) delta=(3
+,10
+) buttons=0x00000000
+
+[WM_MOUSE] Event #4
+ type=00000100
+
+USB Mouse: dx=00000002
+ dy=00000006
+ pos=(3
+,16
+)
+[MOUSE_MOVE] dx=2 dy=6 report_bytes: 00000000
+ 00000002
+ 00000006
+
+[MOUSE] MOVE: pos=(5
+,22
+) delta=(2
+,6
+) buttons=0x00000000
+
+[WM_MOUSE] Event #5
+ type=00000100
+
+USB Mouse: dx=00000002
+ dy=00000006
+ pos=(5
+,22
+)
+[MOUSE_MOVE] dx=7 dy=21 report_bytes: 00000000
+ 00000007
+ 00000015
+
+[MOUSE] MOVE: pos=(12
+,43
+) delta=(7
+,21
+) buttons=0x00000000
+
+USB Mouse: dx=00000007
+ dy=0000000E
+ pos=(12
+,43
+)
+[MOUSE_MOVE] dx=7 dy=14 report_bytes: 00000000
+ 00000007
+ 0000000E
+
+[MOUSE] MOVE: pos=(19
+,57
+) delta=(7
+,14
+) buttons=0x00000000
+
+USB Mouse: dx=00000007
+ dy=00000010
+ pos=(19
+,57
+)
+[MOUSE_MOVE] dx=7 dy=16 report_bytes: 00000000
+ 00000007
+ 00000010
+
+[MOUSE] MOVE: pos=(26
+,73
+) delta=(7
+,16
+) buttons=0x00000000
+
+USB Mouse: dx=00000009
+ dy=0000000C
+ pos=(26
+,73
+)
+[USB_MOUSE] Report #10
+: buttons=0x00000000
+ x=9
+ y=12
+ wheel=0
+
+[MOUSE_MOVE] dx=9 dy=12 report_bytes: 00000000
+ 00000009
+ 0000000C
+
+[MOUSE] MOVE: pos=(35
+,85
+) delta=(9
+,12
+) buttons=0x00000000
+
+USB Mouse: dx=0000000B
+ dy=0000000B
+ pos=(35
+,85
+)
+[MOUSE_MOVE] dx=11 dy=11 report_bytes: 00000000
+ 0000000B
+ 0000000B
+
+[MOUSE] MOVE: pos=(46
+,96
+) delta=(11
+,11
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #10
+: pos=(46
+,96
+) buttons=none
+USB Mouse: dx=00000012
+ dy=00000010
+ pos=(46
+,96
+)
+[MOUSE_MOVE] dx=18 dy=16 report_bytes: 00000000
+ 00000012
+ 00000010
+
+[MOUSE] MOVE: pos=(64
+,112
+) delta=(18
+,16
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=27 dy=19 report_bytes: 00000000
+ 0000001B
+ 00000013
+
+[MOUSE] MOVE: pos=(91
+,131
+) delta=(27
+,19
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=21 dy=11 report_bytes: 00000000
+ 00000015
+ 0000000B
+
+[MOUSE] MOVE: pos=(112
+,142
+) delta=(21
+,11
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=16 dy=5 report_bytes: 00000000
+ 00000010
+ 00000005
+
+[MOUSE] MOVE: pos=(128
+,147
+) delta=(16
+,5
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=3 report_bytes: 00000000
+ 00000007
+ 00000003
+
+[MOUSE] MOVE: pos=(135
+,150
+) delta=(7
+,3
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=-3 report_bytes: 00000000
+ 00000000
+ FFFFFFFD
+
+[MOUSE] MOVE: pos=(135
+,147
+) delta=(0
+,4294967293
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-1 dy=-2 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(134
+,145
+) delta=(4294967295
+,4294967294
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-1 dy=-3 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFD
+
+[MOUSE] MOVE: pos=(133
+,142
+) delta=(4294967295
+,4294967293
+) buttons=0x00000000
+
+[USB_MOUSE] Report #20
+: buttons=0x00000000
+ x=4294967295
+ y=4294967295
+ wheel=0
+
+[MOUSE_MOVE] dx=-1 dy=-1 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(132
+,141
+) delta=(4294967295
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=-4 report_bytes: 00000000
+ 00000000
+ FFFFFFFC
+
+[MOUSE] MOVE: pos=(132
+,137
+) delta=(0
+,4294967292
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #20
+: pos=(132
+,137
+) buttons=none
+[MOUSE_MOVE] dx=0 dy=-4 report_bytes: 00000000
+ 00000000
+ FFFFFFFC
+
+[MOUSE] MOVE: pos=(132
+,133
+) delta=(0
+,4294967292
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=-6 report_bytes: 00000000
+ 00000001
+ FFFFFFFA
+
+[MOUSE] MOVE: pos=(133
+,127
+) delta=(1
+,4294967290
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=-16 report_bytes: 00000000
+ 00000000
+ FFFFFFF0
+
+[MOUSE] MOVE: pos=(133
+,111
+) delta=(0
+,4294967280
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-4 dy=-28 report_bytes: 00000000
+ FFFFFFFC
+ FFFFFFE4
+
+[MOUSE] MOVE: pos=(129
+,83
+) delta=(4294967292
+,4294967268
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-2 dy=-10 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFF6
+
+[MOUSE] MOVE: pos=(127
+,73
+) delta=(4294967294
+,4294967286
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(127
+,72
+) delta=(0
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(127
+,71
+) delta=(0
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-7 dy=-11 report_bytes: 00000000
+ FFFFFFF9
+ FFFFFFF5
+
+[MOUSE] MOVE: pos=(120
+,60
+) delta=(4294967289
+,4294967285
+) buttons=0x00000000
+
+[USB_MOUSE] Report #30
+: buttons=0x00000000
+ x=4294967294
+ y=4294967294
+ wheel=0
+
+[MOUSE_MOVE] dx=-2 dy=-2 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(118
+,58
+) delta=(4294967294
+,4294967294
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-3 dy=-4 report_bytes: 00000000
+ FFFFFFFD
+ FFFFFFFC
+
+[MOUSE] MOVE: pos=(115
+,54
+) delta=(4294967293
+,4294967292
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #30
+: pos=(115
+,54
+) buttons=none
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE] MOVE: pos=(114
+,54
+) delta=(4294967295
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE] MOVE: pos=(114
+,55
+) delta=(0
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=2 report_bytes: 00000000
+ 00000001
+ 00000002
+
+[MOUSE] MOVE: pos=(115
+,57
+) delta=(1
+,2
+) buttons=0x00000000
+
+[834
+:8340
+ms] [XHCI_DEBUG] Cycle mismatch at index 44
+, expected cycle=1
+, got cycle=0
+ (mismatch #1000
+)
+USB KB: Report mod=00000000
+ key0=0000001A
+
+[KBD_PROC] Dispatching event, scancode=00000011
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000077'
+[KBD_PROC] Dispatching event, scancode=00000011
+USB KB: Report mod=00000000
+ key0=0000000C
+
+[KBD_PROC] Dispatching event, scancode=00000017
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000069'
+[KBD_PROC] Dispatching event, scancode=00000017
+USB KB: Report mod=00000000
+ key0=00000011
+
+[KBD_PROC] Dispatching event, scancode=00000031
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '0000006E'
+[KBD_PROC] Dispatching event, scancode=00000031
+USB KB: Report mod=00000000
+ key0=00000007
+
+[KBD_PROC] Dispatching event, scancode=00000020
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000064'
+[KBD_PROC] Dispatching event, scancode=00000020
+USB KB: Report mod=00000000
+ key0=00000012
+
+[KBD_PROC] Dispatching event, scancode=00000018
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '0000006F'
+[KBD_PROC] Dispatching event, scancode=00000018
+USB KB: Report mod=00000000
+ key0=0000001A
+
+[KBD_PROC] Dispatching event, scancode=00000011
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000077'
+[KBD_PROC] Dispatching event, scancode=00000011
+USB KB: Report mod=00000000
+ key0=00000028
+
+[KBD_PROC] Dispatching event, scancode=0000001C
+[SHELL_HANDLER] Processing key
+[WINDOW_DEMO] Starting window_test_demo
+[WINDOW_DEMO] Initializing compositor
+[CONSOLE] console_compositor_init called
+[CONSOLE] Creating window
+[CONSOLE] Window created successfully
+[GFX] Console callback SET
+[CONSOLE] Initialization complete, window is VISIBLE
+[WINDOW_DEMO] Compositor initialized
+[WINDOW_DEMO] Clearing background
+[WINDOW_DEMO] Creating windows
+[WINDOW_DEMO] Rendering all windows
+[WINDOW_DEMO] Initial render complete
+[XHCI_ROUTE] slot=1
+ ep=3
+ code=1
+
+[KBD_PROC] Dispatching event, scancode=0000001C
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE] MOVE: pos=(114
+,57
+) delta=(4294967295
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE] MOVE: pos=(113
+,57
+) delta=(4294967295
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE] MOVE: pos=(111
+,57
+) delta=(4294967294
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE] MOVE: pos=(112
+,57
+) delta=(1
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=2 dy=0 report_bytes: 00000000
+ 00000002
+ 00000000
+
+[MOUSE] MOVE: pos=(114
+,57
+) delta=(2
+,0
+) buttons=0x00000000
+
+[USB_MOUSE] Report #40
+: buttons=0x00000000
+ x=9
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=9 dy=0 report_bytes: 00000000
+ 00000009
+ 00000000
+
+[MOUSE] MOVE: pos=(123
+,57
+) delta=(9
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=26 dy=0 report_bytes: 00000000
+ 0000001A
+ 00000000
+
+[MOUSE] MOVE: pos=(149
+,57
+) delta=(26
+,0
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #40
+: pos=(149
+,57
+) buttons=none
+[MOUSE_MOVE] dx=32 dy=0 report_bytes: 00000000
+ 00000020
+ 00000000
+
+[MOUSE] MOVE: pos=(181
+,57
+) delta=(32
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=18 dy=-1 report_bytes: 00000000
+ 00000012
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(199
+,56
+) delta=(18
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=31 dy=-4 report_bytes: 00000000
+ 0000001F
+ FFFFFFFC
+
+[MOUSE] MOVE: pos=(230
+,52
+) delta=(31
+,4294967292
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=28 dy=-3 report_bytes: 00000000
+ 0000001C
+ FFFFFFFD
+
+[MOUSE] MOVE: pos=(258
+,49
+) delta=(28
+,4294967293
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=8 dy=-1 report_bytes: 00000000
+ 00000008
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(266
+,48
+) delta=(8
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=5 dy=-1 report_bytes: 00000000
+ 00000005
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(271
+,47
+) delta=(5
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=3 dy=0 report_bytes: 00000000
+ 00000003
+ 00000000
+
+[MOUSE] MOVE: pos=(274
+,47
+) delta=(3
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=9 dy=0 report_bytes: 00000000
+ 00000009
+ 00000000
+
+[MOUSE] MOVE: pos=(283
+,47
+) delta=(9
+,0
+) buttons=0x00000000
+
+[USB_MOUSE] process_xhci_data called #50
+
+[USB_MOUSE] Report #50
+: buttons=0x00000000
+ x=15
+ y=1
+ wheel=0
+
+[MOUSE_MOVE] dx=15 dy=1 report_bytes: 00000000
+ 0000000F
+ 00000001
+
+[MOUSE] MOVE: pos=(298
+,48
+) delta=(15
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=17 dy=1 report_bytes: 00000000
+ 00000011
+ 00000001
+
+[MOUSE] MOVE: pos=(315
+,49
+) delta=(17
+,1
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #50
+: pos=(315
+,49
+) buttons=none
+[MOUSE_MOVE] dx=15 dy=0 report_bytes: 00000000
+ 0000000F
+ 00000000
+
+[MOUSE] MOVE: pos=(330
+,49
+) delta=(15
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=15 dy=0 report_bytes: 00000000
+ 0000000F
+ 00000000
+
+[MOUSE] MOVE: pos=(345
+,49
+) delta=(15
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=11 dy=0 report_bytes: 00000000
+ 0000000B
+ 00000000
+
+[MOUSE] MOVE: pos=(356
+,49
+) delta=(11
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=0 report_bytes: 00000000
+ 00000007
+ 00000000
+
+[MOUSE] MOVE: pos=(363
+,49
+) delta=(7
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=0 report_bytes: 00000000
+ 00000004
+ 00000000
+
+[MOUSE] MOVE: pos=(367
+,49
+) delta=(4
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=3 dy=1 report_bytes: 00000000
+ 00000003
+ 00000001
+
+[MOUSE] MOVE: pos=(370
+,50
+) delta=(3
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=5 dy=1 report_bytes: 00000000
+ 00000005
+ 00000001
+
+[MOUSE] MOVE: pos=(375
+,51
+) delta=(5
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=3 dy=1 report_bytes: 00000000
+ 00000003
+ 00000001
+
+[MOUSE] MOVE: pos=(378
+,52
+) delta=(3
+,1
+) buttons=0x00000000
+
+[USB_MOUSE] Report #60
+: buttons=0x00000000
+ x=9
+ y=2
+ wheel=0
+
+[MOUSE_MOVE] dx=9 dy=2 report_bytes: 00000000
+ 00000009
+ 00000002
+
+[MOUSE] MOVE: pos=(387
+,54
+) delta=(9
+,2
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=14 dy=3 report_bytes: 00000000
+ 0000000E
+ 00000003
+
+[MOUSE] MOVE: pos=(401
+,57
+) delta=(14
+,3
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #60
+: pos=(401
+,57
+) buttons=none
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE] MOVE: pos=(402
+,57
+) delta=(1
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=3 dy=1 report_bytes: 00000000
+ 00000003
+ 00000001
+
+[MOUSE] MOVE: pos=(405
+,58
+) delta=(3
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=3 dy=1 report_bytes: 00000000
+ 00000003
+ 00000001
+
+[MOUSE] MOVE: pos=(408
+,59
+) delta=(3
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=2 report_bytes: 00000000
+ 00000007
+ 00000002
+
+[MOUSE] MOVE: pos=(415
+,61
+) delta=(7
+,2
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=8 dy=3 report_bytes: 00000000
+ 00000008
+ 00000003
+
+[MOUSE] MOVE: pos=(423
+,64
+) delta=(8
+,3
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=10 dy=3 report_bytes: 00000000
+ 0000000A
+ 00000003
+
+[MOUSE] MOVE: pos=(433
+,67
+) delta=(10
+,3
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=6 dy=2 report_bytes: 00000000
+ 00000006
+ 00000002
+
+[MOUSE] MOVE: pos=(439
+,69
+) delta=(6
+,2
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=1 report_bytes: 00000000
+ 00000004
+ 00000001
+
+[MOUSE] MOVE: pos=(443
+,70
+) delta=(4
+,1
+) buttons=0x00000000
+
+[USB_MOUSE] Report #70
+: buttons=0x00000000
+ x=1
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE] MOVE: pos=(444
+,70
+) delta=(1
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=2 report_bytes: 00000000
+ 00000004
+ 00000002
+
+[MOUSE] MOVE: pos=(448
+,72
+) delta=(4
+,2
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #70
+: pos=(448
+,72
+) buttons=none
+[MOUSE_MOVE] dx=3 dy=2 report_bytes: 00000000
+ 00000003
+ 00000002
+
+[MOUSE] MOVE: pos=(451
+,74
+) delta=(3
+,2
+) buttons=0x00000000
+
+[1280
+:12800
+ms] [XHCI_QUEUE] Slot 2
+ queued 200
+ transfers, index=199
+ cycle=1
+
+[MOUSE_MOVE] dx=4 dy=2 report_bytes: 00000000
+ 00000004
+ 00000002
+
+[MOUSE] MOVE: pos=(455
+,76
+) delta=(4
+,2
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=9 dy=6 report_bytes: 00000000
+ 00000009
+ 00000006
+
+[MOUSE] MOVE: pos=(464
+,82
+) delta=(9
+,6
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=9 dy=5 report_bytes: 00000000
+ 00000009
+ 00000005
+
+[MOUSE] MOVE: pos=(473
+,87
+) delta=(9
+,5
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=5 dy=3 report_bytes: 00000000
+ 00000005
+ 00000003
+
+[MOUSE] MOVE: pos=(478
+,90
+) delta=(5
+,3
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=8 dy=5 report_bytes: 00000000
+ 00000008
+ 00000005
+
+[MOUSE] MOVE: pos=(486
+,95
+) delta=(8
+,5
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=5 dy=5 report_bytes: 00000000
+ 00000005
+ 00000005
+
+[MOUSE] MOVE: pos=(491
+,100
+) delta=(5
+,5
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=9 dy=7 report_bytes: 00000000
+ 00000009
+ 00000007
+
+[MOUSE] MOVE: pos=(500
+,107
+) delta=(9
+,7
+) buttons=0x00000000
+
+[USB_MOUSE] Report #80
+: buttons=0x00000000
+ x=8
+ y=7
+ wheel=0
+
+[MOUSE_MOVE] dx=8 dy=7 report_bytes: 00000000
+ 00000008
+ 00000007
+
+[MOUSE] MOVE: pos=(508
+,114
+) delta=(8
+,7
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=11 dy=8 report_bytes: 00000000
+ 0000000B
+ 00000008
+
+[MOUSE] MOVE: pos=(519
+,122
+) delta=(11
+,8
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #80
+: pos=(519
+,122
+) buttons=none
+[MOUSE_MOVE] dx=11 dy=11 report_bytes: 00000000
+ 0000000B
+ 0000000B
+
+[MOUSE] MOVE: pos=(530
+,133
+) delta=(11
+,11
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=4 report_bytes: 00000000
+ 00000004
+ 00000004
+
+[MOUSE] MOVE: pos=(534
+,137
+) delta=(4
+,4
+) buttons=0x00000000
+
+[1286
+:12860
+ms] [XHCI] Processed 100
+ events, currently at index 107
+
+[XHCI_ROUTE] slot=2
+ ep=3
+ code=1
+
+[MOUSE_MOVE] dx=4 dy=4 report_bytes: 00000000
+ 00000004
+ 00000004
+
+[MOUSE] MOVE: pos=(538
+,141
+) delta=(4
+,4
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=8 dy=9 report_bytes: 00000000
+ 00000008
+ 00000009
+
+[MOUSE] MOVE: pos=(546
+,150
+) delta=(8
+,9
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=8 dy=6 report_bytes: 00000000
+ 00000008
+ 00000006
+
+[MOUSE] MOVE: pos=(554
+,156
+) delta=(8
+,6
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=3 report_bytes: 00000000
+ 00000004
+ 00000003
+
+[MOUSE] MOVE: pos=(558
+,159
+) delta=(4
+,3
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=1 report_bytes: 00000000
+ 00000001
+ 00000001
+
+[MOUSE] MOVE: pos=(559
+,160
+) delta=(1
+,1
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=1 report_bytes: 00000000
+ 00000001
+ 00000001
+
+[MOUSE] MOVE: pos=(560
+,161
+) delta=(1
+,1
+) buttons=0x00000000
+
+[USB_MOUSE] Report #90
+: buttons=0x00000000
+ x=2
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=2 dy=0 report_bytes: 00000000
+ 00000002
+ 00000000
+
+[MOUSE] MOVE: pos=(562
+,161
+) delta=(2
+,0
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=9 dy=0 report_bytes: 00000000
+ 00000009
+ 00000000
+
+[MOUSE] MOVE: pos=(571
+,161
+) delta=(9
+,0
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #90
+: pos=(571
+,161
+) buttons=none
+[MOUSE_MOVE] dx=7 dy=-1 report_bytes: 00000000
+ 00000007
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(578
+,160
+) delta=(7
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=-1 report_bytes: 00000000
+ 00000007
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(585
+,159
+) delta=(7
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=-2 report_bytes: 00000000
+ 00000007
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(592
+,157
+) delta=(7
+,4294967294
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=6 dy=-1 report_bytes: 00000000
+ 00000006
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(598
+,156
+) delta=(6
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=-2 report_bytes: 00000000
+ 00000004
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(602
+,154
+) delta=(4
+,4294967294
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=-1 report_bytes: 00000000
+ 00000004
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(606
+,153
+) delta=(4
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=7 dy=-2 report_bytes: 00000000
+ 00000007
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(613
+,151
+) delta=(7
+,4294967294
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=4 dy=-2 report_bytes: 00000000
+ 00000004
+ FFFFFFFE
+
+[MOUSE] MOVE: pos=(617
+,149
+) delta=(4
+,4294967294
+) buttons=0x00000000
+
+[USB_MOUSE] process_xhci_data called #100
+
+[USB_MOUSE] Report #100
+: buttons=0x00000000
+ x=2
+ y=4294967295
+ wheel=0
+
+[MOUSE_MOVE] dx=2 dy=-1 report_bytes: 00000000
+ 00000002
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(619
+,148
+) delta=(2
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_MOVE] dx=1 dy=-1 report_bytes: 00000000
+ 00000001
+ FFFFFFFF
+
+[MOUSE] MOVE: pos=(620
+,147
+) delta=(1
+,4294967295
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #100
+: pos=(620
+,147
+) buttons=none
+[MOUSE] Debug logging limit reached (100 events), disabling further logs.
+[WM_MOUSE] Event #100
+ type=00000100
+
+[MOUSE_MOVE] dx=2 dy=-2 report_bytes: 00000000
+ 00000002
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=4 dy=-1 report_bytes: 00000000
+ 00000004
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=4 dy=-1 report_bytes: 00000000
+ 00000004
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE_MOVE] dx=3 dy=0 report_bytes: 00000000
+ 00000003
+ 00000000
+
+[MOUSE_MOVE] dx=4 dy=-1 report_bytes: 00000000
+ 00000004
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=8 dy=0 report_bytes: 00000000
+ 00000008
+ 00000000
+
+[MOUSE_MOVE] dx=8 dy=0 report_bytes: 00000000
+ 00000008
+ 00000000
+
+[USB_MOUSE] Report #110
+: buttons=0x00000000
+ x=2
+ y=1
+ wheel=0
+
+[MOUSE_MOVE] dx=2 dy=1 report_bytes: 00000000
+ 00000002
+ 00000001
+
+[MOUSE_MOVE] dx=2 dy=1 report_bytes: 00000000
+ 00000002
+ 00000001
+
+[MOUSE_MOVE] dx=2 dy=2 report_bytes: 00000000
+ 00000002
+ 00000002
+
+[MOUSE_MOVE] dx=9 dy=3 report_bytes: 00000000
+ 00000009
+ 00000003
+
+[MOUSE_MOVE] dx=10 dy=2 report_bytes: 00000000
+ 0000000A
+ 00000002
+
+[MOUSE_MOVE] dx=4 dy=1 report_bytes: 00000000
+ 00000004
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=1 dy=1 report_bytes: 00000000
+ 00000001
+ 00000001
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[USB_MOUSE] Report #120
+: buttons=0x00000000
+ x=1
+ y=4294967295
+ wheel=0
+
+[MOUSE_MOVE] dx=1 dy=-1 report_bytes: 00000000
+ 00000001
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=2 dy=0 report_bytes: 00000000
+ 00000002
+ 00000000
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE_MOVE] dx=0 dy=-2 report_bytes: 00000000
+ 00000000
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-2 dy=-1 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFF
+
+[1428
+:14280
+ms] [XHCI] Transfer ring wrapping for slot 2
+, index was 255
+, cycle was 1
+
+[1428
+:14280
+ms] [XHCI] Transfer ring wrapped to index 0, new cycle=0
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[USB_MOUSE] Report #130
+: buttons=0x00000000
+ x=4294967295
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+USB Mouse: Buttons - L
+USB Mouse: Buttons - 
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[XHCI_ROUTE] slot=2
+ ep=3
+ code=1
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=-2 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-3 dy=-1 report_bytes: 00000000
+ FFFFFFFD
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-3 dy=-1 report_bytes: 00000000
+ FFFFFFFD
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-15 dy=-2 report_bytes: 00000000
+ FFFFFFF1
+ FFFFFFFE
+
+[USB_MOUSE] Report #140
+: buttons=0x00000000
+ x=4294967273
+ y=4294967290
+ wheel=0
+
+[MOUSE_MOVE] dx=-23 dy=-6 report_bytes: 00000000
+ FFFFFFE9
+ FFFFFFFA
+
+[MOUSE_MOVE] dx=-13 dy=-3 report_bytes: 00000000
+ FFFFFFF3
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=-13 dy=-3 report_bytes: 00000000
+ FFFFFFF3
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=-13 dy=-4 report_bytes: 00000000
+ FFFFFFF3
+ FFFFFFFC
+
+[MOUSE_MOVE] dx=-4 dy=-1 report_bytes: 00000000
+ FFFFFFFC
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-3 dy=0 report_bytes: 00000000
+ FFFFFFFD
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=-1 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-5 dy=-1 report_bytes: 00000000
+ FFFFFFFB
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-8 dy=0 report_bytes: 00000000
+ FFFFFFF8
+ 00000000
+
+[MOUSE_MOVE] dx=-10 dy=-1 report_bytes: 00000000
+ FFFFFFF6
+ FFFFFFFF
+
+[USB_MOUSE] process_xhci_data called #150
+
+[USB_MOUSE] Report #150
+: buttons=0x00000000
+ x=4294967286
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=-10 dy=0 report_bytes: 00000000
+ FFFFFFF6
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=2 report_bytes: 00000000
+ FFFFFFFE
+ 00000002
+
+[MOUSE_MOVE] dx=-3 dy=1 report_bytes: 00000000
+ FFFFFFFD
+ 00000001
+
+[MOUSE_MOVE] dx=-3 dy=1 report_bytes: 00000000
+ FFFFFFFD
+ 00000001
+
+[MOUSE_MOVE] dx=-6 dy=2 report_bytes: 00000000
+ FFFFFFFA
+ 00000002
+
+[MOUSE_MOVE] dx=-7 dy=0 report_bytes: 00000000
+ FFFFFFF9
+ 00000000
+
+[MOUSE_MOVE] dx=-11 dy=0 report_bytes: 00000000
+ FFFFFFF5
+ 00000000
+
+[MOUSE_MOVE] dx=-13 dy=-2 report_bytes: 00000000
+ FFFFFFF3
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-14 dy=-3 report_bytes: 00000000
+ FFFFFFF2
+ FFFFFFFD
+
+[USB_MOUSE] Report #160
+: buttons=0x00000000
+ x=4294967278
+ y=4294967293
+ wheel=0
+
+[MOUSE_MOVE] dx=-18 dy=-3 report_bytes: 00000000
+ FFFFFFEE
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=-15 dy=-4 report_bytes: 00000000
+ FFFFFFF1
+ FFFFFFFC
+
+[MOUSE_MOVE] dx=-7 dy=-1 report_bytes: 00000000
+ FFFFFFF9
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-3 dy=0 report_bytes: 00000000
+ FFFFFFFD
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=-1 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-3 dy=-2 report_bytes: 00000000
+ FFFFFFFD
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-1 dy=-1 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=-2 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFE
+
+[USB_MOUSE] Report #170
+: buttons=0x00000000
+ x=4294967293
+ y=4294967294
+ wheel=0
+
+[MOUSE_MOVE] dx=-3 dy=-2 report_bytes: 00000000
+ FFFFFFFD
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-4 dy=-1 report_bytes: 00000000
+ FFFFFFFC
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-1 dy=-2 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFE
+
+[1542
+:15420
+ms] [XHCI_QUEUE] Slot 2
+ queued 300
+ transfers, index=44
+ cycle=0
+
+[MOUSE_MOVE] dx=-4 dy=-2 report_bytes: 00000000
+ FFFFFFFC
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=-1 report_bytes: 00000000
+ FFFFFFFF
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-2 dy=-2 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFE
+
+[MOUSE_MOVE] dx=-5 dy=-1 report_bytes: 00000000
+ FFFFFFFB
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=-2 dy=-1 report_bytes: 00000000
+ FFFFFFFE
+ FFFFFFFF
+
+[USB_MOUSE] Report #180
+: buttons=0x00000000
+ x=4294967295
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-3 dy=0 report_bytes: 00000000
+ FFFFFFFD
+ 00000000
+
+[MOUSE_MOVE] dx=-3 dy=0 report_bytes: 00000000
+ FFFFFFFD
+ 00000000
+
+[1568
+:15680
+ms] [XHCI] Processed 200
+ events, currently at index 207
+
+[XHCI_ROUTE] slot=2
+ ep=3
+ code=1
+
+[MOUSE_MOVE] dx=-5 dy=0 report_bytes: 00000000
+ FFFFFFFB
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[USB_MOUSE] Report #190
+: buttons=0x00000000
+ x=4294967294
+ y=0
+ wheel=0
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=0 report_bytes: 00000000
+ FFFFFFFE
+ 00000000
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+USB Mouse: Buttons - L
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000001
+ 00000000
+ FFFFFFFF
+
+USB Mouse: Buttons - 
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[USB_MOUSE] process_xhci_data called #200
+
+[USB_MOUSE] Report #200
+: buttons=0x00000000
+ x=1
+ y=1
+ wheel=0
+
+[MOUSE_MOVE] dx=1 dy=1 report_bytes: 00000000
+ 00000001
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=2 report_bytes: 00000000
+ 00000000
+ 00000002
+
+[WM_MOUSE] Event #200
+ type=00000100
+
+[MOUSE_MOVE] dx=1 dy=1 report_bytes: 00000000
+ 00000001
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[1667
+:16670
+ms] [XHCI_DEBUG] Cycle mismatch at index 229
+, expected cycle=1
+, got cycle=0
+ (mismatch #2000
+)
+USB Mouse: Buttons - L
+USB Mouse: Buttons - 
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[USB_MOUSE] Report #210
+: buttons=0x00000000
+ x=4294967295
+ y=1
+ wheel=0
+
+[MOUSE_MOVE] dx=-1 dy=1 report_bytes: 00000000
+ FFFFFFFF
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=-1 dy=0 report_bytes: 00000000
+ FFFFFFFF
+ 00000000
+
+[MOUSE_MOVE] dx=-2 dy=3 report_bytes: 00000000
+ FFFFFFFE
+ 00000003
+
+[MOUSE_MOVE] dx=-1 dy=1 report_bytes: 00000000
+ FFFFFFFF
+ 00000001
+
+[MOUSE_MOVE] dx=-4 dy=7 report_bytes: 00000000
+ FFFFFFFC
+ 00000007
+
+[MOUSE_MOVE] dx=-4 dy=10 report_bytes: 00000000
+ FFFFFFFC
+ 0000000A
+
+[MOUSE_MOVE] dx=-1 dy=6 report_bytes: 00000000
+ FFFFFFFF
+ 00000006
+
+[MOUSE_MOVE] dx=-3 dy=13 report_bytes: 00000000
+ FFFFFFFD
+ 0000000D
+
+[MOUSE_MOVE] dx=0 dy=15 report_bytes: 00000000
+ 00000000
+ 0000000F
+
+[USB_MOUSE] Report #220
+: buttons=0x00000000
+ x=1
+ y=14
+ wheel=0
+
+[MOUSE_MOVE] dx=1 dy=14 report_bytes: 00000000
+ 00000001
+ 0000000E
+
+[MOUSE_MOVE] dx=5 dy=14 report_bytes: 00000000
+ 00000005
+ 0000000E
+
+[MOUSE_MOVE] dx=4 dy=11 report_bytes: 00000000
+ 00000004
+ 0000000B
+
+[MOUSE_MOVE] dx=5 dy=10 report_bytes: 00000000
+ 00000005
+ 0000000A
+
+[MOUSE_MOVE] dx=5 dy=19 report_bytes: 00000000
+ 00000005
+ 00000013
+
+[MOUSE_MOVE] dx=1 dy=8 report_bytes: 00000000
+ 00000001
+ 00000008
+
+[MOUSE_MOVE] dx=2 dy=12 report_bytes: 00000000
+ 00000002
+ 0000000C
+
+[MOUSE_MOVE] dx=1 dy=3 report_bytes: 00000000
+ 00000001
+ 00000003
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[MOUSE_MOVE] dx=0 dy=1 report_bytes: 00000000
+ 00000000
+ 00000001
+
+[USB_MOUSE] Report #230
+: buttons=0x00000000
+ x=0
+ y=4
+ wheel=0
+
+[MOUSE_MOVE] dx=0 dy=4 report_bytes: 00000000
+ 00000000
+ 00000004
+
+[MOUSE_MOVE] dx=0 dy=3 report_bytes: 00000000
+ 00000000
+ 00000003
+
+[1737
+:17370
+ms] [XHCI] Event ring wrapped to index 0, flipped cycle to 0
+
+[MOUSE_MOVE] dx=0 dy=5 report_bytes: 00000000
+ 00000000
+ 00000005
+
+[MOUSE_MOVE] dx=1 dy=7 report_bytes: 00000000
+ 00000001
+ 00000007
+
+[XHCI_ROUTE] slot=2
+ ep=3
+ code=1
+
+[MOUSE_MOVE] dx=0 dy=5 report_bytes: 00000000
+ 00000000
+ 00000005
+
+[MOUSE_MOVE] dx=3 dy=7 report_bytes: 00000000
+ 00000003
+ 00000007
+
+[MOUSE_MOVE] dx=1 dy=4 report_bytes: 00000000
+ 00000001
+ 00000004
+
+[MOUSE_MOVE] dx=1 dy=0 report_bytes: 00000000
+ 00000001
+ 00000000
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[USB_MOUSE] Report #240
+: buttons=0x00000000
+ x=0
+ y=4294967295
+ wheel=0
+
+[MOUSE_MOVE] dx=0 dy=-1 report_bytes: 00000000
+ 00000000
+ FFFFFFFF
+
+[MOUSE_MOVE] dx=1 dy=-3 report_bytes: 00000000
+ 00000001
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=3 dy=-3 report_bytes: 00000000
+ 00000003
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=5 dy=-3 report_bytes: 00000000
+ 00000005
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=10 dy=-3 report_bytes: 00000000
+ 0000000A
+ FFFFFFFD
+
+[MOUSE_MOVE] dx=19 dy=-6 report_bytes: 00000000
+ 00000013
+ FFFFFFFA
+
+[MOUSE_MOVE] dx=33 dy=-4 report_bytes: 00000000
+ 00000021
+ FFFFFFFC
+
+[MOUSE_MOVE] dx=67 dy=-9 report_bytes: 00000000
+ 00000043
+ FFFFFFF7
+
+[MOUSE_MOVE] dx=65 dy=-10 report_bytes: 00000000
+ 00000041
+ FFFFFFF6
+
+[MOUSE_MOVE] dx=108 dy=-23 report_bytes: 00000000
+ 0000006C
+ FFFFFFE9
+
+[USB_MOUSE] process_xhci_data called #250
+
+[USB_MOUSE] Report #250
+: buttons=0x00000000
+ x=87
+ y=4294967269
+ wheel=0
+
+[MOUSE_MOVE] dx=87 dy=-27 report_bytes: 00000000
+ 00000057
+ FFFFFFE5
+
+[MOUSE_MOVE] dx=50 dy=-22 report_bytes: 00000000
+ 00000032
+ FFFFFFEA
+
+[MOUSE_MOVE] dx=38 dy=-18 report_bytes: 00000000
+ 00000026
+ FFFFFFEE
+
+[MOUSE_MOVE] dx=12 dy=-4 report_bytes: 00000000
+ 0000000C
+ FFFFFFFC
+
+[MOUSE_MOVE] dx=6 dy=-2 report_bytes: 00000000
+ 00000006
+ FFFFFFFE
+
+USB KB: Report mod=00000000
+ key0=00000016
+
+[KBD_PROC] Dispatching event, scancode=0000001F
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000073'
+[KBD_PROC] Dispatching event, scancode=0000001F
+USB KB: Report mod=00000000
+ key0=0000000B
+
+[KBD_PROC] Dispatching event, scancode=00000023
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000068'
+USB KB: Report mod=00000000
+ key0=00000018
+
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000075'
+USB KB: Report mod=00000000
+ key0=00000017
+
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000074'
+USB KB: Report mod=00000000
+ key0=00000007
+
+[SHELL_HANDLER] Processing key
+USB KB: Report mod=00000000
+ key0=00000012
+
+[SHELL_HANDLER] Processing key
+USB KB: Report mod=00000000
+ key0=0000001A
+
+[SHELL_HANDLER] Processing key
+USB KB: Report mod=00000000
+ key0=00000011
+
+[SHELL_HANDLER] Processing key
+USB KB: Report mod=00000000
+ key0=00000028
+
+[SHELL_HANDLER] Processing key

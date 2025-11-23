@@ -1,0 +1,17 @@
+// ERROR TEST: Wrong argument types
+// Expected error: Type mismatch in function call
+// Passing STRING where INT is expected
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    result = add("hello", 5);  // ERROR: First argument should be INT
+    say(result);
+}

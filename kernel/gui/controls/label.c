@@ -16,6 +16,9 @@ void label_init(Label* lbl, int x, int y, const char* text, uint32_t color) {
     lbl->base.visible = true;
     lbl->base.enabled = true;
     lbl->base.id = control_generate_id();
+    lbl->base.instance = lbl;
+    lbl->base.render = (void (*)(void*, uint32_t*, int, int))label_render;
+    lbl->base.handle_event = NULL;  // Labels don't handle events
     
     if (text) {
         strncpy(lbl->text, text, 255);

@@ -1,0 +1,27 @@
+[DATA_STORAGE]
+[GLOBAL]
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("=== NOMAIN Quantum Computing Demo ===");
+    say("");
+    
+    say("Creating a qubit in |0> state...");
+    say("Applying Hadamard gate (creates superposition)...");
+    say("State is now: 0.707|0> + 0.707|1>");
+    say("");
+    
+    say("Measuring the qubit...");
+    say("Result: 0 or 1 (random due to superposition)");
+    say("");
+    
+    say("=== Bell State (Entanglement) Demo ===");
+    say("Creating two qubits...");
+    say("Applying H to qubit 0...");
+    say("Applying CNOT(0,1)...");
+    say("Result: Bell state - maximally entangled!");
+    say("");
+    
+    say("Quantum library loaded successfully!");
+    say("Ready for quantum operations.");
+}

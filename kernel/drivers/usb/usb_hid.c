@@ -14,7 +14,33 @@ int usb_hid_init(void) {
     return 0;
 }
 
-int usb_hid_probe_device(usb_device_t *device) {
+// New probe function for XHCI devices
+void usb_hid_probe_device(void* controller, uint8_t slot, uint8_t port) {
+    SERIAL_LOG("USB HID: Probing XHCI device slot=");
+    SERIAL_LOG_HEX("", slot);
+    SERIAL_LOG(" port=");
+    SERIAL_LOG_HEX("", port);
+    SERIAL_LOG("\n");
+    
+    // For now, assume port 5 = keyboard, port 6 = mouse
+    // In production, we'd read descriptors to determine device type
+    if (port == 5) {
+        SERIAL_LOG("USB HID: Initializing XHCI keyboard on slot ");
+        SERIAL_LOG_HEX("", slot);
+        SERIAL_LOG("\n");
+        extern void usb_keyboard_init_xhci(void* controller, uint8_t slot);
+        usb_keyboard_init_xhci(controller, slot);
+    } else if (port == 6) {
+        SERIAL_LOG("USB HID: Initializing XHCI mouse on slot ");
+        SERIAL_LOG_HEX("", slot);
+        SERIAL_LOG("\n");
+        extern void usb_mouse_init_xhci(void* controller, uint8_t slot);
+        usb_mouse_init_xhci(controller, slot);
+    }
+}
+
+// Legacy UHCI probe function
+int usb_hid_probe_device_legacy(usb_device_t *device) {
     if (!device) {
         return -1;
     }
@@ -24,8 +50,21 @@ int usb_hid_probe_device(usb_device_t *device) {
     // This would examine the device's configuration descriptor
     // to find HID interfaces and determine their type (mouse, keyboard, etc.)
     
-    // For our mouse implementation, this is handled in usb_mouse_probe()
-    return usb_mouse_probe(device);
+    // Try to probe as keyboard first
+    extern int usb_keyboard_probe(usb_device_t *device);
+    if (usb_keyboard_probe(device) == 0) {
+        SERIAL_LOG("USB HID: Device identified as keyboard\n");
+        return 0;
+    }
+    
+    // Try to probe as mouse
+    if (usb_mouse_probe(device) == 0) {
+        SERIAL_LOG("USB HID: Device identified as mouse\n");
+        return 0;
+    }
+    
+    SERIAL_LOG("USB HID: Device is not a recognized HID device\n");
+    return -1;
 }
 
 int usb_hid_set_protocol(usb_hid_device_t *hid_dev, uint8_t protocol) {

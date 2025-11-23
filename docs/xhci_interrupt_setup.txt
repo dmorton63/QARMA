@@ -1,0 +1,55 @@
+/**
+ * XHCI Interrupt Handler Setup
+ * 
+ * Instead of polling, we'll enable XHCI interrupts and handle them via IRQ
+ */
+
+// Add to xhci.c after xhci_start():
+
+void xhci_enable_interrupts(xhci_controller_t *xhci) {
+    if (!xhci) return;
+    
+    // Enable interrupts in USBCMD
+    uint32_t cmd = xhci_read32(xhci->operational_base + XHCI_USBCMD);
+    cmd |= (1 << 2);  // Interrupt Enable bit
+    xhci_write32(xhci->operational_base + XHCI_USBCMD, cmd);
+    
+    // Enable interrupter 0
+    uint32_t ir_base = xhci->runtime_base + 0x20;
+    uint32_t iman = xhci_read32(ir_base);
+    iman |= (1 << 1);  // Interrupt Enable
+    xhci_write32(ir_base, iman);
+    
+    // Get PCI IRQ line and register handler
+    extern void register_interrupt_handler(uint8_t irq, void (*handler)(struct regs*));
+    extern void xhci_irq_handler(struct regs* r);
+    
+    // Read IRQ from PCI config space (offset 0x3C)
+    uint8_t irq = pci_read_config_byte(xhci->bus, xhci->slot, xhci->func, 0x3C);
+    
+    SERIAL_LOG("XHCI: Registering IRQ ");
+    SERIAL_LOG_HEX("", irq);
+    SERIAL_LOG("\n");
+    
+    register_interrupt_handler(irq, xhci_irq_handler);
+}
+
+// IRQ handler - called when XHCI generates interrupt
+void xhci_irq_handler(struct regs* r) {
+    (void)r;
+    
+    if (!g_xhci) return;
+    
+    // Clear interrupt pending bit
+    uint32_t ir_base = g_xhci->runtime_base + 0x20;
+    uint32_t iman = xhci_read32(ir_base);
+    if (iman & 1) {  // IP bit set
+        xhci_write32(ir_base, iman | 1);  // Write 1 to clear
+    }
+    
+    // Process events (this already dispatches to keyboard/mouse handlers)
+    xhci_poll_events(g_xhci);
+    
+    // Send EOI
+    send_eoi(32 + (g_xhci->irq_line - 32));
+}

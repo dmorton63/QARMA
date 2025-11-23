@@ -19,6 +19,7 @@
 static multiboot_info_t* g_multiboot_info = NULL;
 
 void multiboot_parse_info(uint32_t magic, multiboot_info_t* mbi) {
+    SERIAL_LOG("[MBOOT] Starting multiboot_parse_info\n");
     debug_buffer_clear();
 
     if (magic != MULTIBOOT_MAGIC) {
@@ -28,9 +29,11 @@ void multiboot_parse_info(uint32_t magic, multiboot_info_t* mbi) {
         return;
     }
 
+    SERIAL_LOG("[MBOOT] Magic validated\n");
     g_multiboot_info = mbi;
     debug_buffer_append("Multiboot info assigned\n");
 
+    SERIAL_LOG("[MBOOT] Checking cmdline\n");
     if (mbi->flags & MULTIBOOT_FLAG_CMDLINE) {
         const char *cmd = (const char*)mbi->cmdline;
         multiboot_parse_verbosity(cmd);
@@ -46,20 +49,25 @@ void multiboot_parse_info(uint32_t magic, multiboot_info_t* mbi) {
         }
     }
 
+    SERIAL_LOG("[MBOOT] Checking memory flags\n");
     if (mbi->flags & MULTIBOOT_FLAG_MEM) {
         debug_buffer_append_dec("Lower memory: ", mbi->mem_lower);
         debug_buffer_append_dec("Upper memory: ", mbi->mem_upper);
     }
 
+    SERIAL_LOG("[MBOOT] Parsing memory map\n");
     if (mbi->flags & MULTIBOOT_FLAG_MMAP) {
         multiboot_parse_memory_map(mbi);
     }
 
+    SERIAL_LOG("[MBOOT] Detecting framebuffer\n");
     if (mbi->flags & MULTIBOOT_FLAG_FRAMEBUFFER) {
         multiboot_detect_framebuffer(mbi);
     }
 
+    SERIAL_LOG("[MBOOT] Flushing debug buffer\n");
     debug_buffer_flush();
+    SERIAL_LOG("[MBOOT] multiboot_parse_info complete\n");
 }
 
 void multiboot_parse_verbosity(const char* cmdline) {
@@ -155,10 +163,12 @@ void multiboot_detect_vbe_framebuffer(multiboot_info_t* mbi) {
 void multiboot_parse_memory_map(multiboot_info_t* mbi) {
     if (!(mbi->flags & MULTIBOOT_FLAG_MMAP)) return;
 
+    SERIAL_LOG("[MBOOT] In multiboot_parse_memory_map\n");
     //pmm_init();
     multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mbi->mmap_addr;
     multiboot_memory_map_t* mmap_end = (multiboot_memory_map_t*)(mbi->mmap_addr + mbi->mmap_length);
 
+    SERIAL_LOG("[MBOOT] Starting memory map loop\n");
     while (mmap < mmap_end) {
         if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE && mmap->addr < 0x100000000ULL) {
             uint32_t start = (uint32_t)mmap->addr;
@@ -171,8 +181,10 @@ void multiboot_parse_memory_map(multiboot_info_t* mbi) {
         mmap = (multiboot_memory_map_t*)((uint32_t)mmap + mmap->size + sizeof(mmap->size));
     }
 
+    SERIAL_LOG("[MBOOT] Memory map loop complete, marking kernel region\n");
     pmm_mark_region_used(0x100000, 0x400000);  // Reserve kernel space
     debug_buffer_append("Memory map parsed and PMM initialized\n");
+    SERIAL_LOG("[MBOOT] multiboot_parse_memory_map complete\n");
 }
 
 multiboot_info_t* multiboot_get_info(void) {

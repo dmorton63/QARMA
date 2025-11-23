@@ -1,0 +1,75 @@
+/**
+ * Window Mouse Event Handling
+ * 
+ * Each window can register a mouse handler that receives events
+ * when the cursor is over that window
+ */
+
+// Add to qarma_win_handle.h:
+typedef void (*window_mouse_handler_t)(struct QARMA_WIN_HANDLE* win, mouse_event_t* event);
+
+// Add to QARMA_WIN_HANDLE structure:
+struct QARMA_WIN_HANDLE {
+    // ... existing fields ...
+    
+    window_mouse_handler_t mouse_handler;
+    void* mouse_context;
+    bool mouse_inside;  // Track if cursor is inside window
+    int last_mouse_x;
+    int last_mouse_y;
+};
+
+// Window manager dispatches to appropriate window:
+void window_manager_handle_mouse_event(mouse_event_t* event) {
+    extern QARMA_WINDOW_MANAGER qarma_window_manager;
+    
+    // Find topmost window under cursor
+    QARMA_WIN_HANDLE* target_window = NULL;
+    
+    for (int i = qarma_window_manager.count - 1; i >= 0; i--) {
+        QARMA_WIN_HANDLE* win = qarma_window_manager.windows[i];
+        
+        if (win && (win->flags & QARMA_FLAG_VISIBLE)) {
+            // Check if cursor is inside window bounds
+            if (event->x >= win->x && event->x < (win->x + win->size.width) &&
+                event->y >= win->y && event->y < (win->y + win->size.height)) {
+                target_window = win;
+                break;
+            }
+        }
+    }
+    
+    // Handle enter/leave events
+    for (uint32_t i = 0; i < qarma_window_manager.count; i++) {
+        QARMA_WIN_HANDLE* win = qarma_window_manager.windows[i];
+        if (!win) continue;
+        
+        bool inside = (win == target_window);
+        
+        if (inside && !win->mouse_inside) {
+            // Mouse entered window
+            mouse_event_t enter_event = *event;
+            enter_event.type = MOUSE_EVENT_ENTER;
+            if (win->mouse_handler) {
+                win->mouse_handler(win, &enter_event);
+            }
+            win->mouse_inside = true;
+        } else if (!inside && win->mouse_inside) {
+            // Mouse left window
+            mouse_event_t leave_event = *event;
+            leave_event.type = MOUSE_EVENT_LEAVE;
+            if (win->mouse_handler) {
+                win->mouse_handler(win, &leave_event);
+            }
+            win->mouse_inside = false;
+        }
+    }
+    
+    // Dispatch event to target window
+    if (target_window && target_window->mouse_handler) {
+        target_window->mouse_handler(target_window, event);
+    } else {
+        // No window hit - dispatch to desktop handler
+        desktop_handle_mouse_event(event);
+    }
+}

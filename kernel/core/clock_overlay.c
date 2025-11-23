@@ -84,12 +84,16 @@ void format_time(char *buffer, uint32_t seconds) {
 }
 
 void draw_clock(void) {
+    // Clock disabled - was bypassing compositor and corrupting display
+    return;
+    /*
     if (!clock_visible) return;
     draw_clock_box();
     char time_str[9];
     format_time(time_str, elapsed_seconds);
 
     fb_draw_text_with_bg(clock_x + 10, clock_y + 6, time_str, clock_fg, clock_bg);
+    */
 }
 
 void clock_tick(void) {

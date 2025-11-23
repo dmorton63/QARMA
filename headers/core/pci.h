@@ -27,6 +27,21 @@ static inline uint16_t pci_read_config_word(uint8_t bus, uint8_t slot, uint8_t f
     return (uint16_t)((d >> ((offset & 2) * 8)) & 0xFFFF);
 }
 
+// Helper to write 32-bit dword
+static inline void pci_write_config_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t value) {
+    uint32_t addr = pci_config_addr(bus, slot, func, offset);
+    __asm__ volatile ("outl %0, %1" : : "a"(addr), "Nd"(PCI_CONFIG_ADDRESS));
+    __asm__ volatile ("outl %0, %1" : : "a"(value), "Nd"(PCI_CONFIG_DATA));
+}
+
+// Helper to write 16-bit word
+static inline void pci_write_config_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint16_t value) {
+    uint32_t d = pci_read_config_dword(bus, slot, func, offset & 0xFC);
+    int shift = (offset & 2) * 8;
+    d &= ~(0xFFFF << shift);
+    d |= ((uint32_t)value << shift);
+    pci_write_config_dword(bus, slot, func, offset & 0xFC, d);
+}
 
 void pci_init(void);
 void pci_scan_and_print(void);

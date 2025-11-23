@@ -67,6 +67,7 @@ extern uint32_t* fb_ptr;
 // Compositor/backing store
 void fb_compose(void);
 void fb_mark_dirty(void);
+void framebuffer_swap(void);  // Double buffering: swap back buffer to front
 
 extern uint32_t fb_width;
 extern uint32_t fb_height;

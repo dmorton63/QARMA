@@ -1,0 +1,21 @@
+// ERROR TEST: Duplicate function definition
+// Expected error: Function 'add' already defined
+// Note: Parser may catch this before semantic analysis
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}
+
+function add(INT x, INT y) -> INT {  // ERROR: 'add' already defined
+    RETURN x + y;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    result = add(5, 3);
+    say(result);
+}

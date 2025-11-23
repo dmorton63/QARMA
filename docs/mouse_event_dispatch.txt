@@ -1,0 +1,72 @@
+/**
+ * Mouse Event Dispatch Flow
+ * 
+ * Hardware IRQ → xhci_irq_handler() → xhci_poll_events() 
+ * → usb_mouse_process_xhci_data() → mouse_dispatch_event()
+ * → Window mouse handler OR desktop mouse handler
+ */
+
+// In usb_mouse.c, modify usb_mouse_process_report():
+
+void usb_mouse_process_report(usb_mouse_report_t *report) {
+    if (!report) return;
+    
+    // Skip if no changes
+    if (report->x == 0 && report->y == 0 && 
+        report->buttons == last_report.buttons &&
+        report->wheel == 0) {
+        return;
+    }
+    
+    // Update internal state
+    mouse_state.dx = (int8_t)report->x;
+    mouse_state.dy = (int8_t)report->y;
+    mouse_state.x += mouse_state.dx;
+    mouse_state.y += mouse_state.dy;
+    
+    // Clamp to bounds
+    if (mouse_state.x < 0) mouse_state.x = 0;
+    if (mouse_state.y < 0) mouse_state.y = 0;
+    if (mouse_state.x >= (int32_t)fb_width) mouse_state.x = fb_width - 1;
+    if (mouse_state.y >= (int32_t)fb_height) mouse_state.y = fb_height - 1;
+    
+    // Create and dispatch events through subsystem
+    mouse_event_t event;
+    event.x = mouse_state.x;
+    event.y = mouse_state.y;
+    event.dx = mouse_state.dx;
+    event.dy = mouse_state.dy;
+    event.timestamp = get_ticks();
+    
+    // Movement event
+    if (report->x != 0 || report->y != 0) {
+        event.type = MOUSE_EVENT_MOVE;
+        mouse_dispatch_event(&event);
+    }
+    
+    // Button events
+    if ((report->buttons & 0x01) && !(last_report.buttons & 0x01)) {
+        event.type = MOUSE_EVENT_DOWN;
+        event.button = MOUSE_BUTTON_LEFT;
+        mouse_dispatch_event(&event);
+    } else if (!(report->buttons & 0x01) && (last_report.buttons & 0x01)) {
+        event.type = MOUSE_EVENT_UP;
+        event.button = MOUSE_BUTTON_LEFT;
+        mouse_dispatch_event(&event);
+        
+        // Also generate click event
+        event.type = MOUSE_EVENT_CLICK;
+        mouse_dispatch_event(&event);
+    }
+    
+    // Similar for right and middle buttons...
+    
+    // Scroll event
+    if (report->wheel != 0) {
+        event.type = MOUSE_EVENT_SCROLL;
+        event.scroll_delta = (int8_t)report->wheel;
+        mouse_dispatch_event(&event);
+    }
+    
+    last_report = *report;
+}

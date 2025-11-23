@@ -1,0 +1,76 @@
+/**
+ * Seamless Cursor Rendering Strategy
+ * 
+ * Option A: Hardware Cursor (if VGA supports it)
+ * Option B: Software cursor with saved background
+ * Option C: Compositor-integrated cursor (best for your architecture)
+ */
+
+// Option C Implementation (recommended):
+
+// In window compositor/renderer:
+void compositor_render_frame(void) {
+    // 1. Clear back buffer or blit background
+    
+    // 2. Render all windows to back buffer
+    for (uint32_t i = 0; i < qarma_window_manager.count; i++) {
+        QARMA_WIN_HANDLE* win = qarma_window_manager.windows[i];
+        if (win && (win->flags & QARMA_FLAG_VISIBLE)) {
+            compositor_blit_window(win);
+        }
+    }
+    
+    // 3. Render cursor on top (if visible)
+    if (mouse_is_cursor_visible()) {
+        int x, y;
+        mouse_get_position(&x, &y);
+        compositor_draw_cursor(x, y);
+    }
+    
+    // 4. Flip back buffer to front (single memcpy or page flip)
+    compositor_flip_buffers();
+}
+
+// Cursor drawing function:
+void compositor_draw_cursor(int x, int y) {
+    // Get cursor bitmap (8x8 or 16x16)
+    extern uint32_t cursor_bitmap[];
+    extern int cursor_width;
+    extern int cursor_height;
+    
+    for (int cy = 0; cy < cursor_height; cy++) {
+        for (int cx = 0; cx < cursor_width; cx++) {
+            int px = x + cx;
+            int py = y + cy;
+            
+            if (px >= 0 && px < fb_width && py >= 0 && py < fb_height) {
+                uint32_t pixel = cursor_bitmap[cy * cursor_width + cx];
+                
+                // Alpha blend if cursor has transparency
+                if ((pixel & 0xFF000000) != 0) {
+                    backbuffer[py * fb_width + px] = pixel;
+                }
+            }
+        }
+    }
+}
+
+// VSync-synchronized flip to prevent tearing:
+void compositor_flip_buffers(void) {
+    // Wait for VSync (if supported)
+    // vga_wait_vsync();
+    
+    // Copy back buffer to framebuffer
+    memcpy(framebuffer, backbuffer, fb_width * fb_height * 4);
+}
+
+// Alternative: Page flipping (faster if hardware supports it)
+void compositor_flip_buffers_fast(void) {
+    // Swap pointers
+    uint32_t* temp = framebuffer;
+    framebuffer = backbuffer;
+    backbuffer = temp;
+    
+    // Update display controller to point to new framebuffer
+    // (hardware-specific)
+}

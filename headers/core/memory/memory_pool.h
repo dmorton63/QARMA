@@ -10,6 +10,11 @@
 #include "kernel_types.h"
 #include "../core_manager.h"
 
+
+
+#define PAGE_SIZE 0x1000  // 4KB pages
+
+
 // Memory pool flags
 typedef enum {
     POOL_FLAG_NUMA_LOCAL    = 0x01,  // Prefer NUMA-local memory

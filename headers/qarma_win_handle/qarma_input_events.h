@@ -87,7 +87,9 @@ typedef struct {
     int32_t y;              // Mouse Y position
     int32_t delta_x;        // X movement since last event
     int32_t delta_y;        // Y movement since last event
+    int32_t scroll_delta;   // Scroll wheel delta
     QARMA_MOUSE_BUTTON button;
+    uint8_t buttons;        // Button state bitfield (LEFT=1, RIGHT=2, MIDDLE=4)
     uint32_t modifiers;     // Keyboard modifiers (QARMA_KEY_MOD)
 } QARMA_MOUSE_EVENT_DATA;
 
@@ -212,6 +214,7 @@ void qarma_input_event_process_queue(void);
 // Create event helper functions
 QARMA_INPUT_EVENT qarma_input_event_create_mouse_move(int32_t x, int32_t y, int32_t dx, int32_t dy, void* target);
 QARMA_INPUT_EVENT qarma_input_event_create_mouse_button(QARMA_INPUT_EVENT_TYPE type, int32_t x, int32_t y, QARMA_MOUSE_BUTTON button, void* target);
+QARMA_INPUT_EVENT qarma_input_event_create_mouse_scroll(int32_t x, int32_t y, int32_t scroll_delta, void* target);
 QARMA_INPUT_EVENT qarma_input_event_create_key(QARMA_INPUT_EVENT_TYPE type, uint32_t scancode, uint32_t keycode, uint32_t modifiers, void* target);
 QARMA_INPUT_EVENT qarma_input_event_create_window(QARMA_INPUT_EVENT_TYPE type, void* window);
 QARMA_INPUT_EVENT qarma_input_event_create_timer(uint32_t timer_id, uint64_t tick_count);

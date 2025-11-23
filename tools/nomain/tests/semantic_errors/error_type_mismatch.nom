@@ -1,0 +1,12 @@
+// ERROR TEST: Type mismatch in variable assignment
+// Expected error: Type mismatch or runtime error
+// INT variable assigned a STRING value
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT number = "Hello";  // ERROR: Cannot assign STRING to INT
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say("This should not execute");
+}

@@ -1,0 +1,8 @@
+[DATA_STORAGE]
+[GLOBAL]
+    STRING greeting = "Hello, World!";
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say(greeting);
+}

@@ -6,6 +6,9 @@
  */
 
 #include "quantum/quantum_kernel.h"
+#include "quantum/quantum_register.h"
+#include "quantum/quantum_ai_observer.h"
+#include "quantum/quantum_scheduler.h"
 //#include "core/kernel.h"
 #include "core/core_manager.h"
 #include "graphics/graphics.h"
@@ -27,6 +30,10 @@ static quantum_entanglement_t* g_entanglements __attribute__((unused)) = NULL;
 static bool g_quantum_hardware_available = false;
 static uint32_t g_qubit_count = 0;
 
+// Quantum processing control
+static bool g_quantum_enabled = true;  // Toggle for quantum processing (enabled by default)
+static bool g_quantum_initialized = false;
+
 /*
     System entry point.  Switch from kernel_main() to quantum_kernel_main().
 */
@@ -44,10 +51,13 @@ void quantum_kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     // Call the original kernel main
     kernel_main(magic, mbi);
     
-    // Don't call quantum functions yet - they might be causing the crash
-    // quantum_kernel_init();         // Initialize quantum core
-    // quantum_drivers_init();        // Load quantum hardware
-    // quantum_scheduler_init();      // Prepare scheduler
+    // Initialize quantum processing (can be toggled at runtime)
+    quantum_kernel_init();           // Initialize quantum core
+    quantum_ai_init();               // Initialize AI observer
+    quantum_scheduler_init();        // Prepare scheduler
+    
+    SERIAL_LOG("[QUANTUM] Quantum subsystem initialized (disabled by default)\n");
+    SERIAL_LOG("[QUANTUM] Use 'quantum on' command to enable\n");
 
     // Optionally spawn initial quantum process
     // quantum_process_create("init", 0);
@@ -65,7 +75,11 @@ void quantum_kernel_main(uint32_t magic, multiboot_info_t* mbi) {
  * Initialize quantum kernel subsystem
  */
 void quantum_kernel_init(void) {
-    GFX_LOG_MIN("Initializing quantum kernel...\n");
+    if (g_quantum_initialized) {
+        return;  // Already initialized
+    }
+    
+    SERIAL_LOG("[QUANTUM] Initializing quantum kernel...\n");
     
     // Initialize quantum hardware
     quantum_hardware_init();
@@ -76,7 +90,10 @@ void quantum_kernel_init(void) {
     // Reset statistics
     memset(&g_quantum_stats, 0, sizeof(quantum_scheduler_stats_t));
     
-    GFX_LOG_MIN("Quantum kernel initialized.\n");
+    g_quantum_initialized = true;
+    SERIAL_LOG("[QUANTUM] Quantum kernel initialized (status: ");
+    SERIAL_LOG(g_quantum_enabled ? "ENABLED" : "DISABLED");
+    SERIAL_LOG(")\n");
 }
 
 /**
@@ -337,6 +354,42 @@ void quantum_restore_coherence(quantum_process_t* process) {
  */
 quantum_scheduler_stats_t* quantum_get_scheduler_stats(void) {
     return &g_quantum_stats;
+}
+
+/**
+ * Enable quantum processing
+ */
+void quantum_enable(void) {
+    if (!g_quantum_initialized) {
+        quantum_kernel_init();
+    }
+    g_quantum_enabled = true;
+    SERIAL_LOG("[QUANTUM] Quantum processing ENABLED\n");
+}
+
+/**
+ * Disable quantum processing
+ */
+void quantum_disable(void) {
+    g_quantum_enabled = false;
+    SERIAL_LOG("[QUANTUM] Quantum processing DISABLED\n");
+}
+
+/**
+ * Check if quantum processing is enabled
+ */
+bool quantum_is_enabled(void) {
+    return g_quantum_enabled;
+}
+
+/**
+ * Get quantum status string
+ */
+const char* quantum_get_status(void) {
+    if (!g_quantum_initialized) {
+        return "NOT INITIALIZED";
+    }
+    return g_quantum_enabled ? "ENABLED" : "DISABLED";
 }
 
 // Core management integration

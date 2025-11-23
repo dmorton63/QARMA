@@ -40,6 +40,10 @@ void vfs_init(void);
 int vfs_mount(const char* devname, const char* fstype, const char* mountpoint);
 // Open a file
 vfs_node_t* vfs_open(const char* path);
+// Create a file or directory
+vfs_node_t* vfs_create(const char* path, uint32_t type);
 // Read from a file
 int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset);
+// Write to a file
+int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset);
 // ...

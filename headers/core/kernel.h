@@ -124,6 +124,7 @@ void security_monitor_tick(void);
 void serial_debug(const char* msg);
 void serial_debug_hex(uint32_t value);
 void serial_debug_decimal(uint32_t value);
+void serial_debug_signed(int32_t value);
 
 
 #endif // QARMA_KERNEL_H

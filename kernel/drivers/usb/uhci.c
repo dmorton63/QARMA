@@ -21,6 +21,11 @@ static inline uint32_t vaddr_to_phys(void *vaddr);
 /* Forward I/O prototypes (definitions appear later) */
 static inline uint16_t uhci_inw(uint16_t port);
 static inline void uhci_outw(uint16_t port, uint16_t value);
+/* Forward declarations */
+typedef struct regs regs_t;
+void uhci_irq_wrapper(regs_t *regs);
+extern void register_interrupt_handler(uint8_t int_no, void (*handler)(regs_t*));
+extern void send_eoi(uint8_t int_no);
 
 /* Port manipulation helpers that properly handle RWC (Read-Write-Clear) bits.
  * RWC bits (CSC, PEC) are cleared when you write 1 to them. */
@@ -216,6 +221,22 @@ int uhci_init_controller(uint8_t bus, uint8_t slot, uint8_t func, uint16_t io_ba
     if (uhci_start_controller(uhci) != 0) {
         GFX_LOG_MIN("UHCI: Failed to start controller\n");
         return -1;
+    }
+    
+    // Register IRQ handler for UHCI interrupts
+    uint16_t irq_word = pci_read_config_word(bus, slot, func, 0x3C);  // PCI Interrupt Line/Pin
+    uint8_t irq_line = irq_word & 0xFF;
+    if (irq_line != 0xFF && irq_line < 16) {
+        SERIAL_LOG("UHCI: Registering IRQ handler for IRQ ");
+        SERIAL_LOG_HEX("", irq_line);
+        SERIAL_LOG("\n");
+        
+        // Register IRQ wrapper
+        register_interrupt_handler(32 + irq_line, uhci_irq_wrapper);
+    } else {
+        SERIAL_LOG("UHCI: No valid IRQ line in PCI config (");
+        SERIAL_LOG_HEX("", irq_line);
+        SERIAL_LOG(")\n");
     }
     
     // Detect connected devices
@@ -1321,6 +1342,20 @@ int uhci_interrupt_transfer(uhci_controller_t *uhci, usb_device_t *device, uint8
     SERIAL_LOG_HEX(" UHCI: frame_index=", cur);
     SERIAL_LOG(" UHCI: Interrupt transfer scheduled\n");
     return 0;
+}
+
+// IRQ wrapper called from IDT - calls the handler for all UHCI controllers
+void uhci_irq_wrapper(regs_t *regs) {
+    (void)regs;  // Unused
+    
+    // Call interrupt handler for all active UHCI controllers
+    for (int i = 0; i < g_uhci_count; i++) {
+        uhci_interrupt_handler(&uhci_controllers[i]);
+    }
+    
+    // Send EOI (IRQ number stored in regs->int_no)
+    extern void send_eoi(uint8_t int_no);
+    send_eoi(regs->int_no);
 }
 
 void uhci_interrupt_handler(uhci_controller_t *uhci) {

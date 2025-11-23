@@ -17,22 +17,22 @@ void pci_scan_and_print(void) {
                 if (vendor == 0xFFFF) continue; // no device
                 uint16_t device = pci_read_config_word(bus, slot, func, 0x02);
                 
-                // Debug: Print all devices found
-                SERIAL_LOG("PCI Device found: ");
-                SERIAL_LOG_HEX("Bus ", bus);
-                SERIAL_LOG_HEX(" Slot ", slot);
-                SERIAL_LOG_HEX(" Func ", func);
-                SERIAL_LOG_HEX(" Vendor ", vendor);
-                SERIAL_LOG_HEX(" Device ", device);
+                // Debug: Print all devices found (disabled for faster boot)
+                // SERIAL_LOG("PCI Device found: ");
+                // SERIAL_LOG_HEX("Bus ", bus);
+                // SERIAL_LOG_HEX(" Slot ", slot);
+                // SERIAL_LOG_HEX(" Func ", func);
+                // SERIAL_LOG_HEX(" Vendor ", vendor);
+                // SERIAL_LOG_HEX(" Device ", device);
                 
                 uint8_t class_code = pci_read_config_word(bus, slot, func, 0x0A) >> 8;
                 uint8_t subclass   = pci_read_config_word(bus, slot, func, 0x0A) & 0xFF;
                 uint8_t prog_if    = pci_read_config_word(bus, slot, func, 0x08) >> 8; // Prog IF is at 0x09, read from 0x08 and shift
                 
-                SERIAL_LOG_HEX(" Class ", class_code);
-                SERIAL_LOG_HEX(" Sub ", subclass);  
-                SERIAL_LOG_HEX(" Prog ", prog_if);
-                SERIAL_LOG("\n");
+                // SERIAL_LOG_HEX(" Class ", class_code);
+                // SERIAL_LOG_HEX(" Sub ", subclass);  
+                // SERIAL_LOG_HEX(" Prog ", prog_if);
+                // SERIAL_LOG("\n");
                 
                 if (class_code == 0x0C && subclass == 0x03) {
                     uint32_t bar4 = pci_read_config_dword(bus, slot, func, 0x20);

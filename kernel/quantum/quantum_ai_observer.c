@@ -358,3 +358,93 @@ void quantum_ai_set_enabled(bool enabled) {
     SERIAL_LOG(enabled ? "Enabled" : "Disabled");
     SERIAL_LOG("\n");
 }
+
+// Export learning data for persistence
+void quantum_ai_export_learning_data(void** data, uint32_t* size) {
+    if (!data || !size) return;
+    
+    *data = NULL;
+    *size = 0;
+    
+    if (g_observer.db_size == 0) {
+        SERIAL_LOG("Quantum AI: No learning data to export\n");
+        return;
+    }
+    
+    // Calculate total size
+    uint32_t total_size = sizeof(uint32_t) + // db_size
+                         (g_observer.db_size * sizeof(quantum_learning_entry_t));
+    
+    // Allocate buffer
+    uint8_t* buffer = (uint8_t*)heap_alloc(total_size);
+    if (!buffer) {
+        SERIAL_LOG("Quantum AI: Failed to allocate export buffer\n");
+        return;
+    }
+    
+    // Write db_size
+    *((uint32_t*)buffer) = g_observer.db_size;
+    
+    // Write entries
+    memcpy(buffer + sizeof(uint32_t), 
+           g_observer.learning_db, 
+           g_observer.db_size * sizeof(quantum_learning_entry_t));
+    
+    *data = buffer;
+    *size = total_size;
+    
+    SERIAL_LOG("Quantum AI: Exported ");
+    SERIAL_LOG_DEC("", g_observer.db_size);
+    SERIAL_LOG(" learning entries (");
+    SERIAL_LOG_DEC("", total_size);
+    SERIAL_LOG(" bytes)\n");
+}
+
+// Import learning data from persistence
+int quantum_ai_import_learning_data(const void* data, uint32_t size) {
+    if (!data || size < sizeof(uint32_t)) {
+        SERIAL_LOG("Quantum AI: Invalid import data\n");
+        return -1;
+    }
+    
+    // Read db_size
+    uint32_t db_size = *((uint32_t*)data);
+    
+    // Validate size
+    uint32_t expected_size = sizeof(uint32_t) + 
+                            (db_size * sizeof(quantum_learning_entry_t));
+    if (size != expected_size) {
+        SERIAL_LOG("Quantum AI: Size mismatch in import data\n");
+        return -1;
+    }
+    
+    // Free existing database
+    if (g_observer.learning_db) {
+        heap_free(g_observer.learning_db);
+    }
+    
+    // Allocate new database
+    g_observer.learning_db = (quantum_learning_entry_t*)heap_alloc(
+        db_size * sizeof(quantum_learning_entry_t));
+    
+    if (!g_observer.learning_db) {
+        SERIAL_LOG("Quantum AI: Failed to allocate database\n");
+        g_observer.db_size = 0;
+        g_observer.db_capacity = 0;
+        return -1;
+    }
+    
+    // Copy data
+    memcpy(g_observer.learning_db, 
+           (uint8_t*)data + sizeof(uint32_t),
+           db_size * sizeof(quantum_learning_entry_t));
+    
+    g_observer.db_size = db_size;
+    g_observer.db_capacity = db_size;
+    
+    SERIAL_LOG("Quantum AI: Imported ");
+    SERIAL_LOG_DEC("", db_size);
+    SERIAL_LOG(" learning entries\n");
+    
+    return 0;
+}

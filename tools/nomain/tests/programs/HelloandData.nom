@@ -1,0 +1,15 @@
+[DATA_STORAGE]
+[GLOBAL]
+    STRING greeting = "Hello, World!";
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    say(greeting);
+    say("A + B = ");
+    say(add(10,20));
+    say_f("a + b = ", add(10,20));
+}
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}

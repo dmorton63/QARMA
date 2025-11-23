@@ -1,5 +1,6 @@
 #include "vfs.h"
 #include "core/string.h"
+#include "config.h"
 
 // Forward declaration for simplefs
 extern void simplefs_init(void);
@@ -168,7 +169,8 @@ int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset) {
     // If we have a filesystem driver, use it
     if (node->fs && node->blockdev) {
         // For our simple filesystem, use the direct read function
-        if (strcmp(node->fs->name, "simplefs") == 0) {
+        // Both simplefs and fat16 use the same underlying storage format
+        if (strcmp(node->fs->name, "simplefs") == 0 || strcmp(node->fs->name, "fat16") == 0) {
             // Call simplefs read function directly
             extern int simplefs_read_file(const char* filename, void* buffer, size_t size, size_t offset);
             return simplefs_read_file(node->name, buf, size, offset);
@@ -209,4 +211,120 @@ void vfs_init(void) {
     }
     
     gfx_print("[VFS] VFS initialization complete.\n");
+}
+
+/**
+ * Create a new file or directory
+ */
+vfs_node_t* vfs_create(const char* path, uint32_t type) {
+    extern void* heap_alloc(size_t size);
+    extern void gfx_print(const char*);
+    
+    if (!path) return NULL;
+    
+    // Check if file already exists
+    vfs_node_t* existing = vfs_find_node(path);
+    if (existing) {
+        SERIAL_LOG("[VFS] File already exists, returning existing node\n");
+        return existing;
+    }
+    
+    // Parse the path to get parent directory and filename
+    char parent_path[256];
+    char filename[64];
+    const char* last_slash = NULL;
+    for (const char* p = path; *p; p++) {
+        if (*p == '/') last_slash = p;
+    }
+    
+    vfs_node_t* parent;
+    if (last_slash) {
+        // Extract parent path and filename
+        int parent_len = last_slash - path;
+        if (parent_len == 0) {
+            parent = &vfs_root;
+        } else {
+            strncpy(parent_path, path, parent_len);
+            parent_path[parent_len] = '\0';
+            parent = vfs_find_node(parent_path);
+        }
+        strncpy(filename, last_slash + 1, 63);
+        filename[63] = '\0';
+    } else {
+        parent = &vfs_root;
+        strncpy(filename, path, 63);
+        filename[63] = '\0';
+    }
+    
+    if (!parent) {
+        SERIAL_LOG("[VFS] Parent directory not found\n");
+        return NULL;
+    }
+    
+    // Allocate new node
+    vfs_node_t* node = (vfs_node_t*)heap_alloc(sizeof(vfs_node_t));
+    if (!node) {
+        SERIAL_LOG("[VFS] Failed to allocate node\n");
+        return NULL;
+    }
+    
+    // Initialize node
+    strncpy(node->name, filename, 63);
+    node->name[63] = '\0';
+    node->type = type;
+    node->parent = parent;
+    node->children = NULL;
+    node->next = NULL;
+    node->size = 0;
+    node->fs_data = NULL;
+    node->fs = parent->fs;
+    node->blockdev = parent->blockdev;
+    
+    // Add to parent's children
+    if (!parent->children) {
+        parent->children = node;
+    } else {
+        vfs_node_t* sibling = parent->children;
+        while (sibling->next) sibling = sibling->next;
+        sibling->next = node;
+    }
+    
+    SERIAL_LOG("[VFS] Created node: ");
+    SERIAL_LOG(filename);
+    SERIAL_LOG("\n");
+    
+    return node;
+}
+
+/**
+ * Write to a file
+ */
+int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset) {
+    extern int simplefs_write_file(const char* filename, const void* buffer, size_t size, size_t offset);
+    
+    if (!node || !buf || node->type != VFS_TYPE_FILE) {
+        SERIAL_LOG("[VFS] Invalid write parameters\n");
+        return -1;
+    }
+    
+    // If we have a filesystem driver, use it
+    if (node->fs && node->blockdev) {
+        // For now, both simplefs and fat16 use the same underlying storage format
+        if (strcmp(node->fs->name, "simplefs") == 0 || strcmp(node->fs->name, "fat16") == 0) {
+            // Call simplefs write function
+            int result = simplefs_write_file(node->name, buf, size, offset);
+            if (result > 0) {
+                // Update node size if needed
+                if (offset + result > node->size) {
+                    node->size = offset + result;
+                }
+            }
+            return result;
+        }
+    }
+    
+    SERIAL_LOG("[VFS] No filesystem driver for write: ");
+    SERIAL_LOG(node->fs ? node->fs->name : "NULL");
+    SERIAL_LOG("\n");
+    return -1;
 }

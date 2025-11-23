@@ -1,0 +1,3169 @@
+[H[J[1;1Herror: can't find command `/*'.
+error: can't find command `*'.
+[?25l[m[H[J[1;1H[2;30HGNU GRUB  version 2.12
+
+[m[4;2H+----------------------------------------------------------------------------+[5;2H|[5;79H|[6;2H|[6;79H|[7;2H|[7;79H|[8;2H|[8;79H|[9;2H|[9;79H|[10;2H|[10;79H|[11;2H|[11;79H|[12;2H|[12;79H|[13;2H|[13;79H|[14;2H|[14;79H|[15;2H|[15;79H|[16;2H|[16;79H|[17;2H+----------------------------------------------------------------------------+[m[18;2H[19;2H[m     Use the ^ and v keys to select which entry is highlighted.          
+      Press enter to boot the selected OS, `e' to edit the commands       
+      before booting or `c' for a command-line.                           [5;80H [m[5;3H QARMA (Silent Mode)                                                        [m[5;78H[m[m[6;3H QARMA (Normal Mode)                                                        [m[6;78H[m[7m[7;3H*QARMA (Verbose Mode)                                                       [m[7;78H[m[m[8;3H Video Test                                                                 [m[8;78H[m[m[9;3H                                                                            [m[9;78H[m[m[10;3H                                                                            [m[10;78H[m[m[11;3H                                                                            [m[11;78H[m[m[12;3H                                                                            [m[12;78H[m[m[13;3H                                                                            [m[13;78H[m[m[14;3H                                                                            [m[14;78H[m[m[15;3H                                                                            [m[15;78H[m[m[16;3H                                                                            [m[16;78H[m[16;80H [7;78H[22;1H   The highlighted entry will be executed automatically in 1s.                 [7;78H[22;1H   The highlighted entry will be executed automatically in 0s.                 [7;78H[?25h[H[J[1;1H[H[J[1;1Hgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+zgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Vgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ygraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+
+VMM: Identity mapping established for 0-32MB
+VMM: Page directory at physical: 01C44000
+
+VMM: Virtual allocation starts at: C0000000
+
+graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Vgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ugraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ographics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ygraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+Mgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ggraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+rgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+ngraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+tgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+agraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+lgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+igraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+zgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+egraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+dgraphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+.graphics_get_info -> GFX_INFO: Current mode requestedgraphics_get_info -> GFX_INFO: Mode value: 0
+graphics_get_info -> GFX Framebuffer Address:753664
+
+Heap: DMA-safe (identity-mapped)
+Heap: Initialized 20MB static heap at virt=00843000
+ phys=00843000
+
+[MBOOT] Starting multiboot_parse_info
+[MBOOT] Magic validated
+[MBOOT] Checking cmdline
+[MBOOT] Checking memory flags
+[MBOOT] Parsing memory map
+[MBOOT] In multiboot_parse_memory_map
+[MBOOT] Starting memory map loop
+[MBOOT] Memory map loop complete, marking kernel region
+[MBOOT] multiboot_parse_memory_map complete
+[MBOOT] Detecting framebuffer
+VMM: Mapping framebuffer - phys=FD000000
+ size=003E8000
+
+VMM: Mapped 000003E8
+ framebuffer pages
+VMM: Enabling paging with PD at: 01C44000
+
+VMM: Paging enabled
+VMM: Paging enabled with framebuffer
+[MBOOT] Flushing debug buffer
+Multiboot info assigned
+Verbosity parsed from cmdline
+Lower memory: 639Upper memory: 129912Memory map parsed and PMM initialized
+Framebuffer info parsed and graphics system updated
+[MBOOT] multiboot_parse_info complete
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected at FD000000
+
+GFX_INIT: Framebuffer detected, using framebuffer mode[GFX] Setting mode 00000001
+
+[GFX_MODE] Setting framebuffer backends
+[GFX] Framebuffer mode backend set to 0011EB3C
+
+GFX_INIT: Graphics system initializedFB_INIT: Framebuffer available
+FB_INIT: Need 4096000
+ bytes for 1024000
+ pixels
+Heap: Large allocation - Size: 003E8000
+ Addr: 00843000
+ Remaining: 01018000
+
+FB_INIT: Backing store allocated at 8663040
+=== Memory Pool Manager Init ===
+DMA Allocator: Initializing...
+DMA pool created: block_size=00000040
+ alignment=00000040
+ max_blocks=16384
+ phys=00500000
+ virt=00500000
+
+DMA pool created: block_size=00000100
+ alignment=00000100
+ max_blocks=4096
+ phys=00601000
+ virt=00601000
+
+DMA pool created: block_size=00000400
+ alignment=00000400
+ max_blocks=2048
+ phys=00702000
+ virt=00702000
+
+DMA pool created: block_size=00001000
+ alignment=00001000
+ max_blocks=1024
+ phys=00903000
+ virt=00903000
+
+DMA pool created: block_size=00010000
+ alignment=00010000
+ max_blocks=64
+ phys=00D10000
+ virt=00D10000
+
+DMA Allocator: Initialized with 5 default pools
+VIDEO: Initializing video subsystem
+VIDEO: Initializing video drivers
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected, using framebuffer mode[GFX] Setting mode 00000001
+
+[GFX_MODE] Setting framebuffer backends
+[GFX] Framebuffer mode backend set to 0011EB3C
+
+GFX_INIT: Graphics system initializedVIDEO: Setting video mode
+VIDEO: Framebuffer connected
+VIDEO: Video subsystem initialized successfully
+TASK: Initializing task manager with real switching\nTASK: Created task ID=00000001
+ name=idle\nTASK: Started task ID=00000001
+\nTASK: Idle task created and started\nTASK: Task manager initialized with real switching\n[KERNEL] Task manager initialized
+===EARLY PNG TEST START===
+PNG: decode() called
+PNG: Signature valid
+PNG: Creating image structure
+Memory Pool: DMA-capable large allocation: 4096
+ KB
+Heap: Aligned allocation - Size: 00400000
+ Align: 00001000
+ Addr: 00C38000
+
+Heap: DMA alloc size=4194304
+ align=4096
+ virt=00C38000
+ phys=00C38000
+
+Memory Pool: DMA allocation succeeded
+PNG: Pixel buffer allocated, generating checkerboard
+SUCCESS: PNG image loaded and decoded!
+[MEMPOOL] print_all_stats called
+[MEMPOOL] Showing stats for subsystem
+[MEMPOOL] Stats - allocated: 00001000
+ KB, peak: 00001000
+ KB
+[MEMPOOL] print_all_stats finished
+PNG test complete - image freed
+===EARLY PNG TEST END===
+[KERNEL] About to init filesystem subsystem
+[FILESYSTEM] Subsystem initialized successfully
+[KERNEL] Filesystem subsystem initialized
+[KERNEL] About to initialize VFS
+[KERNEL] VFS init completed
+[KERNEL] Initializing filesystem drivers...
+[ATA] Initializing ATA driver...
+[ATA] No disk detected
+[KERNEL] Filesystem drivers initialized
+[KERNEL] ===== INITIALIZING ISO9660 FILESYSTEM =====
+[KERNEL] ISO9660 init completed
+PIC1 mask=0x000000FC
+PIC2 mask=0x000000FF
+PCI: Starting PCI initialization
+PCI: Starting PCI bus scan
+Unknown USB controller type
+Prog IF: 00000030
+
+PCI: PCI initialization complete
+USB Mouse: Starting USB stack init...
+XHCI: Initializing USB 3.0 (XHCI) driver...
+XHCI: Scanning PCI bus for XHCI controllers
+XHCI: Found XHCI controller at bus=00000000
+ slot=00000004
+ func=00000000
+
+XHCI: MMIO base address: FEBB0000
+
+VMM: Mapping MMIO region - phys=FEBB0000
+ size=00010000
+ pages=00000010
+
+VMM: MMIO region mapped
+XHCI: MMIO region mapped successfully
+XHCI: HCI Version: 00000000
+
+XHCI: Extended capabilities at offset: 00000020
+
+XHCI: Max slots=00000040
+ ports=00000008
+ interrupters=00000010
+
+XHCI: Resetting controller...
+XHCI: Reset complete
+XHCI: Starting controller...
+00D10000
+ phys=00000000
+00D10000
+
+00D20000
+ phys=00000000
+00D20000
+
+XHCI: Allocating scratchpad buffers: 15
+
+XHCI: Work queue and statistics initialized
+00000000
+00D30000
+ ERST phys=00000000
+00D40000
+
+00D40000
+ ERDP=00D30000
+
+00000000
+00D10001
+
+00000000
+00D20000
+
+XHCI: USBCMD written (INTE+RUN), waiting for controller to start...
+00000000
+
+XHCI: Controller started successfully
+XHCI: Detecting devices on ports...
+XHCI: Checking port 00000001
+
+XHCI: Port 00000001
+ PORTSC=000202A0
+
+XHCI: Checking port 00000002
+
+XHCI: Port 00000002
+ PORTSC=000202A0
+
+XHCI: Checking port 00000003
+
+XHCI: Port 00000003
+ PORTSC=000202A0
+
+XHCI: Checking port 00000004
+
+XHCI: Port 00000004
+ PORTSC=000202A0
+
+XHCI: Checking port 00000005
+
+XHCI: Port 00000005
+ PORTSC=00020EE1
+
+XHCI: Device connected on port 00000005
+ speed=00000003
+
+XHCI: Debouncing port 00000005
+
+XHCI: Resetting port 00000005
+
+00000005
+
+XHCI: Port reset returned
+XHCI: Waiting for PRC on port 00000005
+
+XHCI: Port 00000005
+ enabled
+XHCI: Checking port 00000006
+
+XHCI: Port 00000006
+ PORTSC=00020EE1
+
+XHCI: Device connected on port 00000006
+ speed=00000003
+
+XHCI: Debouncing port 00000006
+
+XHCI: Resetting port 00000006
+
+00000006
+
+XHCI: Port reset returned
+XHCI: Waiting for PRC on port 00000006
+
+XHCI: Port 00000006
+ enabled
+XHCI: Checking port 00000007
+
+XHCI: Port 00000007
+ PORTSC=000202A0
+
+XHCI: Checking port 00000008
+
+XHCI: Port 00000008
+ PORTSC=000202A0
+
+XHCI: Port detection complete
+XHCI: Enumerating devices
+00000005
+
+XHCI: Enabling slot
+00000009
+
+00000000
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=3
+ final_index=3
+
+[XHCI_DRAIN] Drained 3
+ events
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:1000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:2000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:3000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:4000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:5000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:6000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:7000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:8000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:9000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=3
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:3
+ Drained:3
+ Queued:0
+ Empty:10000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+00000001
+
+00000001
+ port=00000005
+
+0000000B
+
+00000001
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=4
+
+[XHCI_DRAIN] Drained 1
+ events
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:11000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:12000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:13000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:14000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:15000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:16000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:17000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:18000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:19000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=4
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:4
+ Drained:4
+ Queued:0
+ Empty:20000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+XHCI: Device addressed successfully
+00000001
+
+0000000C
+
+00000002
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=5
+
+[XHCI_DRAIN] Drained 1
+ events
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:21000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:22000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:23000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:24000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:25000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:26000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:27000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:28000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:29000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=5
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:5
+ Drained:5
+ Queued:0
+ Empty:30000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+XHCI: Endpoint configured successfully
+00000005
+
+USB HID: Probing XHCI device slot=00000001
+ port=00000005
+
+USB HID: Initializing XHCI keyboard on slot 00000001
+
+USB Keyboard: Initializing XHCI keyboard
+USB Keyboard: XHCI keyboard initialized on slot 00000001
+
+[USB_KEYBOARD] Init complete, buffer at 00D70040
+
+00000006
+
+XHCI: Enabling slot
+00000009
+
+00000003
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=6
+
+[XHCI_DRAIN] Drained 1
+ events
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:31000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:32000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:33000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:34000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:35000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:36000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:37000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:38000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:39000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=6
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:6
+ Drained:6
+ Queued:0
+ Empty:40000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+00000002
+
+00000002
+ port=00000006
+
+0000000B
+
+00000004
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=7
+
+[XHCI_DRAIN] Drained 1
+ events
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:41000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:42000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:43000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:44000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:45000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:46000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:47000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:48000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:49000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=7
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:7
+ Drained:7
+ Queued:0
+ Empty:50000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+XHCI: Device addressed successfully
+00000002
+
+0000000C
+
+00000005
+ cycle=00000001
+
+FEBB2000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=8
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:51000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:52000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:53000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:54000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:55000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:56000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:57000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:58000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:59000
+ WorkQ:0
+
+[0
+:0
+ms] [XHCI_DEBUG] index=8
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[0
+:0
+ms] [XHCI_STATS] Events:8
+ Drained:8
+ Queued:0
+ Empty:60000
+ WorkQ:0
+
+XHCI: Command wait complete (assuming success)
+XHCI: Endpoint configured successfully
+00000006
+
+USB HID: Probing XHCI device slot=00000002
+ port=00000006
+
+USB HID: Initializing XHCI mouse on slot 00000002
+
+USB Mouse: Initializing XHCI mouse
+USB Mouse: XHCI mouse initialized on slot 00000002
+
+[USB_MOUSE] Init complete, buffer at 00DA0040
+
+XHCI: Initialization complete
+USB HID: Initializing HID subsystem
+USB: Starting device enumeration
+USB: Attempting to enumerate port 0
+
+USB: usb_enumerate_device called with uhci=01D66300
+ port=0
+
+UHCI: Resetting port 0
+UHCI: Status before reset: 0000FFFF
+UHCI: Port reset asserted
+UHCI: Port reset cleared
+UHCI: Cleared status change bits: 0000FFFF
+UHCI: Port auto-enabled, status: 0000FFFF
+USB: Starting enumeration on UHCI port 0
+
+USB: Assigned port=0
+ address=1
+ state=3
+ controller=01D66300
+
+USB: Port status = 0000FFFF
+USB: Detected LOW-SPEED device
+USB: Starting two-stage device descriptor enumeration
+USB: Attempting partial device descriptor (8 bytes)
+USB: Partial device descriptor succeeded
+USB: Device bMaxPacketSize0=00000000
+USB: Attempting full device descriptor (18 bytes)
+USB: Full device descriptor succeeded
+USB: Device bcdUSB=00000000
+USB: idVendor=00000000
+USB: idProduct=00000000
+USB: Device class=00000000
+USB: subClass=00000000
+USB: protocol=00000000
+USB: Device Descriptor bcdUSB=0x0 idVendor=0x0 idProduct=0x0
+USB: Device class=0x0 subClass=0x0 protocol=0x0
+UHCI: Port already enabled
+USB: Assigned address 1
+
+USB: Config wTotalLength=0
+USB: bNumInterfaces=0
+USB: bConfigurationValue=0
+USB: Config wTotalLength=0 bNumInterfaces=0 bConfigurationValue=0
+USB-MSC: config wTotalLength=00000000
+
+
+USB HID: Probing device for HID interfaces
+USB Keyboard: Probing device for keyboard interface
+USB Mouse: Probing device for mouse interface
+USB HID: Device is not a recognized HID device
+USB: Device found on port 0
+
+USB: Attempting to enumerate port 1
+
+USB: usb_enumerate_device called with uhci=01D66300
+ port=1
+
+UHCI: Resetting port 1
+UHCI: Status before reset: 0000FFFF
+UHCI: Port reset asserted
+UHCI: Port reset cleared
+UHCI: Cleared status change bits: 0000FFFF
+UHCI: Port auto-enabled, status: 0000FFFF
+USB: Starting enumeration on UHCI port 1
+
+USB: Assigned port=1
+ address=2
+ state=3
+ controller=01D66300
+
+USB: Port status = 0000FFFF
+USB: Detected LOW-SPEED device
+USB: Starting two-stage device descriptor enumeration
+USB: Attempting partial device descriptor (8 bytes)
+USB: Partial device descriptor succeeded
+USB: Device bMaxPacketSize0=00000000
+USB: Attempting full device descriptor (18 bytes)
+USB: Full device descriptor succeeded
+USB: Device bcdUSB=00000000
+USB: idVendor=00000000
+USB: idProduct=00000000
+USB: Device class=00000000
+USB: subClass=00000000
+USB: protocol=00000000
+USB: Device Descriptor bcdUSB=0x0 idVendor=0x0 idProduct=0x0
+USB: Device class=0x0 subClass=0x0 protocol=0x0
+UHCI: Port already enabled
+USB: Assigned address 2
+
+USB: Config wTotalLength=0
+USB: bNumInterfaces=0
+USB: bConfigurationValue=0
+USB: Config wTotalLength=0 bNumInterfaces=0 bConfigurationValue=0
+USB-MSC: config wTotalLength=00000000
+
+
+USB HID: Probing device for HID interfaces
+USB Keyboard: Probing device for keyboard interface
+USB Mouse: Probing device for mouse interface
+USB HID: Device is not a recognized HID device
+USB: Device found on port 1
+
+USB Keyboard: Initializing...
+[CONSOLE] console_compositor_init called
+[CONSOLE] Creating window
+[CONSOLE] Window created successfully
+[GFX] Console callback SET
+[CONSOLE] Initialization complete, window VISIBLE
+[QARMA_INPUT_EVENTS] Event system initialized
+[INIT] Registering window manager mouse event handler...
+[INIT] Window manager mouse handler registered
+[INIT] Registering console keyboard handler...
+[INIT] Console keyboard handler registered
+[KEYBOARD] Shell keyboard handler registered
+[INIT] Registering debug mouse event handler...
+[INIT] Debug mouse handler registered (will log first 100 events with state every 10th)
+[AI_PERSIST] Initializing persistence layer
+[AI_PERSIST] Loading quantum learning from: /disk/qlearn.dat
+[AI_PERSIST] File not found
+[AI_PERSIST] Loading command cache from: /disk/cmdcache.dat
+[AI_PERSIST] File not found
+[KERNEL] ===== STARTING DESKTOP ENVIRONMENT =====
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[XHCI_BUF] KB: virt=00D70040
+ phys=00D70040
+
+[1
+:10
+ms] [XHCI_QUEUE] Slot 1
+ queued 100
+ transfers, index=99
+ cycle=1
+
+[USB_KEYBOARD] Queued 128 initial transfers after init
+[USB_KEYBOARD] Buffer address: 0x00D70040
+
+KBD IRQ: 0x00000061
+[KBD_HANDLER] Interrupt #00000001
+[KBD_HANDLER] Scancode: 00000061
+[KBD_PROC] Dispatching event, scancode=00000061
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[CONSOLE_HANDLER] Called
+[CONSOLE_VISIBLE_CHECK] g_console=010393E0
+ window=0103B388
+ flags=00000009
+ VISIBLE_FLAG=00000001
+
+[CONSOLE_VISIBLE_CHECK] Result: YES
+[CONSOLE_HANDLER] Console visible
+[CONSOLE_KEY] Handle key called
+[CONSOLE_VISIBLE_CHECK] g_console=010393E0
+ window=0103B388
+ flags=00000009
+ VISIBLE_FLAG=00000001
+
+[CONSOLE_VISIBLE_CHECK] Result: YES
+[CONSOLE_KEY] Processing key
+[KERNEL] Interrupts enabled for desktop
+[KERNEL] Setting up desktop
+[KERNEL] Desktop ready
+[KERNEL] Bypassing login screen
+[KERNEL] Screen cleared
+[KERNEL] Screen cleared to desktop background
+[KERNEL] Showing console window
+[CONSOLE_SHOW] Setting VISIBLE flag
+[COMPOSITOR_RENDER] Called
+[5
+:50
+ms] [XHCI_QUEUE] Slot 2
+ queued 100
+ transfers, index=99
+ cycle=1
+
+[USB_MOUSE] Queued 128 initial transfers after init
+[USB_MOUSE] Buffer address: 0x00DA0040
+
+[FB_SWAP] Swapping
+[CONSOLE_SHOW] Console shown and rendered
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+[KERNEL] Console window rendered and visible
+[KERNEL] Keyboard enabled
+[KERNEL] Keyboard buffer cleared
+[KERNEL] Console ready for input
+[KERNEL] User logged in: admin
+[KERNEL] Starting shell with desktop
+[SHELL] Entering main loop
+[500
+:5000
+ms] [USB_MOUSE] WARNING: No new reports after 100 polls! Stuck at 0
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=9
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=10
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000004
+
+[KBD_PROC] Dispatching event, scancode=0000001E
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000061'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=11
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[KBD_PROC] Dispatching event, scancode=0000001E
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=12
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[KBD_PROC] Dispatching event, scancode=00000030
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000062'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=13
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[KBD_PROC] Dispatching event, scancode=00000030
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=14
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=4
+ final_index=18
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=19
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000006
+
+[KBD_PROC] Dispatching event, scancode=0000002E
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000063'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=20
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[KBD_PROC] Dispatching event, scancode=0000002E
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=21
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000007
+
+[KBD_PROC] Dispatching event, scancode=00000020
+[SHELL_HANDLER] Called
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000064'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=22
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000004
+
+[KBD_PROC] Dispatching event, scancode=00000020
+[KBD_PROC] Dispatching event, scancode=0000001E
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000061'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=23
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[KBD_PROC] Dispatching event, scancode=0000001E
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=24
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=25
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[KBD_PROC] Dispatching event, scancode=00000030
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000062'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=26
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000006
+
+[KBD_PROC] Dispatching event, scancode=00000030
+[KBD_PROC] Dispatching event, scancode=0000002E
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000063'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=27
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000014
+
+[KBD_PROC] Dispatching event, scancode=0000002E
+[KBD_PROC] Dispatching event, scancode=00000010
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000071'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=28
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=0000000A
+
+[KBD_PROC] Dispatching event, scancode=00000010
+[KBD_PROC] Dispatching event, scancode=00000022
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000067'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=29
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000007
+
+[KBD_PROC] Dispatching event, scancode=00000022
+[KBD_PROC] Dispatching event, scancode=00000020
+[SHELL_HANDLER] Processing key
+[SHELL] Printing char: '00000064'
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=30
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000009
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=31
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=0000000B
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=32
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=0000000A
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=33
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000006
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=34
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=0000000A
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=35
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000008
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=36
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=37
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=39
+
+[XHCI_ROUTE] Slot 1 (KB) ep=3
+[XHCI] -> keyboard
+USB KB: Report mod=00000001
+ key0=00000000
+
+[SHELL_HANDLER] Processing key
+[CONSOLE_HANDLER] Called
+[CONSOLE_VISIBLE_CHECK] g_console=010393E0
+ window=0103B388
+ flags=00000009
+ VISIBLE_FLAG=00000001
+
+[CONSOLE_VISIBLE_CHECK] Result: YES
+[CONSOLE_HANDLER] Console visible
+[CONSOLE_KEY] Handle key called
+[CONSOLE_VISIBLE_CHECK] g_console=010393E0
+ window=0103B388
+ flags=00000009
+ VISIBLE_FLAG=00000001
+
+[CONSOLE_VISIBLE_CHECK] Result: YES
+[CONSOLE_KEY] Processing key
+[XHCI] -> keyboard
+USB KB: Report mod=00000001
+ key0=00000000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=40
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000001
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=3
+ final_index=43
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=44
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=45
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=46
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FD
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=47
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000007
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000007
+
+[MOUSE_DEBUG] report_x=0 report_y=7 state.dx=0 state.dy=7
+[MOUSE_MOVE] dx=0 dy=7 raw[000000000
+ 000000000
+ 000000007
+ 000000000
+]
+[MOUSE] MOVE: pos=(0
+,7
+) delta=(0
+,7
+) buttons=0x00000000
+
+[WM_MOUSE] Event #1
+ type=00000100
+
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000007
+ pos=(0
+,7
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=48
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000000
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=49
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000008
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000008
+
+[MOUSE_DEBUG] report_x=0 report_y=8 state.dx=0 state.dy=8
+[MOUSE_MOVE] dx=0 dy=8 raw[000000000
+ 000000000
+ 000000008
+ 000000000
+]
+[MOUSE] MOVE: pos=(0
+,15
+) delta=(0
+,8
+) buttons=0x00000000
+
+[WM_MOUSE] Event #2
+ type=00000100
+
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000008
+ pos=(0
+,15
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=50
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000008
+ 00000015
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000008
+
+[MOUSE_DEBUG] report_x=0 report_y=8 state.dx=0 state.dy=8
+[MOUSE_MOVE] dx=0 dy=8 raw[000000000
+ 000000000
+ 000000008
+ 00000015
+]
+[MOUSE] MOVE: pos=(0
+,23
+) delta=(0
+,8
+) buttons=0x00000000
+
+[WM_MOUSE] Event #3
+ type=00000100
+
+[FB_SWAP] Swapping
+[MOUSE] SCROLL: delta=21
+ pos=(0
+,23
+)
+[WM_MOUSE] Event #4
+ type=00000105
+
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000015
+ pos=(0
+,23
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=51
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 00000015
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000015
+
+[MOUSE_DEBUG] report_x=0 report_y=21 state.dx=0 state.dy=21
+[MOUSE_MOVE] dx=0 dy=21 raw[000000000
+ 000000000
+ 00000015
+ 000000000
+]
+[MOUSE] MOVE: pos=(0
+,44
+) delta=(0
+,21
+) buttons=0x00000000
+
+[WM_MOUSE] Event #5
+ type=00000100
+
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000015
+ pos=(0
+,44
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=52
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000000
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000000
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=53
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 00000016
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000016
+
+[MOUSE_DEBUG] report_x=0 report_y=22 state.dx=0 state.dy=22
+[MOUSE_MOVE] dx=0 dy=22 raw[000000000
+ 000000000
+ 00000016
+ 000000000
+]
+[MOUSE] MOVE: pos=(0
+,66
+) delta=(0
+,22
+) buttons=0x00000000
+
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000016
+ pos=(0
+,66
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=54
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 00000016
+ 000000008
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000016
+
+[MOUSE_DEBUG] report_x=0 report_y=22 state.dx=0 state.dy=22
+[MOUSE_MOVE] dx=0 dy=22 raw[000000000
+ 000000000
+ 00000016
+ 000000008
+]
+[MOUSE] MOVE: pos=(0
+,88
+) delta=(0
+,22
+) buttons=0x00000000
+
+[FB_SWAP] Swapping
+[MOUSE] SCROLL: delta=8
+ pos=(0
+,88
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000008
+ pos=(0
+,88
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=55
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000008
+ 000000000
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000008
+
+[MOUSE_DEBUG] report_x=0 report_y=8 state.dx=0 state.dy=8
+[MOUSE_MOVE] dx=0 dy=8 raw[000000000
+ 000000000
+ 000000008
+ 000000000
+]
+[MOUSE] MOVE: pos=(0
+,96
+) delta=(0
+,8
+) buttons=0x00000000
+
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000008
+ pos=(0
+,96
+)
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=56
+
+[XHCI] -> mouse
+[MOUSE_MEM] Bytes: 000000000
+ 000000000
+ 000000008
+ 00000015
+ | Fields: buttons=00000000
+ x=00000000
+ y=00000008
+
+[USB_MOUSE] Report #10
+: buttons=0x00000000
+ x=0
+ y=8
+ wheel=21
+
+[MOUSE_DEBUG] report_x=0 report_y=8 state.dx=0 state.dy=8
+[MOUSE_MOVE] dx=0 dy=8 raw[000000000
+ 000000000
+ 000000008
+ 00000015
+]
+[MOUSE] MOVE: pos=(0
+,104
+) delta=(0
+,8
+) buttons=0x00000000
+
+[MOUSE_STATE] Event #10
+: pos=(0
+,104
+) buttons=none
+[FB_SWAP] Swapping
+[MOUSE] SCROLL: delta=21
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: dx=00000000
+ dy=00000015
+ pos=(0
+,104
+)
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=58
+
+[XHCI] -> mouse
+[XHCI] -> mouse
+[785
+:7850
+ms] [XHCI_DEBUG] index=58
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[834
+:8340
+ms] [XHCI_STATS] Events:58
+ Drained:58
+ Queued:50
+ Empty:61000
+ WorkQ:0
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=59
+
+[XHCI] -> mouse
+[MOUSE] DOWN: button=1
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - L
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=60
+
+[XHCI] -> mouse
+[MOUSE] UP: button=1
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - 
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=61
+
+[XHCI] -> mouse
+[MOUSE] DOWN: button=1
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - L
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=62
+
+[XHCI] -> mouse
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=63
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=64
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=65
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=66
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=68
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=69
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=70
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=71
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=72
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=73
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=74
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=75
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=76
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=77
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=78
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=79
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=80
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=81
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=82
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=83
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=84
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=86
+
+[XHCI] -> keyboard
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=87
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000005
+
+[SHELL_HANDLER] Processing key
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=88
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=89
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=90
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=92
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=93
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=94
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=95
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=96
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[1046
+:10460
+ms] [XHCI_QUEUE] Slot 1
+ queued 200
+ transfers, index=199
+ cycle=1
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=97
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=98
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=99
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=100
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=101
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=102
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=103
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=104
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=105
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=106
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=107
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=108
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=109
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=110
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=111
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=112
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=113
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=114
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=115
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=116
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=117
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=118
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=119
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=121
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=122
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=123
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=124
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=125
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=126
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=127
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=128
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=129
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=130
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=131
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=132
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=133
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=134
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FF
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=135
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=136
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=137
+
+[XHCI] -> mouse
+[MOUSE] UP: button=2
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - L
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=138
+
+[XHCI] -> mouse
+[1552
+:15520
+ms] [XHCI_DEBUG] index=138
+ expect_cycle=1
+ event_cycle=0
+ trb_type=0
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=139
+
+[XHCI] -> keyboard
+[1667
+:16670
+ms] [XHCI_STATS] Events:139
+ Drained:139
+ Queued:131
+ Empty:62000
+ WorkQ:0
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=140
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=141
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=142
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FC
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=143
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F9
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=144
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F5
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=145
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000ED
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=146
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000EE
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=147
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000EB
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=148
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F8
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=149
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F5
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=150
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=151
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FB
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=152
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FC
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=154
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[1696
+:16960
+ms] [XHCI] Transfer ring wrapping for slot 1
+, index=255
+, old_cycle=1
+, new_cycle=0
+
+[1696
+:16960
+ms] [XHCI] Transfer ring wrapped to index 0, new cycle=0
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FE
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=155
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F8
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=157
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F5
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F5
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=158
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FA
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=159
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000F5
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=160
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FC
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=161
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=000000FA
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=162
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=163
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=164
+
+[XHCI] -> mouse
+[MOUSE] DOWN: button=1
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - L
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=165
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=166
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=167
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=168
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=3
+ final_index=171
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> mouse
+[USB_MOUSE] Report #20
+: buttons=0x00000005
+ x=0
+ y=0
+ wheel=0
+
+[MOUSE] DOWN: button=2
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - LM
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=3
+ final_index=174
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=175
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=176
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=177
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=178
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=179
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=180
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=181
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000003
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=182
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=183
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000002
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=184
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=185
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=2
+ final_index=187
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=188
+
+[XHCI] -> keyboard
+USB KB: Report mod=00000000
+ key0=00000001
+
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=189
+
+[XHCI] -> keyboard
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=190
+
+[XHCI] -> mouse
+[MOUSE] UP: button=2
+ pos=(0
+,104
+)
+[COMPOSITOR_RENDER] Called
+[FB_SWAP] Swapping
+USB Mouse: Buttons - L
+[XHCI_DRAIN_END] After drain: events=1
+ final_index=191
+
+[XHCI] -> mouse

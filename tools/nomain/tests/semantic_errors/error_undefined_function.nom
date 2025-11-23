@@ -1,0 +1,16 @@
+// ERROR TEST: Undefined function call
+// Expected error: Function 'multiply' not defined
+
+[DATA_STORAGE]
+[GLOBAL]
+    INT result;
+
+function add(INT a, INT b) -> INT {
+    RETURN a + b;
+}
+
+[APPLICATION-STARTUP]
+function main() -> [VOID] {
+    result = multiply(5, 3);  // ERROR: multiply() is not defined
+    say(result);
+}

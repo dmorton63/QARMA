@@ -236,6 +236,24 @@ QARMA_INPUT_EVENT qarma_input_event_create_mouse_button(
     return event;
 }
 
+QARMA_INPUT_EVENT qarma_input_event_create_mouse_scroll(int32_t x, int32_t y, int32_t scroll_delta, void* target) {
+    QARMA_INPUT_EVENT event = {0};
+    event.type = QARMA_INPUT_EVENT_MOUSE_SCROLL;
+    event.timestamp = get_ticks();
+    event.target = target;
+    event.source = NULL;
+    event.data.mouse.x = x;
+    event.data.mouse.y = y;
+    event.data.mouse.delta_x = 0;
+    event.data.mouse.delta_y = 0;
+    event.data.mouse.scroll_delta = scroll_delta;
+    event.data.mouse.button = QARMA_MOUSE_BUTTON_NONE;
+    event.data.mouse.modifiers = 0;
+    event.handled = false;
+    event.cancelled = false;
+    return event;
+}
+
 QARMA_INPUT_EVENT qarma_input_event_create_key(
     QARMA_INPUT_EVENT_TYPE type,
     uint32_t scancode,

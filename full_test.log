@@ -1,0 +1,178 @@
+[H[J[1;1Herror: can't find command `/*'.
+error: can't find command `*'.
+[?25l[m[H[J[1;1H[2;30HGNU GRUB  version 2.12
+
+[m[4;2H+----------------------------------------------------------------------------+[5;2H|[5;79H|[6;2H|[6;79H|[7;2H|[7;79H|[8;2H|[8;79H|[9;2H|[9;79H|[10;2H|[10;79H|[11;2H|[11;79H|[12;2H|[12;79H|[13;2H|[13;79H|[14;2H|[14;79H|[15;2H|[15;79H|[16;2H|[16;79H|[17;2H+----------------------------------------------------------------------------+[m[18;2H[19;2H[m     Use the ^ and v keys to select which entry is highlighted.          
+      Press enter to boot the selected OS, `e' to edit the commands       
+      before booting or `c' for a command-line.                           [5;80H [m[5;3H QARMA (Silent Mode)                                                        [m[5;78H[m[m[6;3H QARMA (Normal Mode)                                                        [m[6;78H[m[7m[7;3H*QARMA (Verbose Mode)                                                       [m[7;78H[m[m[8;3H Video Test                                                                 [m[8;78H[m[m[9;3H                                                                            [m[9;78H[m[m[10;3H                                                                            [m[10;78H[m[m[11;3H                                                                            [m[11;78H[m[m[12;3H                                                                            [m[12;78H[m[m[13;3H                                                                            [m[13;78H[m[m[14;3H                                                                            [m[14;78H[m[m[15;3H                                                                            [m[15;78H[m[m[16;3H                                                                            [m[16;78H[m[16;80H [7;78H[22;1H   The highlighted entry will be executed automatically in 1s.                 [7;78H[22;1H   The highlighted entry will be executed automatically in 0s.                 [7;78H[?25h[H[J[1;1H[H[J[1;1H[vmm_init] identity mapping ready
+PDE[0] = 01C2D003
+PDE[1] = 01C2E003
+Mapping framebuffer: phys=FD000000
+ size=003E8000
+
+Setting up page table for framebuffer...
+FB pages: start=000FD000
+ count=000003E8
+ pde_idx=000003F4
+
+PDE[0] = 01C2D003
+PDE[1] = 01C2E003
+PDE[0x3F4] = 01C35003
+
+Enabling paging with PD at: 01C2C000
+
+Paging enabled.
+Paging enabled with framebuffer mapping
+Multiboot info assigned
+Verbosity parsed from cmdline
+Lower memory: 639Upper memory: 523136Memory map parsed and PMM initialized
+Framebuffer info parsed and graphics system updated
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected at FD000000
+
+GFX_INIT: Framebuffer detected, using framebuffer modeGFX_INIT: Graphics system initializedFB_INIT: Framebuffer available
+FB_INIT: Need 4096000
+ bytes for 1024000
+ pixels
+FB_INIT: Backing store allocated at 8564736
+=== Memory Pool Manager Init ===
+VIDEO: Initializing video subsystem
+VIDEO: Initializing video drivers
+GFX_INIT: Starting graphics initializationGFX_INIT: Framebuffer detected, using framebuffer modeGFX_INIT: Graphics system initializedVIDEO: Setting video mode
+VIDEO: Framebuffer connected
+VIDEO: Video subsystem initialized successfully
+===EARLY PNG TEST START===
+PNG: decode() called
+PNG: Signature valid
+PNG: Creating image structure
+Memory Pool: Attempting large allocation via heap: 4096 KB
+Memory Pool: heap_alloc succeeded
+PNG: Pixel buffer allocated, generating checkerboard
+SUCCESS: PNG image loaded and decoded!
+[MEMPOOL] print_all_stats called
+[MEMPOOL] Showing stats for subsystem
+[MEMPOOL] Stats - allocated: 00001000
+ KB, peak: 00001000
+ KB
+[MEMPOOL] print_all_stats finished
+PNG test complete - image freed
+===EARLY PNG TEST END===
+[KERNEL] About to init filesystem subsystem
+[FILESYSTEM] Subsystem initialized successfully
+[KERNEL] Filesystem subsystem initialized
+[KERNEL] About to initialize VFS
+[KERNEL] VFS init completed
+[KERNEL] Initializing filesystem drivers...
+[ATA] Initializing ATA driver...
+[ATA] No disk detected
+[KERNEL] Filesystem drivers initialized
+[KERNEL] ===== INITIALIZING ISO9660 FILESYSTEM =====
+[KERNEL] ISO9660 init completed
+PIC1 mask=0x000000FC
+PIC2 mask=0x000000FF
+PCI: Starting PCI initialization
+PCI: Starting PCI bus scan
+PCI Device found: Bus 00000000
+ Slot 00000000
+ Func 00000000
+ Vendor 00008086
+ Device 00001237
+ Class 00000006
+ Sub 00000000
+ Prog 00000000
+
+PCI Device found: Bus 00000000
+ Slot 00000001
+ Func 00000000
+ Vendor 00008086
+ Device 00007000
+ Class 00000006
+ Sub 00000001
+ Prog 00000000
+
+PCI Device found: Bus 00000000
+ Slot 00000001
+ Func 00000001
+ Vendor 00008086
+ Device 00007010
+ Class 00000001
+ Sub 00000001
+ Prog 00000080
+
+PCI Device found: Bus 00000000
+ Slot 00000001
+ Func 00000003
+ Vendor 00008086
+ Device 00007113
+ Class 00000006
+ Sub 00000080
+ Prog 00000000
+
+PCI Device found: Bus 00000000
+ Slot 00000002
+ Func 00000000
+ Vendor 00001234
+ Device 00001111
+ Class 00000003
+ Sub 00000000
+ Prog 00000000
+
+PCI Device found: Bus 00000000
+ Slot 00000003
+ Func 00000000
+ Vendor 00008086
+ Device 0000100E
+ Class 00000002
+ Sub 00000000
+ Prog 00000000
+
+PCI: PCI initialization complete
+USB Mouse: Starting USB stack init...
+UHCI: Scanning PCI bus for UHCI controllers
+UHCI: Scan complete, found 0
+ controllers
+[QARMA_INPUT_EVENTS] Event system initialized
+[AI_PERSIST] Initializing persistence layer
+[AI_PERSIST] Loading quantum learning from: /disk/qlearn.dat
+[AI_PERSIST] File not found
+[AI_PERSIST] Loading command cache from: /disk/cmdcache.dat
+[AI_PERSIST] File not found
+KBD IRQ: 0x00000061
+[KBD_HANDLER] Interrupt #00000001
+[KBD_HANDLER] Scancode: 00000061
+[KERNEL] Interrupts enabled for boot messages
+[KERNEL] ===== CREATING BOOT MESSAGES WINDOW =====
+[WINFACTORY] Creating window
+[WINFACTORY] malloc returned
+[WINFACTORY] Initializing window structure
+[WINFACTORY] Pixel buffer allocated
+[WINFACTORY] Adding to window manager
+[WINMGR] add_window called
+[WINMGR] Checking vtable
+[WINMGR] Checking traits
+[WINMGR] Checking window count
+[WINMGR] Adding window to array
+[WINMGR] Window added successfully
+[WINFACTORY] Window created successfully
+[BOOT_MESSAGES] Window created
+[KERNEL] Boot messages window created
+[KERNEL] Boot messages window rendered
+ENABLING window modeWindow mode enabled, buffer cleared and zeroed[KERNEL] Waiting for user to close boot messages (auto-close in 10 frames)
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+GET_EVENT: count=0
+[KERNEL] Auto-closing boot window
+[KERNEL] Boot messages window closed
+[KERNEL] ===== STARTING DESKTOP ENVIRONMENT =====
+[KERNEL] Interrupts enabled for desktop
+[KERNEL] Setting up desktop
+[KERNEL] Desktop ready
+[KERNEL] Bypassing login screen
+[KERNEL] User logged in: admin
+qemu-system-i386: terminating on signal 15 from pid 24122 (timeout)

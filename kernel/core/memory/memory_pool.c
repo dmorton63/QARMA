@@ -11,11 +11,17 @@
 #include "config.h"
 #include "pmm/pmm.h"
 #include "heap.h"
+#include "spinlock.h"
+
+
 
 // Global memory pools
 static memory_pool_t g_pools[SUBSYSTEM_MAX];
 static memory_pool_stats_t g_stats = {0};
 static bool g_initialized = false;
+
+// Concurrency protection
+static spinlock_t pool_lock = SPINLOCK_INIT;
 
 /**
  * Initialize memory pool manager
@@ -90,40 +96,45 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
         return NULL;  // Exceeded pool limit
     }
     
-    // For large allocations without proper VMM support, fall back to heap
-    // This is a temporary solution until we have proper contiguous physical allocation
+    // Allocate based on size and flags
     void* virtual_addr = NULL;
     uint32_t physical_addr = 0;
+    bool use_dma_alloc = (flags & (POOL_FLAG_DMA_CAPABLE | POOL_FLAG_CONTIGUOUS)) != 0;
+    
+    spin_lock(&pool_lock);
     
     if (size > 64 * 1024) {
-        // Large allocation - use kernel heap
-        SERIAL_LOG("Memory Pool: Attempting large allocation via heap: ");
-        char size_buf[16];
-        uint32_t temp = size / 1024;
-        int idx = 0;
-        if (temp == 0) size_buf[idx++] = '0';
-        else {
-            char digits[16];
-            int d = 0;
-            while (temp > 0) { digits[d++] = '0' + (temp % 10); temp /= 10; }
-            for (int i = d-1; i >= 0; i--) size_buf[idx++] = digits[i];
+        // Large allocation - use kernel heap or VMM
+        if (use_dma_alloc) {
+            // DMA-capable large allocation
+            SERIAL_LOG("Memory Pool: DMA-capable large allocation: ");
+            SERIAL_LOG_DEC("", size / 1024);
+            SERIAL_LOG(" KB\n");
+            
+            dma_buf_t buf = heap_alloc_dma(size, 4096);
+            if (!buf.virt) {
+                spin_unlock(&pool_lock);
+                SERIAL_LOG("Memory Pool: heap_alloc_dma FAILED\n");
+                return NULL;
+            }
+            virtual_addr = buf.virt;
+            physical_addr = (uint32_t)buf.phys;
+            SERIAL_LOG("Memory Pool: DMA allocation succeeded\n");
+        } else {
+            // Non-DMA large allocation
+            virtual_addr = heap_alloc(size);
+            if (!virtual_addr) {
+                spin_unlock(&pool_lock);
+                SERIAL_LOG("Memory Pool: heap_alloc FAILED\n");
+                return NULL;
+            }
+            physical_addr = (uint32_t)virtual_addr; // Identity-mapped
         }
-        size_buf[idx] = '\0';
-        SERIAL_LOG(size_buf);
-        SERIAL_LOG(" KB\n");
-        
-        virtual_addr = heap_alloc(size);
-        if (!virtual_addr) {
-            SERIAL_LOG("Memory Pool: heap_alloc FAILED for large allocation\n");
-            return NULL;
-        }
-        SERIAL_LOG("Memory Pool: heap_alloc succeeded\n");
-        // For heap allocations, physical address is the same (identity mapped)
-        physical_addr = (uint32_t)virtual_addr;
     } else {
         // Small allocation - use PMM
         physical_addr = pmm_alloc_page();
         if (physical_addr == 0) {
+            spin_unlock(&pool_lock);
             SERIAL_LOG("Memory Pool: pmm_alloc_page failed\n");
             return NULL;
         }
@@ -135,7 +146,7 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
         memset(virtual_addr, 0, size);
     }
     
-    // Create tracking block
+    // Create tracking block (still holding lock)
     memory_block_t* block = (memory_block_t*)heap_alloc(sizeof(memory_block_t));
     if (!block) {
         // Cleanup - free the allocated memory
@@ -144,6 +155,8 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
         } else {
             pmm_free_page(physical_addr);
         }
+        spin_unlock(&pool_lock);
+        SERIAL_LOG("Memory Pool: Failed to allocate tracking block\n");
         return NULL;
     }
     
@@ -172,6 +185,8 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
     g_stats.used_physical_pages += pages;
     g_stats.used_virtual_space += size;
     
+    spin_unlock(&pool_lock);
+    
     return virtual_addr;
 }
 
@@ -191,6 +206,8 @@ void* memory_pool_alloc_large(subsystem_id_t subsystem, size_t size, uint32_t nu
  */
 void memory_pool_free(subsystem_id_t subsystem, void* ptr) {
     if (!g_initialized || !ptr || subsystem >= SUBSYSTEM_MAX) return;
+    
+    spin_lock(&pool_lock);
     
     memory_pool_t* pool = &g_pools[subsystem];
     memory_block_t* prev = NULL;
@@ -226,12 +243,18 @@ void memory_pool_free(subsystem_id_t subsystem, void* ptr) {
             
             // Free the tracking block
             heap_free(block);
+            
+            spin_unlock(&pool_lock);
             return;
         }
         
         prev = block;
         block = block->next;
     }
+    
+    // Not found - release lock
+    spin_unlock(&pool_lock);
+    SERIAL_LOG("Memory Pool: WARNING - Attempted to free unknown pointer\n");
 }
 
 /**
@@ -342,4 +365,139 @@ void memory_pool_print_all_stats(void) {
         }
     }
     SERIAL_LOG("[MEMPOOL] print_all_stats finished\n");
+}
+
+/**
+ * Allocate aligned memory from pool
+ */
+void* memory_pool_alloc_aligned(subsystem_id_t subsystem, size_t size, size_t alignment, uint32_t flags) {
+    if (!g_initialized || subsystem >= SUBSYSTEM_MAX || size == 0) return NULL;
+    
+    memory_pool_t* pool = &g_pools[subsystem];
+    
+    // Check limits
+    if (pool->enforce_limits && pool->total_allocated + size > pool->max_allocation) {
+        return NULL;
+    }
+    
+    // Use DMA-aware allocation if DMA flag set
+    if (flags & POOL_FLAG_DMA_CAPABLE) {
+        dma_buf_t buf = heap_alloc_dma(size, alignment);
+        if (!buf.virt) return NULL;
+        
+        // Create tracking block
+        spin_lock(&pool_lock);
+        memory_block_t* block = (memory_block_t*)heap_alloc(sizeof(memory_block_t));
+        if (!block) {
+            spin_unlock(&pool_lock);
+            return NULL;
+        }
+        
+        block->virtual_addr = buf.virt;
+        block->physical_addr = (uint32_t)buf.phys;
+        block->size = size;
+        block->from_heap = true;
+        block->flags = flags;
+        block->owner = subsystem;
+        block->numa_node = pool->preferred_numa;
+        block->next = pool->blocks;
+        pool->blocks = block;
+        
+        pool->total_allocated += size;
+        pool->allocation_count++;
+        if (pool->total_allocated > pool->peak_usage) {
+            pool->peak_usage = pool->total_allocated;
+        }
+        
+        g_stats.subsystem_allocated[subsystem] += size;
+        g_stats.subsystem_blocks[subsystem]++;
+        g_stats.used_virtual_space += size;
+        
+        spin_unlock(&pool_lock);
+        return buf.virt;
+    }
+    
+    // Non-DMA aligned allocation
+    void* ptr = heap_alloc_aligned(size, alignment);
+    if (!ptr) return NULL;
+    
+    // Track it
+    spin_lock(&pool_lock);
+    memory_block_t* block = (memory_block_t*)heap_alloc(sizeof(memory_block_t));
+    if (!block) {
+        heap_free(ptr);
+        spin_unlock(&pool_lock);
+        return NULL;
+    }
+    
+    block->virtual_addr = ptr;
+    block->physical_addr = (uint32_t)ptr;
+    block->size = size;
+    block->from_heap = true;
+    block->flags = flags;
+    block->owner = subsystem;
+    block->numa_node = pool->preferred_numa;
+    block->next = pool->blocks;
+    pool->blocks = block;
+    
+    pool->total_allocated += size;
+    pool->allocation_count++;
+    if (pool->total_allocated > pool->peak_usage) {
+        pool->peak_usage = pool->total_allocated;
+    }
+    
+    g_stats.subsystem_allocated[subsystem] += size;
+    g_stats.subsystem_blocks[subsystem]++;
+    g_stats.used_virtual_space += size;
+    
+    spin_unlock(&pool_lock);
+    
+    if (flags & POOL_FLAG_ZERO_INIT) {
+        memset(ptr, 0, size);
+    }
+    
+    return ptr;
+}
+
+/**
+ * Allocate DMA buffer with physical address
+ */
+void* memory_pool_alloc_dma(subsystem_id_t subsystem, size_t size, uint32_t* physical_addr_out) {
+    if (!physical_addr_out) return NULL;
+    
+    uint32_t flags = POOL_FLAG_DMA_CAPABLE | POOL_FLAG_CONTIGUOUS | POOL_FLAG_ZERO_INIT;
+    void* ptr = memory_pool_alloc_aligned(subsystem, size, 64, flags);
+    
+    if (ptr) {
+        // Find the block to get physical address
+        spin_lock(&pool_lock);
+        memory_block_t* block = g_pools[subsystem].blocks;
+        while (block) {
+            if (block->virtual_addr == ptr) {
+                *physical_addr_out = block->physical_addr;
+                spin_unlock(&pool_lock);
+                return ptr;
+            }
+            block = block->next;
+        }
+        spin_unlock(&pool_lock);
+    }
+    
+    *physical_addr_out = 0;
+    return NULL;
+}
+
+/**
+ * Allocate pages from pool
+ */
+void* memory_pool_alloc_pages(subsystem_id_t subsystem, uint32_t page_count, uint32_t flags) {
+    return memory_pool_alloc(subsystem, page_count * PAGE_SIZE, flags);
+}
+
+/**
+ * NUMA-aware allocation (placeholder for future NUMA support)
+ */
+void* memory_pool_alloc_numa(subsystem_id_t subsystem, size_t size, uint32_t numa_node, uint32_t flags) {
+    (void)numa_node; // TODO: Implement NUMA-aware allocation
+    return memory_pool_alloc(subsystem, size, flags);
 }

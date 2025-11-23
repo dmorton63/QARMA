@@ -1,5 +1,8 @@
 #include "close_button.h"
 #include "../renderer.h"
+#include "qarma_win_handle/qarma_input_events.h"
+
+static bool close_button_handle_event_impl(CloseButton* cb, QARMA_INPUT_EVENT* event);
 
 void close_button_init(CloseButton* cb, int x, int y, int size) {
     cb->base.x = x;
@@ -9,11 +12,50 @@ void close_button_init(CloseButton* cb, int x, int y, int size) {
     cb->base.visible = true;
     cb->base.enabled = true;
     cb->base.id = control_generate_id();
+    cb->base.instance = cb;
+    cb->base.render = (void (*)(void*, uint32_t*, int, int))close_button_render;
+    cb->base.handle_event = (bool (*)(void*, QARMA_INPUT_EVENT*))close_button_handle_event_impl;
     cb->hovered = false;
     cb->pressed = false;
     cb->focused = false;
     cb->on_click = NULL;
     cb->userdata = NULL;
+}
+
+static bool close_button_handle_event_impl(CloseButton* cb, QARMA_INPUT_EVENT* event) {
+    if (!cb || !event || !cb->base.enabled) return false;
+    
+    if (event->type == QARMA_INPUT_EVENT_MOUSE_MOVE) {
+        bool was_hovered = cb->hovered;
+        cb->hovered = control_point_in_bounds(&cb->base, event->data.mouse.x, event->data.mouse.y);
+        return cb->hovered != was_hovered;
+    }
+    else if (event->type == QARMA_INPUT_EVENT_MOUSE_DOWN) {
+        if (control_point_in_bounds(&cb->base, event->data.mouse.x, event->data.mouse.y)) {
+            cb->pressed = true;
+            return true;
+        }
+    }
+    else if (event->type == QARMA_INPUT_EVENT_MOUSE_UP) {
+        if (cb->pressed && control_point_in_bounds(&cb->base, event->data.mouse.x, event->data.mouse.y)) {
+            cb->pressed = false;
+            if (cb->on_click) {
+                cb->on_click(cb->userdata);
+            }
+            return true;
+        }
+        cb->pressed = false;
+    }
+    else if (event->type == QARMA_INPUT_EVENT_KEY_DOWN) {
+        if (cb->focused && (event->data.key.scancode == 0x1C || event->data.key.scancode == 0x39)) {  // Enter or Space
+            if (cb->on_click) {
+                cb->on_click(cb->userdata);
+            }
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 void close_button_render(CloseButton* cb, uint32_t* buffer, int buf_width, int buf_height) {
