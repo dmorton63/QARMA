@@ -22,6 +22,13 @@ multiboot2_header_start:
     dd multiboot2_header_end - multiboot2_header_start  ; Header length
     dd -(0xE85250D6 + 0 + (multiboot2_header_end - multiboot2_header_start))  ; Checksum
 
+    ; Entry address tag (tell GRUB where to jump)
+    align 8
+    dw 3                             ; Type: entry address
+    dw 0                             ; Flags
+    dd 12                            ; Size
+    dd 0x101040                      ; Entry point (physical address of _start)
+
     ; Framebuffer tag
     align 8
     dw 5                             ; Type: framebuffer
@@ -60,6 +67,11 @@ global _start
 extern quantum_kernel_main
 
 _start:
+    ; Write OK pattern to VGA - if this appears, GRUB loaded us successfully
+    mov word [0xB8000], 0x2F4F  ; Green 'O'
+    mov word [0xB8002], 0x2F4B  ; Green 'K'
+    mov word [0xB8004], 0x2F20  ; Green ' '
+    
     ; Save multiboot info (EAX = magic, EBX = info pointer)
     mov [PHYS(multiboot_magic)], eax
     mov [PHYS(multiboot_info)], ebx
@@ -75,8 +87,18 @@ _start:
     test eax, eax
     jz .no_long_mode
     
+    ; Debug: write 'C' after long mode check
+    mov dx, 0x3F8
+    mov al, 'C'
+    out dx, al
+    
     ; Build initial page tables
     call setup_page_tables
+    
+    ; Debug: write 'D' after page tables
+    mov dx, 0x3F8
+    mov al, 'D'
+    out dx, al
     
     ; Enable PAE
     mov eax, cr4
@@ -150,69 +172,116 @@ check_long_mode:
 ; ============================================================================
 ; Setup Initial Page Tables
 ; ============================================================================
+section .bss
+align 4096
+boot_pd_hh:
+    resb 4096                        ; PD for higher-half mapping
 setup_page_tables:
-    ; Clear page tables
+    ; Clear PML4, PDPT, PD, PD_HH (4 tables × 4096 bytes = 16384 bytes)
     mov edi, PHYS(boot_pml4)
-    mov ecx, 3072                    ; 3 × 4096 / 4 = 3072 dwords
+    mov ecx, 4096/4
     xor eax, eax
     rep stosd
-    
-    ; PML4[0] → PDPT (identity map first 2MB)
-    mov eax, PHYS(boot_pdpt)
-    or eax, 0x03                     ; Present + Writable
-    mov [PHYS(boot_pml4)], eax
-    
-    ; PML4[511] → PDPT (higher-half kernel)
-    mov eax, PHYS(boot_pdpt)
-    or eax, 0x03
-    mov [PHYS(boot_pml4) + 511*8], eax
-    
-    ; PDPT[0] → PD (identity map)
-    mov eax, PHYS(boot_pd)
-    or eax, 0x03
-    mov [PHYS(boot_pdpt)], eax
-    
-    ; PDPT[510] → PD (higher-half at -2GB)
-    mov eax, PHYS(boot_pd)
-    or eax, 0x03
-    mov [PHYS(boot_pdpt) + 510*8], eax
-    
-    ; Map first 2MB using 2MB pages in PD
-    mov edi, PHYS(boot_pd)
-    mov eax, 0x83                    ; Present + Writable + Page Size (2MB)
-    mov ecx, 512                     ; 512 entries
-.map_pd:
-    mov [edi], eax
-    add eax, 0x200000                ; Next 2MB
-    add edi, 8
-    loop .map_pd
-    
-    ret
 
+    mov edi, PHYS(boot_pdpt)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov edi, PHYS(boot_pd)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov edi, PHYS(boot_pd_hh)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    ; Identity: PML4[0] -> PDPT, PDPT[0] -> PD
+    mov eax, PHYS(boot_pdpt)
+    or  eax, 0x03
+    mov [PHYS(boot_pml4) + 0*8], eax
+
+    mov eax, PHYS(boot_pd)
+    or  eax, 0x03
+    mov [PHYS(boot_pdpt) + 0*8], eax
+
+    ; Higher-half: PML4[511] -> PDPT, PDPT[511] -> boot_pd_hh
+    mov eax, PHYS(boot_pdpt)
+    or  eax, 0x03
+    mov [PHYS(boot_pml4) + 511*8], eax
+
+    mov eax, PHYS(boot_pd_hh)
+    or  eax, 0x03
+    mov [PHYS(boot_pdpt) + 511*8], eax
+
+    ; Identity PD: map 0..1 GiB using 2 MiB pages
+    mov edi, PHYS(boot_pd)
+    mov eax, 0x83              ; P | RW | PS
+    mov ecx, 512
+.id_map:
+    mov [edi], eax
+    add eax, 0x200000
+    add edi, 8
+    loop .id_map
+
+    ; Higher-half PD: map kernel physical (KERNEL_LMA) upward
+    mov edi, PHYS(boot_pd_hh)
+    mov eax, (KERNEL_LMA & ~0x1FFFFF) | 0x83
+    ; Map the first N*2 MiB of the kernel (start with 16 MiB => 8 entries)
+    mov ecx, 8
+.hh_map:
+    mov [edi], eax
+    add eax, 0x200000
+    add edi, 8
+    loop .hh_map
+
+    ret
 ; ============================================================================
 ; 64-bit Code
 ; ============================================================================
 BITS 64
 section .text
 long_mode_start:
-    ; Set up segment registers for 64-bit mode
-    mov ax, 0x10                     ; Data segment selector
+    ; Debug marker: entered long mode
+    mov dx, 0x3F8
+    mov al, 'E'
+    out dx, al
+
+    ; Load data segments
+    mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    
-    ; Jump to higher-half code
+
+    ; *** Set up stack here ***
+    mov rsp, PHYS(boot_stack) + 32768   ; use identity-mapped physical stack first
+
+    ; Clear frame pointer
+    xor rbp, rbp
+
+    ; Debug marker
+    mov dx, 0x3F8
+    mov al, 'F'
+    out dx, al
+
+    ; Now safe to jump to higher-half
     mov rax, .higher_half
     jmp rax
     
 .higher_half:
-    ; Now running in higher-half, can use virtual addresses
-    
-    ; Set up 64-bit stack (higher-half address)
+    ; Debug marker
+    mov dx, 0x3F8
+    mov al, 'G'
+    out dx, al
+
+    ; Switch to higher-half stack (only if mapped!)
     mov rsp, boot_stack + 32768
     
+    ; Now running in higher-half, can use virtual addresses    
     ; Clear the frame pointer
     xor rbp, rbp
     
