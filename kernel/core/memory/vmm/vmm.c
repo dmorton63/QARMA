@@ -87,7 +87,7 @@ static inline void tlb_invalidate_page(uint32_t virtual_addr) {
  * @brief Flush entire TLB by reloading CR3
  */
 static inline void tlb_flush_all(void) {
-    __asm__ volatile("mov %%cr3, %%eax; mov %%eax, %%cr3" ::: "eax", "memory");
+    __asm__ volatile("mov %%cr3, %%rax; mov %%rax, %%cr3" ::: "rax", "memory");
 }
 
 /**
@@ -196,19 +196,19 @@ void vmm_ensure_initialized(void) {
 }
 
 /**
- * @brief Enable paging with the current page directory
+ * @brief Enable paging and switch to virtual memory mode
  * @param page_directory_phys_addr Physical address of page directory
  */
-void enable_paging(uint32_t page_directory_phys_addr) {
+void enable_paging(uint64_t page_directory_phys_addr) {
     SERIAL_LOG_HEX("VMM: Enabling paging with PD at: ", page_directory_phys_addr);
     SERIAL_LOG("\n");
     
     __asm__ volatile (
         "mov %0, %%cr3\n"           // Set page directory
-        "mov %%cr0, %%eax\n"
-        "or $0x80000000, %%eax\n"   // Set PG bit
-        "mov %%eax, %%cr0\n"
-        : : "r" (page_directory_phys_addr) : "eax"
+        "mov %%cr0, %%rax\n"
+        "or $0x80000001, %%eax\n"   // Set PG bit (use eax for 32-bit immediate)
+        "mov %%rax, %%cr0\n"
+        : : "r" (page_directory_phys_addr) : "rax"
     );
     
     paging_enabled = true;

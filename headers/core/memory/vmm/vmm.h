@@ -28,4 +28,4 @@ bool vmm_is_initialized(void);
 void vmm_ensure_initialized(void);
 bool vmm_map_mmio_region(uint32_t physical_addr, uint32_t size);
 
-void enable_paging(uint32_t page_directory_phys_addr);
+void enable_paging(uint64_t page_directory_phys_addr);
