@@ -8,10 +8,11 @@ LD       = ld
 OBJCOPY  = objcopy
 
 # Flags (64-bit mode)
+# Note: SSE enabled for 64-bit (required for float operations in quantum AI)
 CFLAGS   = -std=c99 -ffreestanding -O2 -Wall -Wextra -O0 -g \
            -fno-exceptions -fno-builtin -fno-stack-protector \
-           -m64 -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
-           -nostdlib -nostdinc \
+           -m64 -mcmodel=kernel -mno-red-zone \
+           -nostdlib -nostdinc -fno-pic -fno-pie \
            -MMD -MP -DDEBUG_SERIAL -D__x86_64__
 ASFLAGS  = -g -f elf64 -Wall
 LDFLAGS  = -T kernel/linker.ld -nostdlib -m elf_x86_64
