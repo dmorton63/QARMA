@@ -87,9 +87,20 @@ void console_render_content(QARMA_WIN_HANDLE* win, int x, int y, int w, int h) {
     // Calculate how many lines we can display
     int line_height = 12;
     int max_visible_lines = (h - 30) / line_height;  // Reserve space for input line
-    int start_line = (g_console->line_count > max_visible_lines) 
+    
+    // Apply scroll offset - 0 means showing bottom (most recent)
+    // Positive scroll_offset means scrolling up into history
+    int start_line;
+    if (g_console->scroll_offset == 0) {
+        // Normal mode: show most recent lines at bottom
+        start_line = (g_console->line_count > max_visible_lines) 
                      ? g_console->line_count - max_visible_lines 
                      : 0;
+    } else {
+        // Scrolled mode: show lines from history
+        start_line = g_console->line_count - max_visible_lines - g_console->scroll_offset;
+        if (start_line < 0) start_line = 0;
+    }
     
     // Render output lines
     int text_y = y + 5;
@@ -262,14 +273,76 @@ bool console_compositor_is_visible(void) {
 
 void console_compositor_handle_key(uint8_t scancode, char character) {
     extern void serial_debug(const char* msg);
-    serial_debug("[CONSOLE_KEY] Handle key called\n");
+    serial_debug("[CONSOLE_KEY] Handle key called, scancode=");
+    SERIAL_LOG_HEX("", scancode);
+    serial_debug("\n");
     
     if (!g_console || !console_compositor_is_visible()) {
         serial_debug("[CONSOLE_KEY] Console not visible or NULL\n");
         return;
     }
     
-    serial_debug("[CONSOLE_KEY] Processing key\n");
+    // Calculate scroll parameters
+    extern uint32_t fb_height;
+    int window_height = g_console->window->base.size.height;
+    int line_height = 12;
+    int max_visible_lines = (window_height - 30) / line_height;
+    int max_scroll = g_console->line_count - max_visible_lines;
+    if (max_scroll < 0) max_scroll = 0;
+    
+    // PageUp - scroll up (into history)
+    if (scancode == 0x49) {  // PageUp
+        g_console->scroll_offset += max_visible_lines;
+        if (g_console->scroll_offset > max_scroll) {
+            g_console->scroll_offset = max_scroll;
+        }
+        compositor_render_all();
+        return;
+    }
+    
+    // PageDown - scroll down (toward recent)
+    if (scancode == 0x51) {  // PageDown
+        g_console->scroll_offset -= max_visible_lines;
+        if (g_console->scroll_offset < 0) {
+            g_console->scroll_offset = 0;
+        }
+        compositor_render_all();
+        return;
+    }
+    
+    // Up arrow - scroll up one line
+    if (scancode == 0x48) {  // Up arrow
+        g_console->scroll_offset++;
+        if (g_console->scroll_offset > max_scroll) {
+            g_console->scroll_offset = max_scroll;
+        }
+        compositor_render_all();
+        return;
+    }
+    
+    // Down arrow - scroll down one line
+    if (scancode == 0x50) {  // Down arrow
+        g_console->scroll_offset--;
+        if (g_console->scroll_offset < 0) {
+            g_console->scroll_offset = 0;
+        }
+        compositor_render_all();
+        return;
+    }
+    
+    // Home - jump to top of buffer
+    if (scancode == 0x47) {  // Home
+        g_console->scroll_offset = max_scroll;
+        compositor_render_all();
+        return;
+    }
+    
+    // End - jump to bottom (most recent)
+    if (scancode == 0x4F) {  // End
+        g_console->scroll_offset = 0;
+        compositor_render_all();
+        return;
+    }
     
     // ESC - close console
     if (scancode == 0x01) {
@@ -324,6 +397,9 @@ void console_compositor_handle_key(uint8_t scancode, char character) {
         g_console->input_buffer[0] = '\0';
         g_console->input_pos = 0;
         
+        // Reset scroll to bottom when new output is added
+        g_console->scroll_offset = 0;
+        
         // Re-render console
         compositor_render_all();
         return;
@@ -353,4 +429,42 @@ void console_compositor_print(const char* text) {
     if (console_compositor_is_visible()) {
         compositor_render_all();
     }
+}
+
+// Get scroll position (0 = at bottom, positive = scrolled up into history)
+int console_compositor_get_scroll_offset(void) {
+    return g_console ? g_console->scroll_offset : 0;
+}
+
+// Set scroll position
+void console_compositor_set_scroll_offset(int offset) {
+    if (!g_console) return;
+    
+    // Calculate max scroll
+    extern uint32_t fb_height;
+    int window_height = g_console->window->base.size.height;
+    int line_height = 12;
+    int max_visible_lines = (window_height - 30) / line_height;
+    int max_scroll = g_console->line_count - max_visible_lines;
+    if (max_scroll < 0) max_scroll = 0;
+    
+    // Clamp offset
+    if (offset < 0) offset = 0;
+    if (offset > max_scroll) offset = max_scroll;
+    
+    g_console->scroll_offset = offset;
+    compositor_render_all();
+}
+
+// Get total lines in buffer
+int console_compositor_get_line_count(void) {
+    return g_console ? g_console->line_count : 0;
+}
+
+// Get maximum visible lines
+int console_compositor_get_visible_lines(void) {
+    if (!g_console) return 0;
+    int window_height = g_console->window->base.size.height;
+    int line_height = 12;
+    return (window_height - 30) / line_height;
 }

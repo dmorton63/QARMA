@@ -69,10 +69,19 @@ static uint8_t mouse_read(void) {
 
 void mouse_init(void) {
     SERIAL_LOG("Mouse: Initializing USB mouse...\n");
+    SERIAL_LOG("Mouse: fb_width=");
+    SERIAL_LOG_DEC("", fb_width);
+    SERIAL_LOG(" fb_height=");
+    SERIAL_LOG_DEC("", fb_height);
+    SERIAL_LOG("\n");
     
     // Initialize mouse position to center of screen
-    mouse_state.x = fb_width / 2;
-    mouse_state.y = fb_height / 2;
+    // If framebuffer not initialized yet, use safe defaults
+    uint32_t init_x = (fb_width > 0) ? (fb_width / 2) : 512;
+    uint32_t init_y = (fb_height > 0) ? (fb_height / 2) : 384;
+    
+    mouse_state.x = init_x;
+    mouse_state.y = init_y;
     mouse_state.dx = 0;
     mouse_state.dy = 0;
     mouse_state.left_pressed = false;
@@ -80,6 +89,12 @@ void mouse_init(void) {
     mouse_state.middle_pressed = false;
     mouse_state.scroll_up = false;
     mouse_state.scroll_down = false;
+    
+    SERIAL_LOG("Mouse: Initial position x=");
+    SERIAL_LOG_DEC("", mouse_state.x);
+    SERIAL_LOG(" y=");
+    SERIAL_LOG_DEC("", mouse_state.y);
+    SERIAL_LOG("\n");
     
     // Clear packet buffer
     packet_index = 0;

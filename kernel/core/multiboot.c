@@ -160,31 +160,108 @@ void multiboot_detect_vbe_framebuffer(multiboot_info_t* mbi) {
     SERIAL_LOG("VBE framebuffer detection failed\n");
 }
 
-void multiboot_parse_memory_map(multiboot_info_t* mbi) {
-    if (!(mbi->flags & MULTIBOOT_FLAG_MMAP)) return;
+// E820 Memory Type Names (for logging)
+static const char* e820_type_name(uint32_t type) {
+    switch (type) {
+        case MULTIBOOT_MEMORY_AVAILABLE: return "Available";
+        case 2: return "Reserved";
+        case 3: return "ACPI Reclaimable";
+        case 4: return "ACPI NVS";
+        case 5: return "Bad Memory";
+        default: return "Unknown";
+    }
+}
 
-    SERIAL_LOG("[MBOOT] In multiboot_parse_memory_map\n");
-    //pmm_init();
+void multiboot_parse_memory_map(multiboot_info_t* mbi) {
+    if (!(mbi->flags & MULTIBOOT_FLAG_MMAP)) {
+        SERIAL_LOG("[E820] ERROR: No memory map provided by bootloader\n");
+        return;
+    }
+
+    SERIAL_LOG("[E820] ========== E820 Memory Map ==========\n");
+    SERIAL_LOG("[E820] Total map size: ");
+    SERIAL_LOG_DEC("", mbi->mmap_length);
+    SERIAL_LOG(" bytes\n");
+    
     multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mbi->mmap_addr;
     multiboot_memory_map_t* mmap_end = (multiboot_memory_map_t*)(mbi->mmap_addr + mbi->mmap_length);
 
-    SERIAL_LOG("[MBOOT] Starting memory map loop\n");
+    uint32_t region_count = 0;
+    uint64_t total_available = 0;
+    uint64_t total_reserved = 0;
+    
+    SERIAL_LOG("[E820] Parsing memory regions...\n");
     while (mmap < mmap_end) {
+        region_count++;
+        
+        // Log every region with full details
+        SERIAL_LOG("[E820] Region ");
+        SERIAL_LOG_DEC("", region_count);
+        SERIAL_LOG(": Base=0x");
+        SERIAL_LOG_HEX("", (uint32_t)(mmap->addr >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)(mmap->addr & 0xFFFFFFFF));
+        SERIAL_LOG(" Len=0x");
+        SERIAL_LOG_HEX("", (uint32_t)(mmap->len >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)(mmap->len & 0xFFFFFFFF));
+        SERIAL_LOG(" Type=");
+        SERIAL_LOG(e820_type_name(mmap->type));
+        SERIAL_LOG("\n");
+        
+        // Track totals
+        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            total_available += mmap->len;
+        } else {
+            total_reserved += mmap->len;
+        }
+        
+        // Mark available memory for PMM (32-bit only)
         if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE && mmap->addr < 0x100000000ULL) {
             uint32_t start = (uint32_t)mmap->addr;
             uint32_t length = (uint32_t)mmap->len;
             uint32_t page_start = (start + 0xFFF) & ~0xFFF;
             uint32_t page_end = (start + length) & ~0xFFF;
+            
+            // Skip low memory (below 1MB)
             if (page_start < 0x100000) page_start = 0x100000;
-            if (page_end > page_start) pmm_mark_region_free(page_start, page_end - page_start);
+            
+            if (page_end > page_start) {
+                uint32_t usable = page_end - page_start;
+                SERIAL_LOG("[E820]   -> Marking 0x");
+                SERIAL_LOG_HEX("", page_start);
+                SERIAL_LOG(" - 0x");
+                SERIAL_LOG_HEX("", page_end);
+                SERIAL_LOG(" as FREE (");
+                SERIAL_LOG_DEC("", usable / 1024);
+                SERIAL_LOG(" KB)\n");
+                pmm_mark_region_free(page_start, usable);
+            }
+        } else if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE && mmap->addr >= 0x100000000ULL) {
+            SERIAL_LOG("[E820]   -> Skipping >4GB region (32-bit OS)\n");
+        } else if (mmap->type == 3) {
+            SERIAL_LOG("[E820]   -> ACPI Reclaimable (can be freed after parsing)\n");
+        } else if (mmap->type == 4) {
+            SERIAL_LOG("[E820]   -> ACPI NVS (must not touch)\n");
         }
+        
         mmap = (multiboot_memory_map_t*)((uint32_t)mmap + mmap->size + sizeof(mmap->size));
     }
 
-    SERIAL_LOG("[MBOOT] Memory map loop complete, marking kernel region\n");
-    pmm_mark_region_used(0x100000, 0x400000);  // Reserve kernel space
+    SERIAL_LOG("[E820] ========== Summary ==========\n");
+    SERIAL_LOG("[E820] Total regions: ");
+    SERIAL_LOG_DEC("", region_count);
+    SERIAL_LOG("\n[E820] Available RAM: ");
+    SERIAL_LOG_DEC("", (uint32_t)(total_available / (1024 * 1024)));
+    SERIAL_LOG(" MB\n[E820] Reserved: ");
+    SERIAL_LOG_DEC("", (uint32_t)(total_reserved / (1024 * 1024)));
+    SERIAL_LOG(" MB\n");
+    
+    // Reserve kernel region
+    SERIAL_LOG("[E820] Reserving kernel space: 0x100000 - 0x500000 (4MB)\n");
+    pmm_mark_region_used(0x100000, 0x400000);
+    
+    SERIAL_LOG("[E820] Memory map parsing complete\n");
+    SERIAL_LOG("[E820] =====================================\n");
     debug_buffer_append("Memory map parsed and PMM initialized\n");
-    SERIAL_LOG("[MBOOT] multiboot_parse_memory_map complete\n");
 }
 
 multiboot_info_t* multiboot_get_info(void) {

@@ -80,6 +80,11 @@ static const uint8_t usb_to_scancode[256] = {
     [USB_KEY_F10] = 0x44,
     [USB_KEY_F11] = 0x57,
     [USB_KEY_F12] = 0x58,
+    // Extended keys (will need 0xE0 prefix)
+    [USB_KEY_HOME] = 0x47,
+    [USB_KEY_END] = 0x4F,
+    [USB_KEY_PAGEUP] = 0x49,
+    [USB_KEY_PAGEDOWN] = 0x51,
     // Arrow keys use extended scancodes (0xE0 prefix)
     [USB_KEY_RIGHT] = 0x4D,  // Will need 0xE0 prefix
     [USB_KEY_LEFT] = 0x4B,   // Will need 0xE0 prefix
@@ -386,8 +391,9 @@ void usb_keyboard_process_report(usb_keyboard_report_t *report) {
             // Key was released
             uint8_t scancode = usb_to_scancode[old_key];
             if (scancode != 0) {
-                // Check if this is an extended key (arrow keys)
-                if (old_key >= USB_KEY_RIGHT && old_key <= USB_KEY_UP) {
+                // Check if this is an extended key (arrow keys, PageUp/Down, Home/End)
+                if ((old_key >= USB_KEY_HOME && old_key <= USB_KEY_PAGEDOWN) ||
+                    (old_key >= USB_KEY_RIGHT && old_key <= USB_KEY_UP)) {
                     keyboard_process_scancode(0xE0);
                 }
                 keyboard_process_scancode(scancode | 0x80);  // Send release
@@ -412,8 +418,9 @@ void usb_keyboard_process_report(usb_keyboard_report_t *report) {
             // Key was pressed
             uint8_t scancode = usb_to_scancode[new_key];
             if (scancode != 0) {
-                // Check if this is an extended key (arrow keys)
-                if (new_key >= USB_KEY_RIGHT && new_key <= USB_KEY_UP) {
+                // Check if this is an extended key (arrow keys, PageUp/Down, Home/End)
+                if ((new_key >= USB_KEY_HOME && new_key <= USB_KEY_PAGEDOWN) ||
+                    (new_key >= USB_KEY_RIGHT && new_key <= USB_KEY_UP)) {
                     keyboard_process_scancode(0xE0);
                 }
                 keyboard_process_scancode(scancode);  // Send press

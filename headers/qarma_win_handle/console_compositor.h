@@ -49,4 +49,24 @@ void console_compositor_handle_key(uint8_t scancode, char character);
  */
 void console_compositor_print(const char* text);
 
+/**
+ * Get scroll offset (0 = at bottom, positive = scrolled up)
+ */
+int console_compositor_get_scroll_offset(void);
+
+/**
+ * Set scroll offset (for scrollbar integration)
+ */
+void console_compositor_set_scroll_offset(int offset);
+
+/**
+ * Get total number of lines in buffer
+ */
+int console_compositor_get_line_count(void);
+
+/**
+ * Get maximum number of visible lines
+ */
+int console_compositor_get_visible_lines(void);
+
 #endif // CONSOLE_COMPOSITOR_H

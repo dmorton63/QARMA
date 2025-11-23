@@ -90,6 +90,10 @@ typedef struct __attribute__((packed)) {
 #define USB_KEY_F10         0x43
 #define USB_KEY_F11         0x44
 #define USB_KEY_F12         0x45
+#define USB_KEY_HOME        0x4A
+#define USB_KEY_PAGEUP      0x4B
+#define USB_KEY_END         0x4D
+#define USB_KEY_PAGEDOWN    0x4E
 #define USB_KEY_RIGHT       0x4F
 #define USB_KEY_LEFT        0x50
 #define USB_KEY_DOWN        0x51

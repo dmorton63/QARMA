@@ -410,28 +410,93 @@ void usb_mouse_process_report(usb_mouse_report_t *report) {
     
     // Update absolute position (with bounds checking)
     if (has_movement) {
+        // Clamp deltas to prevent huge jumps (max 50 pixels per update)
+        // This prevents "catch-up" behavior where mouse flies off screen
+        if (mouse_state.dx > 50) mouse_state.dx = 50;
+        if (mouse_state.dx < -50) mouse_state.dx = -50;
+        if (mouse_state.dy > 50) mouse_state.dy = 50;
+        if (mouse_state.dy < -50) mouse_state.dy = -50;
+        
         mouse_state.x += mouse_state.dx;
         mouse_state.y += mouse_state.dy;
         
-        // Clamp to screen boundaries
-        if (mouse_state.x < 0) mouse_state.x = 0;
-        if (mouse_state.y < 0) mouse_state.y = 0;
-        if (mouse_state.x >= (int32_t)fb_width) mouse_state.x = fb_width - 1;
-        if (mouse_state.y >= (int32_t)fb_height) mouse_state.y = fb_height - 1;
+        // Defensive: ensure framebuffer dimensions are valid
+        uint32_t max_x = (fb_width > 0) ? fb_width : 1024;
+        uint32_t max_y = (fb_height > 0) ? fb_height : 768;
         
-        // Display mouse position on screen for debugging
-        extern void gfx_print(const char *str);
-        extern void gfx_print_decimal(uint32_t val);
-        static uint32_t pos_update_count = 0;
-        if (++pos_update_count % 5 == 0) {  // Update display every 5 movements
-            gfx_print("Mouse: X=");
-            gfx_print_decimal(mouse_state.x);
-            gfx_print(" Y=");
-            gfx_print_decimal(mouse_state.y);
-            gfx_print(" #");
-            gfx_print_decimal(report_count);
-            gfx_print("     \n");  // Extra spaces to clear previous text
+        // Clamp to screen boundaries with logging for debugging
+        static uint32_t boundary_log_count = 0;
+        bool hit_boundary = false;
+        
+        if (mouse_state.x < 0) {
+            if (boundary_log_count < 10) {
+                SERIAL_LOG("[MOUSE] Clamping X from ");
+                SERIAL_LOG_DEC("", mouse_state.x);
+                SERIAL_LOG(" to 0\n");
+            }
+            mouse_state.x = 0;
+            hit_boundary = true;
         }
+        if (mouse_state.y < 0) {
+            if (boundary_log_count < 10) {
+                SERIAL_LOG("[MOUSE] Clamping Y from ");
+                SERIAL_LOG_DEC("", mouse_state.y);
+                SERIAL_LOG(" to 0\n");
+            }
+            mouse_state.y = 0;
+            hit_boundary = true;
+        }
+        if (mouse_state.x >= (int32_t)max_x) {
+            if (boundary_log_count < 10) {
+                SERIAL_LOG("[MOUSE] Clamping X from ");
+                SERIAL_LOG_DEC("", mouse_state.x);
+                SERIAL_LOG(" to ");
+                SERIAL_LOG_DEC("", max_x - 1);
+                SERIAL_LOG("\n");
+            }
+            mouse_state.x = max_x - 1;
+            hit_boundary = true;
+        }
+        if (mouse_state.y >= (int32_t)max_y) {
+            if (boundary_log_count < 10) {
+                SERIAL_LOG("[MOUSE] Clamping Y from ");
+                SERIAL_LOG_DEC("", mouse_state.y);
+                SERIAL_LOG(" to ");
+                SERIAL_LOG_DEC("", max_y - 1);
+                SERIAL_LOG("\n");
+            }
+            mouse_state.y = max_y - 1;
+            hit_boundary = true;
+        }
+        
+        if (hit_boundary) {
+            boundary_log_count++;
+            if (boundary_log_count <= 5) {
+                SERIAL_LOG("[MOUSE] Final position: x=");
+                SERIAL_LOG_DEC("", mouse_state.x);
+                SERIAL_LOG(" y=");
+                SERIAL_LOG_DEC("", mouse_state.y);
+                SERIAL_LOG(" (fb=");
+                SERIAL_LOG_DEC("", fb_width);
+                SERIAL_LOG("x");
+                SERIAL_LOG_DEC("", fb_height);
+                SERIAL_LOG(")\n");
+            }
+        }
+        
+        // Mouse position debug output disabled - mouse working correctly
+        // extern void gfx_print(const char *str);
+        // extern void gfx_print_decimal(uint32_t val);
+        // static uint32_t pos_update_count = 0;
+        // if (++pos_update_count % 5 == 0) {  // Update display every 5 movements
+        //     gfx_print("Mouse: X=");
+        //     gfx_print_decimal(mouse_state.x);
+        //     gfx_print(" Y=");
+        //     gfx_print_decimal(mouse_state.y);
+        //     gfx_print(" #");
+        //     gfx_print_decimal(report_count);
+        //     gfx_print("     \n");  // Extra spaces to clear previous text
+        // }
         
         // Dispatch mouse move event
         QARMA_INPUT_EVENT move_event = qarma_input_event_create_mouse_move(
