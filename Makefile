@@ -89,15 +89,15 @@ $(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg
 # Configuration
 QEMU_CPUS ?= 8
 
-# Run in QEMU  
+# Run in QEMU (64-bit)
 qemu: $(BUILD_DIR)/qarma.iso
-	@echo "Booting QARMA OS in QEMU ($(QEMU_CPUS) CPUs)..."
-	qemu-system-i386 -cdrom $(BUILD_DIR)/qarma.iso -boot d -m 512M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0
+	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs)..."
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -boot d -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64
 
-# Debug with GDB
+# Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso
 	@echo "Starting debugger..."
-	qemu-system-i386 -drive file=$<,format=raw,media=cdrom,if=ide -m 256M -vga std -smp $(QEMU_CPUS) -s -S &
+	qemu-system-x86_64 -drive file=$<,format=raw,media=cdrom,if=ide -m 4096M -vga std -smp $(QEMU_CPUS) -s -S -cpu qemu64 &
 	gdb $(BUILD_DIR)/kernel.elf -ex "target remote :1234"
 
 # Clean build artifacts
