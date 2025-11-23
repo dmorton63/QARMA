@@ -1,18 +1,20 @@
 # QARMA OS Build System — Modular, Adaptive, Legacy-Aware
 
-# Toolchain
-CC       = i686-elf-gcc
+# Toolchain (64-bit)
+# Using system gcc for now - can switch to x86_64-elf-gcc later
+CC       = gcc
 AS       = nasm
-LD       = i686-elf-ld
-OBJCOPY  = i686-elf-objcopy
+LD       = ld
+OBJCOPY  = objcopy
 
-# Flags
+# Flags (64-bit mode)
 CFLAGS   = -std=c99 -ffreestanding -O2 -Wall -Wextra -O0 -g \
            -fno-exceptions -fno-builtin -fno-stack-protector \
-           -m32 -nostdlib -nostdinc -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
-           -MMD -MP -DDEBUG_SERIAL
-ASFLAGS  = -g -f elf32 -Wall
-LDFLAGS  = -T kernel/linker.ld -nostdlib -m elf_i386
+           -m64 -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+           -nostdlib -nostdinc \
+           -MMD -MP -DDEBUG_SERIAL -D__x86_64__
+ASFLAGS  = -g -f elf64 -Wall
+LDFLAGS  = -T kernel/linker.ld -nostdlib -m elf_x86_64
 
 # Directories
 SRC_DIR     = kernel
