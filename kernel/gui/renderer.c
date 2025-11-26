@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "graphics/framebuffer.h"
 
 // External VGA font data (8x8 bitmap font)
 extern const uint8_t vga_font[128][8];
@@ -8,11 +9,15 @@ extern const uint8_t vga_font[128][8];
 // ============================================================================
 
 void draw_filled_rect(uint32_t* buffer, int buf_width, int x, int y, int w, int h, uint32_t color) {
+    // Get buffer height from framebuffer info
+    extern FramebufferInfo* fb_info;
+    int buf_height = fb_info ? fb_info->height : 768;
+    
     for (int dy = 0; dy < h; dy++) {
         for (int dx = 0; dx < w; dx++) {
             int px = x + dx;
             int py = y + dy;
-            if (px >= 0 && px < buf_width && py >= 0) {
+            if (px >= 0 && px < buf_width && py >= 0 && py < buf_height) {
                 buffer[py * buf_width + px] = color;
             }
         }
@@ -20,19 +25,23 @@ void draw_filled_rect(uint32_t* buffer, int buf_width, int x, int y, int w, int 
 }
 
 void draw_rect_border(uint32_t* buffer, int buf_width, int x, int y, int w, int h, uint32_t color, int thickness) {
+    // Get buffer height from framebuffer info
+    extern FramebufferInfo* fb_info;
+    int buf_height = fb_info ? fb_info->height : 768;
+    
     // Top and bottom
     for (int i = 0; i < w; i++) {
         for (int t = 0; t < thickness; t++) {
             if (x + i >= 0 && x + i < buf_width) {
-                if (y + t >= 0) buffer[(y + t) * buf_width + (x + i)] = color;
-                if (y + h - 1 - t >= 0) buffer[(y + h - 1 - t) * buf_width + (x + i)] = color;
+                if (y + t >= 0 && y + t < buf_height) buffer[(y + t) * buf_width + (x + i)] = color;
+                if (y + h - 1 - t >= 0 && y + h - 1 - t < buf_height) buffer[(y + h - 1 - t) * buf_width + (x + i)] = color;
             }
         }
     }
     // Left and right
     for (int i = 0; i < h; i++) {
         for (int t = 0; t < thickness; t++) {
-            if (y + i >= 0) {
+            if (y + i >= 0 && y + i < buf_height) {
                 if (x + t >= 0 && x + t < buf_width) buffer[(y + i) * buf_width + (x + t)] = color;
                 if (x + w - 1 - t >= 0 && x + w - 1 - t < buf_width) buffer[(y + i) * buf_width + (x + w - 1 - t)] = color;
             }
@@ -41,6 +50,10 @@ void draw_rect_border(uint32_t* buffer, int buf_width, int x, int y, int w, int 
 }
 
 void draw_char_to_buffer(uint32_t* buffer, int buf_width, int x, int y, char c, uint32_t color) {
+    // Get buffer height from framebuffer info
+    extern FramebufferInfo* fb_info;
+    int buf_height = fb_info ? fb_info->height : 768;
+    
     // Use VGA font data for proper character rendering
     if (c < 0 || c >= 128) c = '?';
     
@@ -51,7 +64,7 @@ void draw_char_to_buffer(uint32_t* buffer, int buf_width, int x, int y, char c, 
         for (int dx = 0; dx < 8; dx++) {
             int px = x + dx;
             int py = y + dy;
-            if (px >= 0 && px < buf_width && py >= 0) {
+            if (px >= 0 && px < buf_width && py >= 0 && py < buf_height) {
                 // Check if this pixel should be drawn (bit set in font data)
                 // Read bits from right to left (LSB to MSB)
                 if (row_bits & (1 << dx)) {

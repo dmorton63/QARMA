@@ -811,6 +811,8 @@ void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     extern int ai_load_state(void);
     ai_load_state();
     
-    // Show boot messages with new frame rendering
-    qarma_show_boot_messages();
+    // TODO: Re-enable boot messages window after testing console rendering
+    // qarma_show_boot_messages();
+    
+    SERIAL_LOG("[KERNEL] Skipping boot messages window (testing console rendering first)\n");
 }
