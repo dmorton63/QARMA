@@ -315,9 +315,9 @@ void gfx_scroll_up(void) {
 
 // Display information accessors
 display_info_t* graphics_get_info(void) {
-    SERIAL_LOG("graphics_get_info -> GFX_INFO: Current mode requested");
-    SERIAL_LOG_DEC("graphics_get_info -> GFX_INFO: Mode value: ", g_display.mode);
-    SERIAL_LOG_DEC("graphics_get_info -> GFX Framebuffer Address:", (uint32_t)(uintptr_t)g_display.framebuffer);
+    // SERIAL_LOG("graphics_get_info -> GFX_INFO: Current mode requested");
+    // SERIAL_LOG_DEC("graphics_get_info -> GFX_INFO: Mode value: ", g_display.mode);
+    // SERIAL_LOG_DEC("graphics_get_info -> GFX Framebuffer Address:", (uint32_t)(uintptr_t)g_display.framebuffer);
     return &g_display;
 }
 

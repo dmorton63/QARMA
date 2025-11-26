@@ -7,12 +7,12 @@
 #include "gui/controls/close_button.h"
 // #include "gui/controls/label.h"  // Legacy - disabled
 // #include "gui/status_bar.h"  // Legacy - disabled
-// #include "gui/console_window.h"  // Legacy - disabled
+#include "gui/console_window.h"  // New architecture
 #include "quantum/quantum_register_example.h"
 #include "config.h"
 
-// Old console window (DISABLED - using compositor console instead)
-// static ConsoleWindow* g_console_old = NULL;  // Legacy - disabled
+// Console window (new architecture)
+static console_window_t* g_console = NULL;
 
 // Forward declarations for vtable
 static void main_window_vtable_update(QARMA_WIN_HANDLE* self, QARMA_TICK_CONTEXT* ctx);
@@ -85,8 +85,17 @@ MainWindow* main_window_create(void) {
     win->vtable = &main_window_vtable;
     win->traits = mw;  // Store MainWindow pointer in traits
     
-    // Old console system disabled - using compositor console instead
-    // g_console_old = NULL;  // Legacy - disabled
+    // Create console window with new architecture
+    int console_width = 800;
+    int console_height = 500;
+    int console_x = (screen_w - console_width) / 2;
+    int console_y = (screen_h - console_height) / 2;
+    g_console = console_window_create(console_x, console_y, console_width, console_height);
+    if (g_console) {
+        console_window_set_visible(g_console, false);  // Hidden initially
+        SERIAL_LOG("[MAIN_WINDOW] Console window created (new architecture)\n");
+    }
+    
     win->buffer_size = win->size;
     // Allocate pixel buffer for title bar only
     size_t buffer_bytes = screen_w * TITLE_BAR_HEIGHT * sizeof(uint32_t);
@@ -167,12 +176,11 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
     serial_debug_hex(event->data.key.scancode);
     SERIAL_LOG("\n");
     
-    // Old console disabled - using compositor console
     // If console is visible, it gets priority for events
-    // if (g_console_old && g_console_old->visible) {  // Legacy - disabled
-    //     console_window_handle_event(g_console_old, event);
-    //     return;
-    // }
+    if (g_console && g_console->visible) {
+        console_window_handle_event(g_console, event);
+        return;
+    }
 
     // Try dispatching to controls first
     if (qarma_win_dispatch_event(mw->win, event)) {
@@ -223,11 +231,12 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
             SERIAL_LOG("[MAIN_WIN] ESC pressed, exiting\n");
             mw->should_exit = true;
         }
-        // Ctrl+T - Toggle console (handled by compositor console handler now)
+        // Ctrl+T - Toggle console
         else if (event->data.key.scancode == 0x14 && (event->data.key.modifiers & QARMA_MOD_CTRL)) {  // Ctrl+T
-            // if (g_console_old) {  // Legacy - disabled
-            //     console_window_set_visible(g_console_old, !g_console_old->visible);
-            // }
+            if (g_console) {
+                console_window_set_visible(g_console, !g_console->visible);
+                SERIAL_LOG("[MAIN_WIN] Console visibility toggled\n");
+            }
         }
         // Q key - Run quantum register examples
         else if (event->data.key.scancode == 0x10) {  // Q

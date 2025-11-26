@@ -11,26 +11,36 @@
 shell_state_t g_shell_state = { .current_path = "/", .initialized = false };
 
 void shell_init(void) {
+    SERIAL_LOG("[SHELL] shell_init() entry\n");
     if (g_shell_state.initialized) {
+        SERIAL_LOG("[SHELL] Already initialized, returning\n");
         return;
     }
     
+    SERIAL_LOG("[SHELL] Setting path\n");
     strcpy(g_shell_state.current_path, "/");
     g_shell_state.initialized = true;
     
     SERIAL_LOG("[SHELL] Initializing shell\n");
-    gfx_print("QARMA Shell Initialized\n");
-    gfx_print("Type 'help' for available commands\n\n");
-    SERIAL_LOG("[SHELL] Showing prompt\n");
-    show_prompt(": ");
+    // Skip gfx_print for now - might be causing issues
+    // SERIAL_LOG("[SHELL] About to call gfx_print #1\n");
+    // gfx_print("QARMA Shell Initialized\n");
+    // SERIAL_LOG("[SHELL] About to call gfx_print #2\n");
+    // gfx_print("Type 'help' for available commands\n\n");
+    // SERIAL_LOG("[SHELL] Showing prompt\n");
+    // SERIAL_LOG("[SHELL] About to call show_prompt\n");
+    // show_prompt(": ");
     SERIAL_LOG("[SHELL] Init complete\n");
 }
 
 void show_prompt(const char* path) {
-
-    char prompt[256];
-        sprintf(prompt, "[Qarma OS]%s", path);
-        gfx_print(prompt);
+    SERIAL_LOG("[SHELL] show_prompt() entry\n");
+    static char prompt[256];  // Use static to avoid stack overflow
+    SERIAL_LOG("[SHELL] About to sprintf\n");
+    sprintf(prompt, "[Qarma OS]%s", path);
+    SERIAL_LOG("[SHELL] About to gfx_print prompt\n");
+    gfx_print(prompt);
+    SERIAL_LOG("[SHELL] show_prompt() exit\n");
 }
 
 void process_command(const char* command) {

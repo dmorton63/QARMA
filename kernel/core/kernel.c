@@ -104,8 +104,11 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     // Run shell instead of desktop (for testing)
     extern void shell_init(void);
     extern void shell_run(void);
+    SERIAL_LOG("[KERNEL] About to call shell_init\n");
     shell_init();
+    SERIAL_LOG("[KERNEL] shell_init returned, about to call shell_run\n");
     shell_run();
+    SERIAL_LOG("[KERNEL] shell_run returned (should never happen)\n");
     
     // Should never reach here
     return 0;
