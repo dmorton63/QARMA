@@ -35,3 +35,4 @@ test_fb_16bit.c
 # Disk images
 *.img
 qarma_disk.img
+qarma_disk_with_os.img
