@@ -199,7 +199,47 @@ static void textbox_render(qarma_control_t* control, uint32_t* buffer,
         }
     }
     
-    // TODO: Render text when font system is available
+    // Render text
+    extern void draw_string_to_buffer(uint32_t* buffer, int buf_width, int x, int y, 
+                                       const char* str, uint32_t color);
+    
+    uint32_t text_color = (control->state_flags & CONTROL_STATE_ENABLED) ? 0xFF000000 : 0xFF808080;
+    
+    if (control->style_flags & CONTROL_STYLE_MULTILINE) {
+        // Multiline: render line by line
+        int32_t text_y = abs_y + 4;
+        int32_t line_height = 10;
+        const char* ptr = data->text;
+        char line_buffer[256];
+        
+        while (*ptr && text_y < abs_y + control->height - 4) {
+            // Find end of line
+            int line_len = 0;
+            while (*ptr && *ptr != '\n' && line_len < 255) {
+                line_buffer[line_len++] = *ptr++;
+            }
+            line_buffer[line_len] = '\0';
+            
+            // Draw line
+            if (line_len > 0) {
+                draw_string_to_buffer(buffer, buf_width, abs_x + 4, text_y, 
+                                     line_buffer, text_color);
+            }
+            
+            text_y += line_height;
+            
+            // Skip newline
+            if (*ptr == '\n') {
+                ptr++;
+            }
+        }
+    } else {
+        // Single line
+        if (data->text[0] != '\0') {
+            draw_string_to_buffer(buffer, buf_width, abs_x + 4, abs_y + 4,
+                                 data->text, text_color);
+        }
+    }
 }
 
 // ============================================================================
