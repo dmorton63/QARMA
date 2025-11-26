@@ -658,12 +658,16 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
 void qarma_run_desktop(void) {
     SERIAL_LOG("[KERNEL] Entering desktop loop\n");
     
-    // Initialize compositor and windows immediately
-    SERIAL_LOG("[KERNEL] Initializing compositor and windows\n");
-    extern void window_test_demo(void);
-    window_test_demo();
+    // Show console window (compositor already initialized)
+    SERIAL_LOG("[KERNEL] Showing console window\n");
+    extern void console_compositor_show(void);
+    console_compositor_show();
     
-    SERIAL_LOG("[KERNEL] Desktop initialized with compositor\n");
+    // Render initial desktop state
+    extern void compositor_render_all(void);
+    compositor_render_all();
+    
+    SERIAL_LOG("[KERNEL] Desktop initialized with console\n");
     
     // Add boot log messages to console window
     extern void console_compositor_print(const char* text);
