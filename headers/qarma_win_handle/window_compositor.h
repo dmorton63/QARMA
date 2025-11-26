@@ -94,3 +94,7 @@ window_style_t compositor_get_default_style(void);
 
 // Get global compositor instance
 window_compositor_t* get_compositor(void);
+
+// Enable/disable compositor rendering (for boot messages)
+void compositor_set_enabled(bool enabled);
+bool compositor_is_enabled(void);

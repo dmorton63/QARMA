@@ -19,6 +19,7 @@ extern mouse_state_t mouse_state;
 // Global compositor instance
 static window_compositor_t g_compositor = {0};
 static bool g_z_order_dirty = true;
+static bool g_compositor_enabled = true;  // Disabled during boot messages
 
 // ────────────────────────────────────────────────────────────────────────────
 // Initialization
@@ -27,6 +28,19 @@ static bool g_z_order_dirty = true;
 void compositor_init(void) {
     memset(&g_compositor, 0, sizeof(window_compositor_t));
     g_compositor.next_z_order = 1;
+    g_compositor_enabled = true;  // Enable by default
+}
+
+void compositor_set_enabled(bool enabled) {
+    extern void serial_debug(const char* msg);
+    g_compositor_enabled = enabled;
+    serial_debug("[COMPOSITOR] Rendering ");
+    serial_debug(enabled ? "ENABLED" : "DISABLED");
+    serial_debug("\n");
+}
+
+bool compositor_is_enabled(void) {
+    return g_compositor_enabled;
 }
 
 window_compositor_t* get_compositor(void) {
@@ -516,6 +530,12 @@ static void compositor_render_cursor(int x, int y) {
 void compositor_render_all(void) {
     extern void serial_debug(const char* msg);
     serial_debug("[COMPOSITOR_RENDER] Called\n");
+    
+    // Check if compositor is enabled (disabled during boot messages)
+    if (!g_compositor_enabled) {
+        serial_debug("[COMPOSITOR_RENDER] Skipped (disabled)\n");
+        return;
+    }
     
     // Safety check: Prevent potential issues with uninitialized framebuffer
     extern uint32_t* backing_store;

@@ -324,49 +324,19 @@ void qarma_init_gui(void) {
 void qarma_init_desktop(void) {
     SERIAL_LOG("[KERNEL] Initializing desktop\n");
     
-    // Get screen dimensions
-    display_info_t* display = graphics_get_info();
-    if (!display) {
-        SERIAL_LOG("[KERNEL] ERROR: Could not get display info\n");
-        return;
-    }
+    // Compositor will handle desktop rendering
+    // Just render initial compositor state
+    extern void compositor_render_all(void);
+    compositor_render_all();
     
-    // Create desktop background frame (fullscreen)
-    extern qarma_frame_t* g_desktop_frame;
-    g_desktop_frame = frame_create(NULL, 0, 0, display->width, display->height, 0, "Desktop");
-    if (!g_desktop_frame) {
-        SERIAL_LOG("[KERNEL] ERROR: Failed to create desktop frame\n");
-        return;
-    }
-    
-    // Set desktop background color (dark blue/gray)
-    g_desktop_frame->background.red = 0x2A;
-    g_desktop_frame->background.green = 0x2A;
-    g_desktop_frame->background.blue = 0x3E;
-    g_desktop_frame->background.alpha = 0xFF;
-    g_desktop_frame->visible = true;
-    
-    SERIAL_LOG("[KERNEL] Desktop frame created\n");
-    
-    // Render desktop background
-    frame_render(g_desktop_frame);
-    
-    // Swap buffers to display desktop
-    extern void frame_swap_buffers(void);
-    frame_swap_buffers();
-    
-    SERIAL_LOG("[KERNEL] Desktop rendered\n");
-    
-    // Now show boot messages window on top
-    qarma_show_boot_messages();
+    SERIAL_LOG("[KERNEL] Desktop compositor rendered\n");
 }
 
 void qarma_show_boot_messages(void) {
     SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW (NEW) =====\n");
     
-    // Enable interrupts for keyboard input
-    __asm__ volatile("sti");
-    SERIAL_LOG("[KERNEL] Interrupts enabled for boot messages\n");
+    // Boot log was already captured during initialization
+    // Now just display it in a window after desktop is running
     
     // Get screen dimensions
     display_info_t* display = graphics_get_info();
@@ -416,12 +386,7 @@ void qarma_show_boot_messages(void) {
     
     SERIAL_LOG("[KERNEL] Messages added, rendering window\n");
     
-    // Render desktop first (in case it was corrupted)
-    if (g_desktop_frame) {
-        frame_render(g_desktop_frame);
-    }
-    
-    // Render the boot messages window on top
+    // Render the boot messages window
     boot_messages_render(boot_msg_win);
     
     // Swap buffers to display
@@ -450,6 +415,10 @@ void qarma_show_boot_messages(void) {
     
     // Destroy boot messages window
     boot_messages_destroy(boot_msg_win);
+    
+    // Re-render desktop + compositor windows
+    extern void compositor_render_all(void);
+    compositor_render_all();
     
     SERIAL_LOG("[KERNEL] Boot messages complete\n");
 }
@@ -785,6 +754,11 @@ void qarma_run_desktop(void) {
     
     SERIAL_LOG("[KERNEL] Desktop initialized with compositor\n");
     
+    // Now display boot messages window on top of desktop
+    qarma_show_boot_messages();
+    
+    SERIAL_LOG("[KERNEL] Boot messages closed, desktop active\n");
+    
     // Don't show_prompt() - it writes directly to framebuffer and covers windows
     // Console window handles its own prompt
     
@@ -880,6 +854,13 @@ void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     boot_log_push("");
     boot_log_push("System initialization complete!");
     
-    // Initialize desktop and display boot messages
+    // Initialize desktop (just compositor render, no boot messages yet)
     qarma_init_desktop();
+    
+    SERIAL_LOG("[KERNEL] System ready - boot log captured with ");
+    char messages[BOOT_LOG_MAX_LINES][BOOT_LOG_LINE_LENGTH];
+    uint32_t msg_count = 0;
+    boot_log_get_messages(messages, &msg_count);
+    SERIAL_LOG_DEC("", msg_count);
+    SERIAL_LOG(" messages\n");
 }
