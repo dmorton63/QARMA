@@ -49,6 +49,7 @@ extern void pipeline_system_init(void);
 extern void handle_manager_init(void);
 extern void message_system_init(void);
 extern void frame_system_init(void);
+extern void control_system_init(void);
 extern void fs_init(void);
 extern void pci_init(void);
 extern int usb_mouse_init(void);
@@ -95,6 +96,10 @@ void qarma_init_core_subsystems(void) {
     // Initialize frame system (third - UI containment layer)
     frame_system_init();
     gfx_print("Frame system initialized.\n");
+    
+    // Initialize control system (fourth - UI controls)
+    control_system_init();
+    gfx_print("Control system initialized.\n");
     
     // Initialize core allocation manager
     core_manager_init();
