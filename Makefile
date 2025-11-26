@@ -99,7 +99,7 @@ QEMU_CPUS ?= 8
 # Run in QEMU (64-bit)
 qemu: $(BUILD_DIR)/qarma.iso
 	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs)..."
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-mouse,bus=xhci.0 -cpu qemu64
 
 # Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso

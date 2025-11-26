@@ -5,9 +5,12 @@
  */
 
 #include "gui/frame.h"
+#include "gui/qarma_control.h"
 #include "core/memory/heap.h"
 #include "core/string.h"
 #include "config.h"
+#include "graphics/framebuffer.h"
+#include "gui/renderer.h"
 
 // ============================================================================
 // Global State
@@ -424,8 +427,69 @@ void frame_render(qarma_frame_t* frame) {
         return;
     }
     
-    // TODO: Implement actual rendering when graphics integration is done
-    // For now, just clear dirty flag
+    // Get framebuffer info
+    extern FramebufferInfo* fb_info;
+    if (!fb_info || !fb_info->virt_addr) {
+        frame->dirty = false;
+        return;
+    }
+    
+    uint32_t* framebuffer = (uint32_t*)(uintptr_t)fb_info->virt_addr;
+    int32_t fb_width = fb_info->width;
+    int32_t fb_height = fb_info->height;
+    
+    // Calculate absolute position (considering parent hierarchy)
+    int32_t abs_x = frame->bounds.x;
+    int32_t abs_y = frame->bounds.y;
+    qarma_frame_t* parent = frame->parent;
+    while (parent) {
+        abs_x += parent->bounds.x;
+        abs_y += parent->bounds.y;
+        parent = parent->parent;
+    }
+    
+    // Render frame background
+    uint32_t bg_color = (frame->background.alpha << 24) | 
+                        (frame->background.red << 16) | 
+                        (frame->background.green << 8) | 
+                        frame->background.blue;
+    draw_filled_rect(framebuffer, fb_width, abs_x, abs_y, frame->bounds.width, frame->bounds.height, bg_color);
+    
+    // Render border if style includes it
+    if (frame->style_flags & FRAME_STYLE_BORDER) {
+        uint32_t border_color = (frame->border_color.alpha << 24) | 
+                                (frame->border_color.red << 16) | 
+                                (frame->border_color.green << 8) | 
+                                frame->border_color.blue;
+        draw_rect_border(framebuffer, fb_width, abs_x, abs_y, frame->bounds.width, frame->bounds.height, border_color, 2);
+    }
+    
+    // Render title bar if style includes it
+    if (frame->style_flags & FRAME_STYLE_TITLE_BAR) {
+        // Draw title bar background (darker than main bg)
+        uint32_t title_bg = bg_color & 0x7F7F7F7F; // Darken by half
+        draw_filled_rect(framebuffer, fb_width, abs_x, abs_y, frame->bounds.width, 24, title_bg);
+        // Draw title text
+        draw_string_to_buffer(framebuffer, fb_width, abs_x + 8, abs_y + 6, frame->title, 0xFFFFFFFF);
+    }
+    
+    // Render all child controls
+    for (uint32_t i = 0; i < frame->control_count; i++) {
+        qarma_control_t* control = frame->controls[i];
+        if (control && control->render_func && (control->state_flags & CONTROL_STATE_VISIBLE)) {
+            // Controls render at absolute positions (already offset by frame position)
+            // Add frame's absolute position to control's relative position
+            control->render_func(control, framebuffer, fb_width, fb_height);
+        }
+    }
+    
+    // Render child frames recursively
+    for (uint32_t i = 0; i < frame->child_count; i++) {
+        if (frame->children[i]) {
+            frame_render(frame->children[i]);
+        }
+    }
+    
     frame->dirty = false;
 }
 

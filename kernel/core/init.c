@@ -811,8 +811,6 @@ void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     extern int ai_load_state(void);
     ai_load_state();
     
-    // Show boot messages - DISABLED: frame_render() is not implemented yet
-    // qarma_show_boot_messages();
-    
-    SERIAL_LOG("[KERNEL] Skipping boot messages (rendering not implemented)\n");
+    // Show boot messages with new frame rendering
+    qarma_show_boot_messages();
 }
