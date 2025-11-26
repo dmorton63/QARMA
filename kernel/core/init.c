@@ -332,96 +332,7 @@ void qarma_init_desktop(void) {
     SERIAL_LOG("[KERNEL] Desktop compositor rendered\n");
 }
 
-void qarma_show_boot_messages(void) {
-    SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW (NEW) =====\n");
-    
-    // Boot log was already captured during initialization
-    // Now just display it in a window after desktop is running
-    
-    // Get screen dimensions
-    display_info_t* display = graphics_get_info();
-    if (!display) {
-        SERIAL_LOG("[KERNEL] ERROR: Could not get display info\n");
-        return;
-    }
-    
-    // Create boot messages window (centered on screen)
-    int32_t win_w = 600;
-    int32_t win_h = 400;
-    int32_t win_x = (display->width - win_w) / 2;
-    int32_t win_y = (display->height - win_h) / 2;
-    
-    boot_messages_window_t* boot_msg_win = boot_messages_create(win_x, win_y, win_w, win_h);
-    if (!boot_msg_win) {
-        SERIAL_LOG("[KERNEL] ERROR: Failed to create boot messages window\n");
-        return;
-    }
-    
-    SERIAL_LOG("[KERNEL] Boot messages window created successfully\n");
-    
-    // Add header
-    boot_messages_add(boot_msg_win, "QARMA OS - Boot Log");
-    boot_messages_add(boot_msg_win, "======================================");
-    boot_messages_add(boot_msg_win, "");
-    
-    // Load messages from boot_log
-    char messages[BOOT_LOG_MAX_LINES][BOOT_LOG_LINE_LENGTH];
-    uint32_t msg_count = 0;
-    boot_log_get_messages(messages, &msg_count);
-    
-    SERIAL_LOG("[KERNEL] Loaded ");
-    SERIAL_LOG_DEC("", msg_count);
-    SERIAL_LOG(" boot messages from boot_log\n");
-    
-    // Add all boot log messages
-    for (uint32_t i = 0; i < msg_count; i++) {
-        boot_messages_add(boot_msg_win, messages[i]);
-    }
-    
-    // Add footer
-    boot_messages_add(boot_msg_win, "");
-    boot_messages_add(boot_msg_win, "System initialization complete!");
-    boot_messages_add(boot_msg_win, "");
-    boot_messages_add(boot_msg_win, "Press ESC to continue to shell...");
-    
-    SERIAL_LOG("[KERNEL] Messages added, rendering window\n");
-    
-    // Render the boot messages window
-    boot_messages_render(boot_msg_win);
-    
-    // Swap buffers to display
-    extern void frame_swap_buffers(void);
-    frame_swap_buffers();
-    
-    SERIAL_LOG("[KERNEL] Window rendered and swapped, entering event loop\n");
-    
-    // Simple event loop - wait for ESC key
-    bool done = false;
-    while (!done) {
-        // Check for keyboard events
-        if (keyboard_has_event()) {
-            key_event_t event = keyboard_poll_event();
-            if (!event.released && event.scancode == 0x01) {  // ESC key pressed (not released)
-                SERIAL_LOG("[KERNEL] ESC pressed, closing boot messages\n");
-                done = true;
-            }
-        }
-        
-        // Small delay to avoid tight loop
-        sleep_ms(10);
-    }
-    
-    SERIAL_LOG("[KERNEL] Boot messages acknowledged, cleaning up\n");
-    
-    // Destroy boot messages window
-    boot_messages_destroy(boot_msg_win);
-    
-    // Re-render desktop + compositor windows
-    extern void compositor_render_all(void);
-    compositor_render_all();
-    
-    SERIAL_LOG("[KERNEL] Boot messages complete\n");
-}
+// qarma_show_boot_messages removed - boot log now displays in console window
 
 #if 0  // Legacy - login screen disabled
 void qarma_run_login_screen(void (*on_success)(const char* username)) {
@@ -754,10 +665,26 @@ void qarma_run_desktop(void) {
     
     SERIAL_LOG("[KERNEL] Desktop initialized with compositor\n");
     
-    // Now display boot messages window on top of desktop
-    qarma_show_boot_messages();
+    // Add boot log messages to console window
+    extern void console_compositor_print(const char* text);
+    char messages[BOOT_LOG_MAX_LINES][BOOT_LOG_LINE_LENGTH];
+    uint32_t msg_count = 0;
+    boot_log_get_messages(messages, &msg_count);
     
-    SERIAL_LOG("[KERNEL] Boot messages closed, desktop active\n");
+    SERIAL_LOG("[KERNEL] Adding ");
+    SERIAL_LOG_DEC("", msg_count);
+    SERIAL_LOG(" boot messages to console\n");
+    
+    console_compositor_print("====== BOOT LOG ======");
+    for (uint32_t i = 0; i < msg_count; i++) {
+        console_compositor_print(messages[i]);
+    }
+    console_compositor_print("======================");
+    console_compositor_print("");
+    console_compositor_print("System ready. Press Ctrl+T to toggle console.");
+    console_compositor_print("");
+    
+    SERIAL_LOG("[KERNEL] Boot log added to console, desktop active\n");
     
     // Don't show_prompt() - it writes directly to framebuffer and covers windows
     // Console window handles its own prompt
