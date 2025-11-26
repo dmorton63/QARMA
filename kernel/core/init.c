@@ -29,6 +29,12 @@
 #include "core/memory/heap.h"
 #include "drivers/usb/usb_mouse.h"
 #include "keyboard/command.h"
+#include "gui/frame.h"
+#include "gui/boot_messages.h"
+#include "core/boot_log.h"
+
+// Global desktop frame
+qarma_frame_t* g_desktop_frame = NULL;
 // #include "qarma_win_handle/login_screen.h"  // Legacy - disabled
 
 // Debug flag: Set to 1 to enable mouse event logging, 0 to disable
@@ -315,6 +321,46 @@ void qarma_init_gui(void) {
     #endif
 }
 
+void qarma_init_desktop(void) {
+    SERIAL_LOG("[KERNEL] Initializing desktop\n");
+    
+    // Get screen dimensions
+    display_info_t* display = graphics_get_info();
+    if (!display) {
+        SERIAL_LOG("[KERNEL] ERROR: Could not get display info\n");
+        return;
+    }
+    
+    // Create desktop background frame (fullscreen)
+    extern qarma_frame_t* g_desktop_frame;
+    g_desktop_frame = frame_create(NULL, 0, 0, display->width, display->height, 0, "Desktop");
+    if (!g_desktop_frame) {
+        SERIAL_LOG("[KERNEL] ERROR: Failed to create desktop frame\n");
+        return;
+    }
+    
+    // Set desktop background color (dark blue/gray)
+    g_desktop_frame->background.red = 0x2A;
+    g_desktop_frame->background.green = 0x2A;
+    g_desktop_frame->background.blue = 0x3E;
+    g_desktop_frame->background.alpha = 0xFF;
+    g_desktop_frame->visible = true;
+    
+    SERIAL_LOG("[KERNEL] Desktop frame created\n");
+    
+    // Render desktop background
+    frame_render(g_desktop_frame);
+    
+    // Swap buffers to display desktop
+    extern void frame_swap_buffers(void);
+    frame_swap_buffers();
+    
+    SERIAL_LOG("[KERNEL] Desktop rendered\n");
+    
+    // Now show boot messages window on top
+    qarma_show_boot_messages();
+}
+
 void qarma_show_boot_messages(void) {
     SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW (NEW) =====\n");
     
@@ -343,38 +389,46 @@ void qarma_show_boot_messages(void) {
     
     SERIAL_LOG("[KERNEL] Boot messages window created successfully\n");
     
-    // Add boot messages
-    boot_messages_add(boot_msg_win, "QARMA Boot Sequence");
+    // Add header
+    boot_messages_add(boot_msg_win, "QARMA OS - Boot Log");
     boot_messages_add(boot_msg_win, "======================================");
     boot_messages_add(boot_msg_win, "");
-    boot_messages_add(boot_msg_win, "[OK] Multiboot information parsed");
-    boot_messages_add(boot_msg_win, "[OK] Memory manager initialized");
-    boot_messages_add(boot_msg_win, "[OK] Handle manager initialized");
-    boot_messages_add(boot_msg_win, "[OK] Message system ready");
-    boot_messages_add(boot_msg_win, "[OK] Frame system initialized");
-    boot_messages_add(boot_msg_win, "[OK] Control system ready");
-    boot_messages_add(boot_msg_win, "[OK] Heap allocator ready");
-    boot_messages_add(boot_msg_win, "[OK] Framebuffer detected");
-    boot_messages_add(boot_msg_win, "[OK] Graphics subsystem initialized");
-    boot_messages_add(boot_msg_win, "[OK] Video subsystem ready");
-    boot_messages_add(boot_msg_win, "[OK] Filesystem subsystem initialized");
-    boot_messages_add(boot_msg_win, "[OK] GDT initialized");
-    boot_messages_add(boot_msg_win, "[OK] IDT and interrupts configured");
-    boot_messages_add(boot_msg_win, "[OK] Keyboard driver loaded");
-    boot_messages_add(boot_msg_win, "[OK] PCI subsystem initialized");
-    boot_messages_add(boot_msg_win, "[OK] QARMA window manager started");
-    boot_messages_add(boot_msg_win, "[OK] Input event system ready");
+    
+    // Load messages from boot_log
+    char messages[BOOT_LOG_MAX_LINES][BOOT_LOG_LINE_LENGTH];
+    uint32_t msg_count = 0;
+    boot_log_get_messages(messages, &msg_count);
+    
+    SERIAL_LOG("[KERNEL] Loaded ");
+    SERIAL_LOG_DEC("", msg_count);
+    SERIAL_LOG(" boot messages from boot_log\n");
+    
+    // Add all boot log messages
+    for (uint32_t i = 0; i < msg_count; i++) {
+        boot_messages_add(boot_msg_win, messages[i]);
+    }
+    
+    // Add footer
     boot_messages_add(boot_msg_win, "");
     boot_messages_add(boot_msg_win, "System initialization complete!");
     boot_messages_add(boot_msg_win, "");
-    boot_messages_add(boot_msg_win, "Press ESC to continue...");
+    boot_messages_add(boot_msg_win, "Press ESC to continue to shell...");
     
     SERIAL_LOG("[KERNEL] Messages added, rendering window\n");
     
-    // Render the window
+    // Render desktop first (in case it was corrupted)
+    if (g_desktop_frame) {
+        frame_render(g_desktop_frame);
+    }
+    
+    // Render the boot messages window on top
     boot_messages_render(boot_msg_win);
     
-    SERIAL_LOG("[KERNEL] Window rendered, entering event loop\n");
+    // Swap buffers to display
+    extern void frame_swap_buffers(void);
+    frame_swap_buffers();
+    
+    SERIAL_LOG("[KERNEL] Window rendered and swapped, entering event loop\n");
     
     // Simple event loop - wait for ESC key
     bool done = false;
@@ -766,53 +820,66 @@ void qarma_run_desktop(void) {
 
 void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'A', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] QARMA OS Boot Started");
+    
     // Parse multiboot info
     qarma_init_memory(mbi);
+    boot_log_push("[OK] Memory manager initialized");
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'B', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     multiboot_parse_info(magic, mbi);
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'C', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] Multiboot information parsed");
     
     // Initialize graphics
     qarma_init_graphics(mbi);
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'D', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] Graphics subsystem initialized");
     
     // Initialize core subsystems
     qarma_init_core_subsystems();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'E', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] Core subsystems ready");
     
     // Initialize task manager
     extern void task_manager_init(void);
     task_manager_init();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'F', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     SERIAL_LOG("[KERNEL] Task manager initialized\n");
+    boot_log_push("[OK] Task manager initialized");
     
     // Initialize filesystems
     qarma_init_filesystems();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'G', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] Filesystem subsystem initialized");
     
     // Initialize CPU and interrupts
     qarma_init_cpu();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'H', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] CPU and interrupts configured");
     
     // Initialize input devices
     qarma_init_input();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'I', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] Input devices initialized");
     
     // Initialize GUI
     qarma_init_gui();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'J', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] GUI window manager started");
     
     // Initialize AI persistence
     extern void ai_persistence_init(void);
     ai_persistence_init();
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'K', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
+    boot_log_push("[OK] AI persistence layer ready");
     
     // Try to load previous AI learning data
     extern int ai_load_state(void);
     ai_load_state();
     
-    // TODO: Re-enable boot messages window after testing console rendering
-    // qarma_show_boot_messages();
+    boot_log_push("");
+    boot_log_push("System initialization complete!");
     
-    SERIAL_LOG("[KERNEL] Skipping boot messages window (testing console rendering first)\n");
+    // Initialize desktop and display boot messages
+    qarma_init_desktop();
 }

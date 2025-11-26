@@ -30,6 +30,9 @@ void qarma_init_input(void);
 // Initialize window manager and GUI
 void qarma_init_gui(void);
 
+// Initialize desktop background and display boot messages
+void qarma_init_desktop(void);
+
 // Display boot messages window
 void qarma_show_boot_messages(void);
 
