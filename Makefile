@@ -8,14 +8,21 @@ LD       = ld
 OBJCOPY  = objcopy
 
 # Flags (64-bit mode)
-# Note: SSE enabled for 64-bit (required for float operations in quantum AI)
-CFLAGS   = -std=c99 -ffreestanding -O2 -Wall -Wextra -O0 -g \
-           -fno-exceptions -fno-builtin -fno-stack-protector \
-           -m64 -mcmodel=kernel -mno-red-zone \
-           -nostdlib -nostdinc -fno-pic -fno-pie \
-           -MMD -MP -DDEBUG_SERIAL -D__x86_64__
-ASFLAGS  = -g -f elf64 -Wall
-LDFLAGS  = -T kernel/linker.ld -nostdlib -m elf_x86_64
+# Note: FPU/SSE initialized in boot_stub before calling C code
+CFLAGS = -std=c99 -ffreestanding -Wall -Wextra -O0 -g \
+         -fno-exceptions -fno-builtin -fno-stack-protector \
+         -m64 -mcmodel=kernel -mno-red-zone \
+         -fno-pic -fno-pie \
+         -ffunction-sections -fdata-sections \
+         -gdwarf-4 \
+         -fno-omit-frame-pointer -fno-optimize-sibling-calls \
+         -fcf-protection=none \
+         -MMD -MP \
+         -DDEBUG_SERIAL -D__x86_64__
+ASFLAGS	= -f elf64 -g -F dwarf -Wall
+LDFLAGS = -T kernel/linker64.ld -nostdlib -m elf_x86_64 \
+          --gc-sections -Map=build/kernel.map \
+          -z max-page-size=4096
 
 # Directories
 SRC_DIR     = kernel
@@ -73,7 +80,7 @@ $(QUANTUM_OBJ):
 	@$(MAKE) -C $(QUANTUM_DIR)q
 
 # Link kernel
-$(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker.ld
+$(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker64.ld
 	@echo "Linking kernel..."
 	$(LD) $(LDFLAGS) $(ASM_OBJS) $(C_OBJS) $(QUANTUM_OBJ) -o $(BUILD_DIR)/kernel.elf
 	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
@@ -92,7 +99,7 @@ QEMU_CPUS ?= 8
 # Run in QEMU (64-bit)
 qemu: $(BUILD_DIR)/qarma.iso
 	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs)..."
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -boot d -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64
 
 # Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso

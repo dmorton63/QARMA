@@ -19,7 +19,7 @@
 // ────────────────
 // External Symbols
 // ────────────────
-extern void idt_flush(uint32_t);
+extern void idt_flush(uint64_t);
 extern void irq33();
 extern void isr0();
 extern void irq44();
@@ -95,32 +95,8 @@ void divide_by_zero_handler() {
     // Optional: halt or recover
 }
 
-// ────────────────
-// IDT Gate Setup
-// ────────────────
-void set_idt_gate(int n, uint32_t handler) {
-    idt[n].base_low  = handler & 0xFFFF;
-    idt[n].base_high = (handler >> 16) & 0xFFFF;
-    idt[n].sel       = 0x08;     // Kernel code segment
-    idt[n].always0   = 0;
-    idt[n].flags     = 0x8E;     // Present, ring 0, interrupt gate
-}
-
-// ────────────────
-// IDT Initialization
-// ────────────────
-void init_idt() {
-    idt_ptr.limit = sizeof(idt_entry_t) * IDT_ENTRIES - 1;
-    idt_ptr.base  = (uint32_t)&idt;
-
-    memset(&idt, 0, sizeof(idt));
-
-    set_idt_gate(0,  (uint32_t)isr0);   // Divide-by-zero
-    set_idt_gate(33, (uint32_t)irq33);  // Keyboard
-    set_idt_gate(32, (uint32_t)irq0_handler); // Timer
-    // set_idt_gate(44, (uint32_t)irq44); // Mouse IRQ12 - Disabled to prevent conflicts
-    idt_flush((uint32_t)&idt_ptr);
-}
+// IDT initialization moved to idt.c for 64-bit compatibility
+// init_idt() is now idt_init() in idt.c
 
 
 void timer_handler(struct regs* r) {
@@ -142,6 +118,16 @@ void timer_handler(struct regs* r) {
     if (tick_count % 5 == 0) {
         extern void usb_mouse_poll_xhci(void);
         usb_mouse_poll_xhci();
+    }
+    
+    // Render if framebuffer is dirty (e.g., from console toggle)
+    // Check every 2 ticks (20ms) to avoid excessive rendering
+    if (tick_count % 2 == 0) {
+        extern bool fb_is_dirty(void);
+        extern void compositor_render_all(void);
+        if (fb_is_dirty()) {
+            compositor_render_all();
+        }
     }
 
     // if(tick_count % 10 == 0) {
@@ -211,7 +197,7 @@ void interrupts_system_init(void) {
     gfx_print("Setting up interrupt system...\n");
 
     gdt_init();       // Segment setup
-    init_idt();       // IDT + IRQ stubs
+    idt_init();       // IDT + IRQ stubs (64-bit)
     gfx_print("IDT initialized.\n");
     gfx_print("Remapping PIC...\n");
     init_pic();       // PIC remapping

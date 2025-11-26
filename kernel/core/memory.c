@@ -4,12 +4,13 @@
 
 #include "core/kernel.h"
 #include "graphics/graphics.h" 
-#include "multiboot.h"
-#include "memory.h"
+#include "core/multiboot.h"
+#include "core/memory.h"
 #include "config.h"
-#include "memory/pmm/pmm.h"
-#include "memory/vmm/vmm.h"
-#include "memory/heap.h"
+#include "core/memory/pmm/pmm.h"
+#include "core/memory/vmm/vmm.h"
+#include "core/memory/heap.h"
+
 Block* freeList = NULL;
 
 // Forward declarations for serial debug functions

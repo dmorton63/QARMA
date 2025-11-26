@@ -40,7 +40,7 @@ void pmm_init(void) {
     // Later: mark usable regions from BIOS/multiboot
 }
 
-uint32_t pmm_alloc_page(void) {
+uint64_t pmm_alloc_page(void) {
     spin_lock(&pmm_lock);
     if (pmm_next == 0) pmm_next = 1; // never allocate page 0
 
@@ -48,7 +48,7 @@ uint32_t pmm_alloc_page(void) {
         if (!bit_is_set(i)) {
             bit_set(i);
             pmm_next = i + 1;
-            uint32_t addr = i * 0x1000;
+            uint64_t addr = (uint64_t)i * 0x1000;
             spin_unlock(&pmm_lock);
             return addr;
         }
@@ -58,7 +58,7 @@ uint32_t pmm_alloc_page(void) {
         if (!bit_is_set(i)) {
             bit_set(i);
             pmm_next = i + 1;
-            uint32_t addr = i * 0x1000;
+            uint64_t addr = (uint64_t)i * 0x1000;
             spin_unlock(&pmm_lock);
             return addr;
         }
@@ -67,16 +67,16 @@ uint32_t pmm_alloc_page(void) {
     return 0; // OOM
 }
 
-void pmm_free_page(uint32_t addr) {
+void pmm_free_page(uint64_t addr) {
     if ((addr & 0xFFF) != 0) return; // must be page-aligned
-    uint32_t page = addr / 0x1000;
+    uint64_t page = addr / 0x1000;
     if (page == 0 || page >= MAX_PHYSICAL_PAGES) return;
 
     spin_lock(&pmm_lock);
     // Optional: debug check to catch double free
     // if (!bit_is_set(page)) { /* log or assert */ }
-    bit_clear(page);
-    if (page < pmm_next) pmm_next = page; // improve locality
+    bit_clear((uint32_t)page);
+    if (page < pmm_next) pmm_next = (uint32_t)page; // improve locality
     spin_unlock(&pmm_lock);
 }
 
@@ -120,10 +120,10 @@ uint32_t pmm_alloc_contiguous(uint32_t num_pages, uint32_t align_pages) {
     return 0;
 }
 
-void pmm_mark_region_free(uint32_t start_addr, uint32_t length) {
+void pmm_mark_region_free(uint64_t start_addr, uint64_t length) {
     if (length == 0) return;
     uint64_t start = start_addr;
-    uint64_t end   = (uint64_t)start_addr + length;
+    uint64_t end   = start_addr + length;
     uint32_t start_page = (uint32_t)(start / 0x1000);
     uint32_t end_page   = (uint32_t)((end + 0xFFF) / 0x1000);
 
@@ -135,10 +135,10 @@ void pmm_mark_region_free(uint32_t start_addr, uint32_t length) {
     }
 }
 
-void pmm_mark_region_used(uint32_t start_addr, uint32_t length) {
+void pmm_mark_region_used(uint64_t start_addr, uint64_t length) {
     if (length == 0) return;
     uint64_t start = start_addr;
-    uint64_t end   = (uint64_t)start_addr + length;
+    uint64_t end   = start_addr + length;
     uint32_t start_page = (uint32_t)(start / 0x1000);
     uint32_t end_page   = (uint32_t)((end + 0xFFF) / 0x1000);
 

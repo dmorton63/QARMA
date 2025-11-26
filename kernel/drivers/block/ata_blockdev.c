@@ -11,6 +11,31 @@
 #include "config.h"
 
 #define ATA_BLOCK_SIZE 512
+static bool g_disk_present = false;
+
+
+// static bool ata_wait_ready(uint32_t spins, uint8_t *last) {
+//     for (uint32_t i = 0; i < spins; i++) {
+//         uint8_t s = ata_status();
+//         if (last) *last = s;
+//         if ((s & ATA_SR_ERR) || (s & ATA_SR_DF)) return false;       // error
+//         if (!(s & ATA_SR_BSY) && (s & ATA_SR_DRDY)) return true;     // ready
+//         ata_400ns_delay();
+//     }
+//     return false;
+// }
+
+static bool ata_wait_drq(uint32_t spins, uint8_t *last) {
+    for (uint32_t i = 0; i < spins; i++) {
+        uint8_t s = ata_status();
+        if (last) *last = s;
+        if ((s & ATA_SR_ERR) || (s & ATA_SR_DF)) return false;
+        if ((s & ATA_SR_DRQ) && !(s & ATA_SR_BSY)) return true;      // data ready
+        ata_400ns_delay();
+    }
+    return false;
+}
+
 
 static int ata_blockdev_read(blockdev_t* dev, uint64_t lba, void* buf, size_t count) {
     if (!dev || !buf || count > 255) return -1;
@@ -42,10 +67,8 @@ static blockdev_t ata_blockdev = {
 };
 
 void ata_blockdev_init(void) {
-    extern void gfx_print(const char*);
-    
-    SERIAL_LOG("[ATA] Initializing ATA driver...\n");
-    gfx_print("[ATA] Initializing ATA driver...\n");
+    SERIAL_LOG("!!!!!!!! ATA_BLOCKDEV_INIT 2025-11-24 NOON BUILD !!!!!!!!\n");
+    gfx_print("!!!!!!!! ATA_BLOCKDEV_INIT 2025-11-24 NOON BUILD !!!!!!!!\n");
     
     if (!ata_init()) {
         SERIAL_LOG("[ATA] No disk detected\n");
@@ -53,20 +76,11 @@ void ata_blockdev_init(void) {
         return;
     }
     
-    SERIAL_LOG("[ATA] Disk detected\n");
-    gfx_print("[ATA] Disk detected\n");
+    SERIAL_LOG("[ATA] Disk detected - NEW CODE EXECUTED\n");
+    gfx_print("[ATA] Disk detected - NEW CODE EXECUTED\n");
     
-    // Register block device
     blockdev_register(&ata_blockdev);
-    SERIAL_LOG("[ATA] Block device registered as hda\n");
-    gfx_print("[ATA] Block device registered as hda\n");
     
-    // Mount as SimpleFS (same format as ramdisk)
-    if (vfs_mount("hda", "simplefs", "/disk") == 0) {
-        SERIAL_LOG("[ATA] Mounted SimpleFS filesystem at /disk\n");
-        gfx_print("[ATA] Mounted SimpleFS filesystem at /disk\n");
-    } else {
-        SERIAL_LOG("[ATA] Warning: Could not mount filesystem\n");
-        gfx_print("[ATA] Warning: Could not mount filesystem\n");
-    }
+    SERIAL_LOG("[ATA] Block device registered - CONTINUING TO VFS_MOUNT\n");
+    gfx_print("[ATA] Block device registered - CONTINUING\n");
 }

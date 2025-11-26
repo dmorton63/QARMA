@@ -17,15 +17,15 @@ void vmm_init(void);
 void* vmm_alloc_pages(size_t num_pages);   // page-aligned allocation
  void  vmm_free_pages(void* addr, size_t num_pages);
 
-void vmm_map_page(uint32_t virtual_addr, uint32_t physical_addr, uint32_t flags);
-void vmm_unmap_page(uint32_t virtual_addr);
+void vmm_map_page(uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
+void vmm_unmap_page(uint64_t virtual_addr);
 uint64_t virt_to_phys(void *virt);
-uint32_t vmm_get_physical_address(uint32_t virtual_addr);
-void vmm_free_region(uint32_t virtual_addr, uint32_t size);
-uint32_t vmm_alloc_region(uint32_t size);
-bool vmm_map_framebuffer(uint32_t fb_physical_addr, uint32_t fb_size);
+uint64_t vmm_get_physical_address(uint64_t virtual_addr);
+void vmm_free_region(uint64_t virtual_addr, uint64_t size);
+uint64_t vmm_alloc_region(uint64_t size);
+bool vmm_map_framebuffer(uint64_t fb_physical_addr, uint64_t fb_size);
 bool vmm_is_initialized(void);
 void vmm_ensure_initialized(void);
-bool vmm_map_mmio_region(uint32_t physical_addr, uint32_t size);
+bool vmm_map_mmio_region(uint64_t physical_addr, uint64_t size);
 
 void enable_paging(uint64_t page_directory_phys_addr);

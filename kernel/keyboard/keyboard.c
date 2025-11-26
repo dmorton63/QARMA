@@ -153,6 +153,14 @@ static void shell_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data) {
         return;
     }
     
+    // Don't process keys if console is hidden
+    extern bool console_compositor_is_visible(void);
+    if (!console_compositor_is_visible()) {
+        SERIAL_LOG("[SHELL_HANDLER] Console hidden, ignoring key\n");
+        event->handled = false;  // Let other handlers try
+        return;
+    }
+    
     SERIAL_LOG("[SHELL_HANDLER] Processing key\n");
     
     uint8_t scancode = (uint8_t)event->data.key.scancode;

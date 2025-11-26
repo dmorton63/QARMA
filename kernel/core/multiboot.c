@@ -7,6 +7,7 @@
 
 #include "multiboot.h"
 #include "graphics/graphics.h"
+#include "graphics/framebuffer.h"
 #include "kernel.h"
 #include "core/boot_log.h"
 #include "config.h"
@@ -18,12 +19,170 @@
 
 static multiboot_info_t* g_multiboot_info = NULL;
 
+// Helper: align up to 8-byte boundary for Multiboot2 tags
+static inline uint32_t align_up_8(uint32_t x) {
+    return (x + 7) & ~7;
+}
+
+// Parse all Multiboot2 tags (framebuffer, memory map, command line)
+void multiboot2_parse_all_tags(uintptr_t mbi_ptr) {
+    extern FramebufferInfo* fbinfo;
+    
+    if (!mbi_ptr) {
+        SERIAL_LOG("[MB2] Invalid mbi_ptr\n");
+        return;
+    }
+    
+    // Multiboot2 info structure starts with total_size
+    const uint32_t total_size = *(const uint32_t*)mbi_ptr;
+    const uint32_t reserved = *(const uint32_t*)(mbi_ptr + 4);
+    
+    SERIAL_LOG("[MB2] Multiboot2 info total_size=");
+    SERIAL_LOG_DEC("", total_size);
+    SERIAL_LOG(" reserved=");
+    SERIAL_LOG_DEC("", reserved);
+    SERIAL_LOG("\n");
+    
+    if (fbinfo) {
+        fbinfo->valid = false;
+    }
+    
+    // Tags start at offset 8
+    const uint8_t* p = (const uint8_t*)(mbi_ptr + 8);
+    const uint8_t* end = (const uint8_t*)(mbi_ptr + total_size);
+    
+    while (p < end) {
+        uint32_t type = *(const uint32_t*)(p + 0);
+        uint32_t size = *(const uint32_t*)(p + 4);
+        
+        // End tag
+        if (type == 0 && size == 8) {
+            SERIAL_LOG("[MB2] Reached end tag\n");
+            break;
+        }
+        
+        // Command line tag (type 1)
+        if (type == 1) {
+            const char* cmdline = (const char*)(p + 8);
+            SERIAL_LOG("[MB2] Found command line: ");
+            SERIAL_LOG(cmdline);
+            SERIAL_LOG("\n");
+            multiboot_parse_verbosity(cmdline);
+        }
+        
+        // Memory map tag (type 6)
+        if (type == 6) {
+            SERIAL_LOG("[MB2] Found memory map tag\n");
+            uint32_t entry_size = *(const uint32_t*)(p + 8);
+            uint32_t entry_version = *(const uint32_t*)(p + 12);
+            const uint8_t* entries = p + 16;
+            const uint8_t* entries_end = p + size;
+            
+            SERIAL_LOG("[MB2] Entry size=");
+            SERIAL_LOG_DEC("", entry_size);
+            SERIAL_LOG(" version=");
+            SERIAL_LOG_DEC("", entry_version);
+            SERIAL_LOG("\n");
+            
+            uint32_t region_count = 0;
+            while (entries < entries_end) {
+                uint64_t base = *(const uint64_t*)(entries + 0);
+                uint64_t length = *(const uint64_t*)(entries + 8);
+                uint32_t mtype = *(const uint32_t*)(entries + 16);
+                
+                region_count++;
+                SERIAL_LOG("[E820] Region ");
+                SERIAL_LOG_DEC("", region_count);
+                SERIAL_LOG(": 0x");
+                SERIAL_LOG_HEX("", (uint32_t)(base >> 32));
+                SERIAL_LOG_HEX("", (uint32_t)base);
+                SERIAL_LOG(" len=0x");
+                SERIAL_LOG_HEX("", (uint32_t)(length >> 32));
+                SERIAL_LOG_HEX("", (uint32_t)length);
+                SERIAL_LOG(" type=");
+                SERIAL_LOG_DEC("", mtype);
+                SERIAL_LOG("\n");
+                
+                // Type 1 = Available, mark as free for PMM
+                if (mtype == 1 && base < 0x100000000ULL) {
+                    uint32_t start = (uint32_t)base;
+                    uint32_t len = (uint32_t)length;
+                    uint32_t page_start = (start + 0xFFF) & ~0xFFF;
+                    uint32_t page_end = (start + len) & ~0xFFF;
+                    
+                    if (page_start < 0x100000) page_start = 0x100000;  // Skip low memory
+                    
+                    if (page_end > page_start) {
+                        SERIAL_LOG("[E820]   -> Marking FREE: 0x");
+                        SERIAL_LOG_HEX("", page_start);
+                        SERIAL_LOG(" - 0x");
+                        SERIAL_LOG_HEX("", page_end);
+                        SERIAL_LOG("\n");
+                        pmm_mark_region_free(page_start, page_end - page_start);
+                    }
+                }
+                
+                entries += entry_size;
+            }
+            
+            // Reserve kernel region
+            SERIAL_LOG("[E820] Reserving kernel: 0x100000-0x500000\n");
+            pmm_mark_region_used(0x100000, 0x400000);
+        }
+        
+        // Framebuffer tag (type 8)
+        if (type == 8 && fbinfo) {
+            SERIAL_LOG("[MB2] Found framebuffer tag\n");
+            
+            const uint64_t addr   = *(const uint64_t*)(p + 8);
+            const uint32_t pitch  = *(const uint32_t*)(p + 16);
+            const uint32_t width  = *(const uint32_t*)(p + 20);
+            const uint32_t height = *(const uint32_t*)(p + 24);
+            const uint8_t  bpp    = *(const uint8_t*)(p + 28);
+            const uint8_t  fbtype = *(const uint8_t*)(p + 29);
+            
+            SERIAL_LOG("[MB2] FB ");
+            SERIAL_LOG_DEC("", width);
+            SERIAL_LOG("x");
+            SERIAL_LOG_DEC("", height);
+            SERIAL_LOG(" bpp=");
+            SERIAL_LOG_DEC("", bpp);
+            SERIAL_LOG(" @ 0x");
+            SERIAL_LOG_HEX("", (uint32_t)(addr >> 32));
+            SERIAL_LOG_HEX("", (uint32_t)addr);
+            SERIAL_LOG("\n");
+            
+            if (addr != 0 && addr != 0xB8000 && width >= 320 && height >= 200 && bpp >= 8 && bpp <= 32) {
+                fbinfo->phys_addr = addr;
+                fbinfo->virt_addr = addr;
+                fbinfo->pitch = pitch;
+                fbinfo->width = width;
+                fbinfo->height = height;
+                fbinfo->bpp = bpp;
+                fbinfo->type = fbtype;
+                fbinfo->valid = true;
+                SERIAL_LOG("[MB2] Framebuffer OK\n");
+            }
+        }
+        
+        // Move to next tag (align to 8 bytes)
+        p += align_up_8(size);
+    }
+}
+
 void multiboot_parse_info(uint32_t magic, multiboot_info_t* mbi) {
     SERIAL_LOG("[MBOOT] Starting multiboot_parse_info\n");
     debug_buffer_clear();
 
+    SERIAL_LOG("[MBOOT] Received magic: 0x");
+    SERIAL_LOG_HEX("", magic);
+    SERIAL_LOG("\n");
+    SERIAL_LOG("[MBOOT] Expected magic: 0x");
+    SERIAL_LOG_HEX("", MULTIBOOT_MAGIC);
+    SERIAL_LOG("\n");
+
     if (magic != MULTIBOOT_MAGIC) {
-        //debug_buffer_append("ERROR: Bad multiboot magic!\n");
+        SERIAL_LOG("[MBOOT] ERROR: Magic mismatch!\n");
         debug_buffer_push("ERROR: Bad multiboot magic!\n");
         debug_buffer_flush_lines();
         return;
@@ -33,37 +192,28 @@ void multiboot_parse_info(uint32_t magic, multiboot_info_t* mbi) {
     g_multiboot_info = mbi;
     debug_buffer_append("Multiboot info assigned\n");
 
-    SERIAL_LOG("[MBOOT] Checking cmdline\n");
-    if (mbi->flags & MULTIBOOT_FLAG_CMDLINE) {
-        const char *cmd = (const char*)mbi->cmdline;
-        multiboot_parse_verbosity(cmd);
-        /* Parse UHCI-specific boot options (e.g., uhci_clflush=1) */
-        if (strstr(cmd, "uhci_clflush=1")) {
-            extern void uhci_set_clflush_enabled(int);
-            uhci_set_clflush_enabled(1);
-            debug_buffer_append("UHCI: cmdline enabled CLFLUSH\n");
-        } else if (strstr(cmd, "uhci_clflush=0")) {
-            extern void uhci_set_clflush_enabled(int);
-            uhci_set_clflush_enabled(0);
-            debug_buffer_append("UHCI: cmdline disabled CLFLUSH\n");
-        }
-    }
+    // Log all flags for debugging
+    SERIAL_LOG("[MBOOT] Flags: 0x");
+    SERIAL_LOG_HEX("", mbi->flags);
+    SERIAL_LOG("\n");
+    SERIAL_LOG("[MBOOT] Flag checks:\n");
+    SERIAL_LOG("[MBOOT]   MEM (0x1): ");
+    SERIAL_LOG((mbi->flags & 0x1) ? "YES\n" : "NO\n");
+    SERIAL_LOG("[MBOOT]   CMDLINE (0x4): ");
+    SERIAL_LOG((mbi->flags & 0x4) ? "YES\n" : "NO\n");
+    SERIAL_LOG("[MBOOT]   MMAP (0x40): ");
+    SERIAL_LOG((mbi->flags & 0x40) ? "YES\n" : "NO\n");
+    SERIAL_LOG("[MBOOT]   VBE (0x400): ");
+    SERIAL_LOG((mbi->flags & 0x400) ? "YES\n" : "NO\n");
+    SERIAL_LOG("[MBOOT]   FRAMEBUFFER (0x1000): ");
+    SERIAL_LOG((mbi->flags & 0x1000) ? "YES\n" : "NO\n");
 
-    SERIAL_LOG("[MBOOT] Checking memory flags\n");
-    if (mbi->flags & MULTIBOOT_FLAG_MEM) {
-        debug_buffer_append_dec("Lower memory: ", mbi->mem_lower);
-        debug_buffer_append_dec("Upper memory: ", mbi->mem_upper);
-    }
-
-    SERIAL_LOG("[MBOOT] Parsing memory map\n");
-    if (mbi->flags & MULTIBOOT_FLAG_MMAP) {
-        multiboot_parse_memory_map(mbi);
-    }
-
-    SERIAL_LOG("[MBOOT] Detecting framebuffer\n");
-    if (mbi->flags & MULTIBOOT_FLAG_FRAMEBUFFER) {
-        multiboot_detect_framebuffer(mbi);
-    }
+    // Multiboot2 uses tag-based structure, not flags
+    // Parse all tags instead of checking flags
+    SERIAL_LOG("[MBOOT] Parsing Multiboot2 tags\n");
+    
+    // Parse framebuffer, memory map, command line from tags
+    multiboot2_parse_all_tags((uintptr_t)mbi);
 
     SERIAL_LOG("[MBOOT] Flushing debug buffer\n");
     debug_buffer_flush();
@@ -82,27 +232,10 @@ void multiboot_parse_verbosity(const char* cmdline) {
 }
 
 void multiboot_detect_framebuffer(multiboot_info_t* mbi) {
-    if (!(mbi->flags & MULTIBOOT_FLAG_FRAMEBUFFER)) return;
-
-    framebuffer_info_t* fb = &mbi->framebuffer_info;
-    uint32_t fb_addr = (uint32_t)(fb->framebuffer_addr & 0xFFFFFFFF);
-
-    if (fb->framebuffer_width < 320 || fb->framebuffer_height < 200) return;
-    if (fb->framebuffer_bpp < 8 || fb->framebuffer_bpp > 32) return;
-
-    display_info_t* display = graphics_get_display_info();
-    if (display && fb_addr != 0) {
-        display->framebuffer = (uint32_t*)fb_addr;
-        display->width = fb->framebuffer_width;
-        display->height = fb->framebuffer_height;
-        display->bpp = fb->framebuffer_bpp;
-        display->pitch = fb->framebuffer_pitch;
-
-        uint32_t fb_size = fb->framebuffer_height * fb->framebuffer_pitch;
-        if (fb_addr >= 0x100000) vmm_map_framebuffer(fb_addr, fb_size);
-    }
-
-    debug_buffer_append("Framebuffer info parsed and graphics system updated\n");
+    (void)mbi;  // Unused
+    SERIAL_LOG("[MBOOT] multiboot_detect_framebuffer called (deprecated)\n");
+    // This function is deprecated - use multiboot2_parse_framebuffer instead
+    // Kept for compatibility but does nothing
 }
 
 void multiboot_detect_vbe_framebuffer(multiboot_info_t* mbi) {
@@ -135,9 +268,9 @@ void multiboot_detect_vbe_framebuffer(multiboot_info_t* mbi) {
     };
     
     for (int i = 0; potential_addrs[i] != NULL; i++) {
-        uint32_t test_addr = (uint32_t)potential_addrs[i];
+        uintptr_t test_addr = (uintptr_t)potential_addrs[i];
         SERIAL_LOG("  Testing framebuffer at: ");
-        SERIAL_LOG_HEX("  Testing framebuffer at: ", test_addr);
+        SERIAL_LOG_HEX("  Testing framebuffer at: ", (uint32_t)test_addr);
         SERIAL_LOG("\n");
         
         // Test if this address is accessible (simple write/read test)
@@ -146,7 +279,7 @@ void multiboot_detect_vbe_framebuffer(multiboot_info_t* mbi) {
         // For now, assume the first address works if VBE is available
         display_info_t* display = graphics_get_display_info();
         if (display) {
-            display->framebuffer = (uint32_t*)test_addr;
+            display->framebuffer = (uint32_t*)(uintptr_t)test_addr;
             display->width = 1024;   // From gfxpayload=1024x768x32
             display->height = 768;
             display->bpp = 32;
@@ -183,8 +316,8 @@ void multiboot_parse_memory_map(multiboot_info_t* mbi) {
     SERIAL_LOG_DEC("", mbi->mmap_length);
     SERIAL_LOG(" bytes\n");
     
-    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mbi->mmap_addr;
-    multiboot_memory_map_t* mmap_end = (multiboot_memory_map_t*)(mbi->mmap_addr + mbi->mmap_length);
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)(uintptr_t)mbi->mmap_addr;
+    multiboot_memory_map_t* mmap_end = (multiboot_memory_map_t*)((uintptr_t)mbi->mmap_addr + mbi->mmap_length);
 
     uint32_t region_count = 0;
     uint64_t total_available = 0;
@@ -243,7 +376,7 @@ void multiboot_parse_memory_map(multiboot_info_t* mbi) {
             SERIAL_LOG("[E820]   -> ACPI NVS (must not touch)\n");
         }
         
-        mmap = (multiboot_memory_map_t*)((uint32_t)mmap + mmap->size + sizeof(mmap->size));
+        mmap = (multiboot_memory_map_t*)((uintptr_t)mmap + mmap->size + sizeof(mmap->size));
     }
 
     SERIAL_LOG("[E820] ========== Summary ==========\n");

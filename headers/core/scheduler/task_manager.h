@@ -32,13 +32,14 @@ typedef enum {
 #define TASK_FLAG_PREEMPTIBLE   (1 << 3)    /* Can be preempted */
 #define TASK_FLAG_PERSISTENT    (1 << 4)    /* Don't terminate on error */
 
-/* CPU register context for task switching */
+/* CPU register context for task switching (64-bit) */
 typedef struct {
-    uint32_t eax, ebx, ecx, edx;
-    uint32_t esi, edi;
-    uint32_t esp, ebp;
-    uint32_t eip;
-    uint32_t eflags;
+    uint64_t rax, rbx, rcx, rdx;
+    uint64_t rsi, rdi;
+    uint64_t rbp, rsp;
+    uint64_t rip;
+    uint64_t rflags;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
     uint16_t cs, ds, es, fs, gs, ss;
 } cpu_context_t;
 

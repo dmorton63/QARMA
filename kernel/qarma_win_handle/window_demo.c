@@ -65,21 +65,25 @@ void window_test_demo(void) {
     extern void console_compositor_show(void);
     console_compositor_show();
     
-    // Create three test windows (silent - no gfx_print to avoid corrupting framebuffer)
+    // Create main desktop window at top of screen
     serial_debug("[WINDOW_DEMO] Creating windows\n");
-    compositor_window_t* win1 = compositor_create_window("Hello Window", 100, 100, 300, 150);
+    extern uint32_t fb_width;
+    int screen_w = (fb_width > 0) ? fb_width : 1024;
+    
+    compositor_window_t* main_win = compositor_create_window("QARMA Desktop", 0, 0, screen_w, 400);
+    if (main_win) {
+        main_win->on_render_content = render_hello_content;
+    }
+    
+    // Create additional test windows
+    compositor_window_t* win1 = compositor_create_window("Info Window", 200, 200, 280, 180);
     if (win1) {
-        win1->on_render_content = render_hello_content;
+        win1->on_render_content = render_info_content;
     }
     
-    compositor_window_t* win2 = compositor_create_window("Info Window", 200, 200, 280, 180);
+    compositor_window_t* win2 = compositor_create_window("Stats", 450, 150, 250, 140);
     if (win2) {
-        win2->on_render_content = render_info_content;
-    }
-    
-    compositor_window_t* win3 = compositor_create_window("Stats", 450, 150, 250, 140);
-    if (win3) {
-        win3->on_render_content = render_stats_content;
+        win2->on_render_content = render_stats_content;
     }
     
     // Render all windows (double buffered - will swap to display)

@@ -44,7 +44,7 @@ static uint32_t framebuffer_page_table[1024] __attribute__((aligned(4096)));
 
 static bool paging_enabled = false;
 static bool vmm_initialized = false;
-static uint32_t vmm_next_virtual_addr = VIRT_ALLOC_START;
+static uint64_t vmm_next_virtual_addr = VIRT_ALLOC_START;
 static uint32_t early_pt_count = 0;
 static bool early_pt_exhausted = false;
 
@@ -61,8 +61,13 @@ static bool early_pt_exhausted = false;
  * identity_page_tables, which are statically allocated in .bss and loaded
  * in the first 32MB of memory.
  */
-static inline uint32_t vmm_virt_to_phys(void* ptr) {
-    uint32_t addr = (uint32_t)ptr;
+static inline uint64_t vmm_virt_to_phys(void* ptr) {
+    uint64_t addr = (uint64_t)ptr;
+    
+    // Handle higher-half kernel addresses (0xFFFFFFFF80000000+)
+    if (addr >= 0xFFFFFFFF80000000ULL) {
+        return addr - 0xFFFFFFFF80000000ULL;
+    }
     
     // All VMM static structures are in identity-mapped region
     if (addr < IDENTITY_MAP_SIZE) {
@@ -70,8 +75,9 @@ static inline uint32_t vmm_virt_to_phys(void* ptr) {
     }
     
     // Should never happen for VMM's own structures
-    SERIAL_LOG("VMM: WARNING - vmm_virt_to_phys called on non-identity address: ");
-    SERIAL_LOG_HEX("", addr);
+    SERIAL_LOG("VMM: WARNING - vmm_virt_to_phys called on non-identity address: 0x");
+    SERIAL_LOG_HEX("", (uint32_t)(addr >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)addr);
     SERIAL_LOG("\n");
     return addr;
 }
@@ -79,7 +85,7 @@ static inline uint32_t vmm_virt_to_phys(void* ptr) {
 /**
  * @brief Invalidate TLB entry for a virtual address
  */
-static inline void tlb_invalidate_page(uint32_t virtual_addr) {
+static inline void tlb_invalidate_page(uint64_t virtual_addr) {
     __asm__ volatile("invlpg (%0)" :: "r"(virtual_addr) : "memory");
 }
 
@@ -145,7 +151,9 @@ void vmm_init(void) {
         return;
     }
 
-    gfx_print("Initializing Virtual Memory Manager...\n");
+    // TEMPORARY: Disable gfx_print until graphics system is fixed
+    // gfx_print("Initializing Virtual Memory Manager...\n");
+    SERIAL_LOG("VMM: Initializing Virtual Memory Manager...\n");
     
     // Clear page directory
     memset(page_directory, 0, sizeof(page_directory));
@@ -221,7 +229,7 @@ void enable_paging(uint64_t page_directory_phys_addr) {
  * @param physical_addr Physical address (will be page-aligned)
  * @param flags Page flags (PAGE_PRESENT, PAGE_WRITE, etc.)
  */
-void vmm_map_page(uint32_t virtual_addr, uint32_t physical_addr, uint32_t flags) {
+void vmm_map_page(uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags) {
     if (!vmm_initialized) {
         SERIAL_LOG("VMM: ERROR - Cannot map page, VMM not initialized\n");
         return;
@@ -249,7 +257,7 @@ void vmm_map_page(uint32_t virtual_addr, uint32_t physical_addr, uint32_t flags)
  * @brief Unmap a virtual page
  * @param virtual_addr Virtual address to unmap
  */
-void vmm_unmap_page(uint32_t virtual_addr) {
+void vmm_unmap_page(uint64_t virtual_addr) {
     if (!vmm_initialized) {
         return;
     }
@@ -275,13 +283,25 @@ void vmm_unmap_page(uint32_t virtual_addr) {
  * @param vaddr Virtual address
  * @return Physical address, or 0 if not mapped
  */
-uint32_t vmm_get_physical_address(uint32_t vaddr) {
-    // Fast path for identity-mapped region
+uint64_t vmm_get_physical_address(uint64_t vaddr) {
+    // Handle higher-half kernel addresses (0xFFFFFFFF80000000+)
+    if (vaddr >= 0xFFFFFFFF80000000ULL) {
+        return vaddr - 0xFFFFFFFF80000000ULL;
+    }
+    
+    // Fast path for low identity-mapped region
     if (vaddr < IDENTITY_MAP_SIZE) {
         return vaddr;
     }
 
-    uint32_t pd_index = vaddr >> 22;
+    // For 64-bit, we would need to walk 4-level page tables (PML4->PDPT->PD->PT)
+    // For now, handle 32-bit compatibility addresses
+    if (vaddr >= 0x100000000ULL) {
+        SERIAL_LOG("VMM: WARNING - Cannot translate >4GB virtual address without 64-bit page table walk\n");
+        return 0;
+    }
+
+    uint32_t pd_index = (vaddr >> 22) & 0x3FF;
     uint32_t pt_index = (vaddr >> 12) & 0x3FF;
 
     // Check page directory entry
@@ -296,7 +316,7 @@ uint32_t vmm_get_physical_address(uint32_t vaddr) {
     }
 
     // Return physical address
-    return (page_table[pt_index] & ~0xFFF) | (vaddr & 0xFFF);
+    return ((uint64_t)(page_table[pt_index] & ~0xFFF)) | (vaddr & 0xFFF);
 }
 
 /**
@@ -305,16 +325,26 @@ uint32_t vmm_get_physical_address(uint32_t vaddr) {
  * @return 64-bit physical address, or 0 if not mapped
  */
 uint64_t virt_to_phys(void* virt) {
-    uint32_t vaddr = (uint32_t)virt;
-    uint32_t phys = vmm_get_physical_address(vaddr);
+    uint64_t vaddr = (uint64_t)virt;
+    
+    // Handle higher-half kernel addresses (0xFFFFFFFF80000000+)
+    // These are directly mapped to physical 0x00000000+
+    if (vaddr >= 0xFFFFFFFF80000000ULL) {
+        uint64_t phys = vaddr - 0xFFFFFFFF80000000ULL;
+        return phys;
+    }
+    
+    // Handle other virtual addresses through page tables
+    uint64_t phys = vmm_get_physical_address(vaddr);
     
     if (phys == 0) {
-        SERIAL_LOG("VMM: WARNING - virt_to_phys failed for address: ");
-        SERIAL_LOG_HEX("", vaddr);
+        SERIAL_LOG("VMM: WARNING - virt_to_phys failed for address: 0x");
+        SERIAL_LOG_HEX("", (uint32_t)(vaddr >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)vaddr);
         SERIAL_LOG("\n");
     }
     
-    return (uint64_t)phys;
+    return phys;
 }
 
 /**
@@ -366,7 +396,7 @@ void vmm_free_pages(void* addr, size_t num_pages) {
  * @param size Size in bytes (will be rounded up to page boundary)
  * @return Virtual address of allocated region, or 0 on failure
  */
-uint32_t vmm_alloc_region(uint32_t size) {
+uint64_t vmm_alloc_region(uint64_t size) {
     if (!vmm_initialized || !paging_enabled || size == 0) {
         return 0;
     }
@@ -390,7 +420,7 @@ uint32_t vmm_alloc_region(uint32_t size) {
  * @param virtual_addr Base virtual address
  * @param size Size in bytes (will be rounded up to page boundary)
  */
-void vmm_free_region(uint32_t virtual_addr, uint32_t size) {
+void vmm_free_region(uint64_t virtual_addr, uint64_t size) {
     if (!vmm_initialized) {
         return;
     }
@@ -434,80 +464,26 @@ void vmm_free_region(uint32_t virtual_addr, uint32_t size) {
  * Identity-maps the framebuffer region so virtual address = physical address.
  * Typically used for QEMU/VGA framebuffer at 0xFD000000 or similar.
  */
-bool vmm_map_framebuffer(uint32_t fb_physical_addr, uint32_t fb_size) {
-    if (!vmm_initialized) {
-        SERIAL_LOG("VMM: ERROR - Cannot map framebuffer, not initialized\n");
-        return false;
-    }
-
-    SERIAL_LOG("VMM: Mapping framebuffer - phys=");
-    SERIAL_LOG_HEX("", fb_physical_addr);
+bool vmm_map_framebuffer(uint64_t fb_physical_addr, uint64_t fb_size) {
+    SERIAL_LOG("VMM: Framebuffer mapping requested - phys=0x");
+    SERIAL_LOG_HEX("", (uint32_t)(fb_physical_addr >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)fb_physical_addr);
     SERIAL_LOG(" size=");
-    SERIAL_LOG_HEX("", fb_size);
+    SERIAL_LOG_HEX("", (uint32_t)fb_size);
     SERIAL_LOG("\n");
     
-    // Low memory is already identity-mapped
-    if (fb_physical_addr < 0x100000) {
-        SERIAL_LOG("VMM: Framebuffer in low memory, already accessible\n");
-        return true;
-    }
+    // TODO: Implement 64-bit page table mapping for framebuffer
+    // For now, we need to:
+    // 1. Walk the 4-level page tables (PML4 -> PDPT -> PD -> PT)
+    // 2. Create entries for the framebuffer physical address
+    // 3. Map it to a known virtual address (e.g., 0xFFFFFFFFC0000000)
+    // 4. Update display_info to use the virtual address
     
-    // Check if paging is already enabled
-    if (paging_enabled) {
-        SERIAL_LOG("VMM: Paging already enabled\n");
-        return true;
-    }
+    // TEMPORARY: Just log the request
+    SERIAL_LOG("VMM: Framebuffer mapping not yet implemented for 64-bit\n");
+    SERIAL_LOG("VMM: Physical address is above 4GB - cannot map with current implementation\n");
     
-    // Validate framebuffer address range
-    if (fb_physical_addr < 0xE0000000 || fb_physical_addr >= 0xFFE00000) {
-        SERIAL_LOG("VMM: WARNING - Framebuffer address outside expected range\n");
-    }
-    
-    // Calculate page coverage
-    uint32_t fb_page_count = (fb_size + PAGE_SIZE - 1) / PAGE_SIZE;
-    
-    // Set up page table for framebuffer region
-    uint32_t fb_base_page = (fb_physical_addr >> 22) << 10;
-    for (uint32_t i = 0; i < 1024; i++) {
-        uint32_t page_addr = ((fb_base_page + i) << 12);
-        framebuffer_page_table[i] = page_addr | PAGE_PRESENT | PAGE_WRITE;
-    }
-    
-    // Identity-map framebuffer pages (optimized bulk mapping)
-    uint32_t pages_mapped = 0;
-    for (uint32_t page = 0; page < fb_page_count; page++) {
-        uint32_t phys_addr = fb_physical_addr + (page * PAGE_SIZE);
-        uint32_t virt_addr = phys_addr;  // Identity mapping
-        uint32_t page_dir_idx = virt_addr >> 22;
-        uint32_t page_table_idx = (virt_addr >> 12) & 0x3FF;
-        
-        // Get or create page table
-        uint32_t* page_table;
-        if (!(page_directory[page_dir_idx] & PAGE_PRESENT)) {
-            uint32_t fb_pt_phys = vmm_virt_to_phys(framebuffer_page_table);
-            page_directory[page_dir_idx] = fb_pt_phys | PAGE_PRESENT | PAGE_WRITE;
-            page_table = framebuffer_page_table;
-        } else {
-            page_table = (uint32_t*)(page_directory[page_dir_idx] & ~0xFFF);
-        }
-        
-        // Map the page
-        page_table[page_table_idx] = phys_addr | PAGE_PRESENT | PAGE_WRITE;
-        pages_mapped++;
-    }
-    
-    // Flush TLB for entire range
-    tlb_flush_all();
-    
-    SERIAL_LOG_HEX("VMM: Mapped ", pages_mapped);
-    SERIAL_LOG(" framebuffer pages\n");
-    
-    // Enable paging with framebuffer mapping
-    uint32_t page_dir_phys = vmm_virt_to_phys(page_directory);
-    enable_paging(page_dir_phys);
-    
-    SERIAL_LOG("VMM: Paging enabled with framebuffer\n");
-    return true;
+    return false;  // Indicate mapping failed
 }
 
 /**
@@ -519,7 +495,7 @@ bool vmm_map_framebuffer(uint32_t fb_physical_addr, uint32_t fb_size) {
  * Used for device registers like XHCI controller MMIO space.
  * Creates identity mapping (virtual = physical) with PAGE_NO_CACHE flag.
  */
-bool vmm_map_mmio_region(uint32_t physical_addr, uint32_t size) {
+bool vmm_map_mmio_region(uint64_t physical_addr, uint64_t size) {
     if (!vmm_initialized) {
         SERIAL_LOG("VMM: ERROR - Cannot map MMIO, not initialized\n");
         return false;

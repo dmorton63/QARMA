@@ -59,13 +59,17 @@ void screen_put_char(char c) {
 }
 
 void shell_run(void) {
-    // Get framebuffer info for window rendering
-    extern FramebufferInfo* fb_info;
-    uint32_t* fb = fb_info ? (uint32_t*)fb_info->address : NULL;
-    int fb_w = fb_info ? fb_info->width : 0;
-    int fb_h = fb_info ? fb_info->height : 0;
-    
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'Z', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     SERIAL_LOG("[SHELL] Entering main loop\n");
+    
+    // Test if interrupts are enabled
+    uint64_t rflags;
+    __asm__ volatile("pushfq; pop %0" : "=r"(rflags));
+    if (rflags & (1 << 9)) {
+        SERIAL_LOG("[SHELL] Interrupts are ENABLED\n");
+    } else {
+        SERIAL_LOG("[SHELL] ERROR: Interrupts are DISABLED!\n");
+    }
     
     // **IMPORTANT**: Shell is now DEPRECATED - console compositor handles all input
     // This loop only exists for backwards compatibility and should do nothing

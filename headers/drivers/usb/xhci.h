@@ -112,7 +112,7 @@ typedef struct __attribute__((packed)) {
 
 // XHCI Controller structure
 typedef struct {
-    uint32_t mmio_base;           // Memory-mapped I/O base address
+    uintptr_t mmio_base;          // Memory-mapped I/O base address (64-bit)
     uint8_t cap_length;           // Capability register length
     uint32_t operational_base;    // Operational registers base
     uint32_t runtime_base;        // Runtime registers base
@@ -181,22 +181,22 @@ int xhci_queue_transfer(xhci_controller_t *xhci, uint8_t slot, uint8_t endpoint,
 void xhci_poll_events(xhci_controller_t *xhci);
 xhci_controller_t* xhci_get_controller(void);
 
-// Low-level I/O helpers
-static inline uint32_t xhci_read32(uint32_t addr) {
+// Low-level I/O helpers (64-bit address support)
+static inline uint32_t xhci_read32(uintptr_t addr) {
     return *(volatile uint32_t*)addr;
 }
 
-static inline void xhci_write32(uint32_t addr, uint32_t value) {
+static inline void xhci_write32(uintptr_t addr, uint32_t value) {
     *(volatile uint32_t*)addr = value;
 }
 
-static inline uint64_t xhci_read64(uint32_t addr) {
+static inline uint64_t xhci_read64(uintptr_t addr) {
     uint32_t low = *(volatile uint32_t*)addr;
     uint32_t high = *(volatile uint32_t*)(addr + 4);
     return ((uint64_t)high << 32) | low;
 }
 
-static inline void xhci_write64(uint32_t addr, uint64_t value) {
+static inline void xhci_write64(uintptr_t addr, uint64_t value) {
     *(volatile uint32_t*)addr = (uint32_t)(value & 0xFFFFFFFF);
     *(volatile uint32_t*)(addr + 4) = (uint32_t)(value >> 32);
 }

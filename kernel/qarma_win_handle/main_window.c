@@ -196,7 +196,7 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
             main_window_render(mw);
             // Blit to framebuffer
             extern FramebufferInfo* fb_info;
-            uint32_t* fb = (uint32_t*)fb_info->address;
+            uint32_t* fb = (uint32_t*)(uintptr_t)fb_info->virt_addr;
             uint32_t* win_buffer = mw->win->pixel_buffer;
             int win_w = mw->win->size.width;
             int win_h = mw->win->size.height;

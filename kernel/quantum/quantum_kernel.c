@@ -38,18 +38,77 @@ static bool g_quantum_initialized = false;
     System entry point.  Switch from kernel_main() to quantum_kernel_main().
 */
 
-void quantum_kernel_main(uint32_t magic, multiboot_info_t* mbi) {
-    // Try to output something immediately to see if we get this far
-    // Use direct VGA text mode as a fallback
-    volatile char* vga_buffer = (volatile char*)0xB8000;
-    const char* msg = "BOOT: quantum_kernel_main started";
-    for (int i = 0; msg[i] != '\0'; i++) {
-        vga_buffer[i * 2] = msg[i];
-        vga_buffer[i * 2 + 1] = 0x07; // White on black
-    }
+void quantum_kernel_main(uint64_t magic, uint64_t mbi_addr) {
+    // Debug marker J - entered quantum_kernel_main
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'J', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
+    
+    // Debug marker 1 - still alive
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'1', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
+    
+    // // Try to output something immediately to see if we get this far
+    // // Use direct VGA text mode as a fallback
+    // volatile char* vga_buffer = (volatile char*)0xB8000;
+    // const char* msg = "BOOT: quantum_kernel_main started";
+    // for (int i = 0; msg[i] != '\0'; i++) {
+    //     vga_buffer[i * 2] = msg[i];
+    //     vga_buffer[i * 2 + 1] = 0x07; // White on black
+    // }
+    
+    // Debug marker K - after VGA write
+    // __asm__ volatile (
+    //     "mov $0x3F8, %%dx\n"
+    //     "mov $'K', %%al\n"
+    //     "out %%al, %%dx\n"
+    //     ::: "rax", "rdx"
+    // );
+    
+    // Debug marker 2 - before cast
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'2', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
+    
+    // Convert to proper types
+    multiboot_info_t* mbi = (multiboot_info_t*)mbi_addr;
+    
+    // Debug marker 3 - after cast
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'3', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
+    
+    // Debug marker L - before kernel_main
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'L', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
     
     // Call the original kernel main
-    kernel_main(magic, mbi);
+    kernel_main((uint32_t)magic, mbi);
+    
+    // Debug marker M - after kernel_main
+    // __asm__ volatile (
+    //     "mov $0x3F8, %%dx\n"
+    //     "mov $'M', %%al\n"
+    //     "out %%al, %%dx\n"
+    //     ::: "rax", "rdx"
+    // );
     
     // Initialize quantum processing (can be toggled at runtime)
     quantum_kernel_init();           // Initialize quantum core

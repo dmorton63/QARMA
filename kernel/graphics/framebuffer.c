@@ -44,6 +44,8 @@ static uint32_t cursor_x = 0;
 static uint32_t cursor_y = 0;
 
 // Framebuffer info structure instances
+// This is the SINGLE SOURCE OF TRUTH for framebuffer parameters
+// Populated once by multiboot.c, never overwritten elsewhere
 static FramebufferInfo fb_info_instance = {0};
 FramebufferInfo* fb_info = &fb_info_instance;
 FramebufferInfo* fbinfo = &fb_info_instance;
@@ -58,99 +60,94 @@ extern void draw_bitmap_char(uint32_t fb_x, uint32_t fb_y, char c, rgb_color_t f
 #define FONT_HEIGHT 8
 
 void framebuffer_init(void) {
-    display_info_t* info = graphics_get_display_info();
-
-    // Get framebuffer info from multiboot (stored during init)
-    // The graphics system should have preserved the real framebuffer info
-    if (info->framebuffer != NULL) {
-    framebuffer_ptr = info->framebuffer;
-    // Also set fb_ptr used by fb_* helpers
-    fb_ptr = (uint32_t*)framebuffer_ptr;
-
-        // Store the PIXEL dimensions from multiboot detection
-        // Note: At this point info->width/height are still in PIXELS from multiboot
-        uint32_t pixel_width = info->width;
-        uint32_t pixel_height = info->height;
-
-        // Use actual framebuffer parameters from multiboot
-        fb_width = pixel_width;
-        fb_height = pixel_height;
-        fb_bpp = info->bpp;
-        fb_pitch = info->pitch;
-  
-        // Boot log framebuffer detection
-        BOOT_LOG("Framebuffer detected and configured\n");
-        BOOT_LOG_HEX("FB Address: ", (uint32_t)framebuffer_ptr);
-        BOOT_LOG_DEC("FB Resolution: ", fb_width);
-        BOOT_LOG_DEC("x", fb_height);
-        BOOT_LOG_DEC(" BPP: ", fb_bpp);
-        BOOT_LOG_DEC(" Pitch: ", fb_pitch);
-        SERIAL_LOG_MIN("FB_INIT: Framebuffer available\n");
-    } else {
-        // No framebuffer available
-        framebuffer_ptr = NULL;
-
-        SERIAL_LOG_MIN("FB_INIT: No framebuffer available!\n");
-        return;
-    }
-
-    cursor_x = 0;
-    cursor_y = 0;  // Start at row 0 (offset is added when drawing)
-
-    // Update display info for TEXT operations (characters, not pixels)
-    info->width = fb_width / FONT_WIDTH;    // Characters per line
-    info->height = fb_height / FONT_HEIGHT; // Lines per screen
-    info->pitch = fb_pitch;
-    info->bpp = fb_bpp;
-
+    SERIAL_LOG("FB_INIT: Starting framebuffer initialization\n");
     
-      fbinfo->width = fb_width;
-      fbinfo->height = fb_height;
-      fbinfo->bpp = fb_bpp;
-      fbinfo->pitch = fb_pitch;
-      fbinfo->address = (uint8_t*)framebuffer_ptr;
-
-    // Debug: Show text area dimensions
-    BOOT_LOG_DEC("Text cols: ", info->width);
-    BOOT_LOG_DEC("Text rows: ", info->height);
-    // Keep framebuffer pointer for graphics operations
-    info->cursor_x = 0;
-    info->cursor_y = 0;  // Start at row 0 (offset is added when drawing)
-
-    // Clear framebuffer to black first
-    for (uint32_t y = 0; y < fb_height; y++) {
-        for (uint32_t x = 0; x < fb_width; x++) {
-            uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
-            framebuffer_ptr[offset] = 0x00000000; // Black
-        }
-    }
-
-    // Allocate backing store for composition
-    size_t pixels = fb_width * fb_height;
-    size_t backing_store_size = pixels * sizeof(uint32_t);
-    SERIAL_LOG_DEC("FB_INIT: Need ", backing_store_size);
-    SERIAL_LOG_DEC(" bytes for ", pixels);
-    SERIAL_LOG(" pixels\n");
-    
-    backing_store = (uint32_t*)heap_alloc(backing_store_size);
-    SERIAL_LOG_DEC("FB_INIT: Backing store allocated at ", (uint32_t)(uintptr_t)backing_store);
-    if(!backing_store) {
-        SERIAL_LOG_MIN("FB_INIT: Backing store allocation failed!\n");
-        SERIAL_LOG_DEC("FB_INIT: Requested ", backing_store_size);
+    // Check if multiboot already populated fbinfo
+    if (fbinfo->valid) {
+        SERIAL_LOG("FB_INIT: Using framebuffer from multiboot\n");
+        SERIAL_LOG("FB_INIT: Address: 0x");
+        SERIAL_LOG_HEX("", (uint32_t)(fbinfo->virt_addr >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)(fbinfo->virt_addr & 0xFFFFFFFF));
+        SERIAL_LOG("\n");
+        SERIAL_LOG_DEC("FB_INIT: Dimensions: ", fbinfo->width);
+        SERIAL_LOG("x");
+        SERIAL_LOG_DEC("", fbinfo->height);
+        SERIAL_LOG(" bpp=");
+        SERIAL_LOG_DEC("", fbinfo->bpp);
+        SERIAL_LOG("\n");
+        
+        // Use the virtual address (identity mapped for now)
+        framebuffer_ptr = (uint32_t*)(uintptr_t)fbinfo->virt_addr;
+        fb_ptr = framebuffer_ptr;
+        fb_width = fbinfo->width;
+        fb_height = fbinfo->height;
+        fb_bpp = fbinfo->bpp;
+        fb_pitch = fbinfo->pitch;
+        
+        // Allocate backing store for double-buffering
+        size_t pixels = fb_width * fb_height;
+        size_t backing_store_size = pixels * sizeof(uint32_t);
+        SERIAL_LOG_DEC("FB_INIT: Allocating backing store: ", backing_store_size);
         SERIAL_LOG(" bytes\n");
-        __asm__ volatile("hlt");
+        
+        backing_store = (uint32_t*)heap_alloc(backing_store_size);
+        if (!backing_store) {
+            SERIAL_LOG("FB_INIT: WARNING - Backing store allocation failed\n");
+        } else {
+            SERIAL_LOG("FB_INIT: Backing store allocated successfully\n");
+            // Clear backing store to black
+            for (size_t i = 0; i < pixels; i++) {
+                backing_store[i] = 0x00000000;
+            }
+        }
+        
+        SERIAL_LOG("FB_INIT: Graphics framebuffer ready\n");
         return;
-
     }
-    if (backing_store) {
-        // Initialize backing store to black
-        for (uint32_t y = 0; y < fb_height; y++) {
-            for (uint32_t x = 0; x < fb_width; x++) {
-                uint32_t offset = (y * fb_pitch + x * (fb_bpp / 8)) / 4;
-                backing_store[offset] = 0x00000000; // Black
+    
+    // Fall back to VGA text mode if no framebuffer from multiboot
+    SERIAL_LOG("FB_INIT: No valid framebuffer, using VGA text mode\n");
+    framebuffer_ptr = (uint32_t*)0xB8000;
+    fb_ptr = framebuffer_ptr;
+    fb_width = 80;
+    fb_height = 25;
+    fb_bpp = 4;  // 16 colors
+    fb_pitch = 160;  // 80 chars * 2 bytes
+    
+    // Mark as VGA text mode (not a real graphics framebuffer)
+    fbinfo->virt_addr = 0xB8000;
+    fbinfo->width = 80;
+    fbinfo->height = 25;
+    fbinfo->bpp = 4;
+    fbinfo->pitch = 160;
+    fbinfo->valid = false;  // Not a graphics framebuffer
+    
+    SERIAL_LOG("FB_INIT: VGA text mode initialized\n");
+    
+    // Reset cursor to top-left
+    cursor_x = 0;
+    cursor_y = 0;
+    
+    // Allocate backing store for double-buffering (only for graphics mode)
+    if (fbinfo->valid && fb_width > 0 && fb_height > 0) {
+        size_t pixels = fb_width * fb_height;
+        size_t backing_store_size = pixels * sizeof(uint32_t);
+        SERIAL_LOG_DEC("FB_INIT: Allocating backing store: ", backing_store_size);
+        SERIAL_LOG(" bytes\n");
+        
+        backing_store = (uint32_t*)heap_alloc(backing_store_size);
+        if (!backing_store) {
+            SERIAL_LOG("FB_INIT: WARNING - Backing store allocation failed\n");
+        } else {
+            SERIAL_LOG("FB_INIT: Backing store allocated successfully\n");
+            // Clear backing store to black
+            for (size_t i = 0; i < pixels; i++) {
+                backing_store[i] = 0x00000000;
             }
         }
     }
+    
+    SERIAL_LOG("FB_INIT: Framebuffer initialization complete\n");
 }
 
 void framebuffer_putchar(char c) {
@@ -577,6 +574,10 @@ extern QARMA_WINDOW_MANAGER qarma_window_manager;
 
 void fb_mark_dirty(void) {
     fb_dirty = true;
+}
+
+bool fb_is_dirty(void) {
+    return fb_dirty;
 }
 
 // Simple and fast: copy entire back buffer to front buffer (present frame)

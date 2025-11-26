@@ -2,16 +2,16 @@ set timeout=10
 set default=1
 
 menuentry "QARMA (Silent Mode)" {
-  multiboot /boot/qarma.elf verbosity=silent
+  multiboot2 /boot/qarma.elf verbosity=silent
   boot
 }
 
 menuentry "QARMA (Normal Mode)" {
-  multiboot /boot/qarma.elf verbosity=minimal
+  multiboot2 /boot/qarma.elf verbosity=minimal
   boot
 }
 
-menuentry "QARMA (Verbose Mode)" {
+menuentry2 "QARMA (Verbose Mode)" {
   multiboot /boot/qarma.elf verbosity=verbose
   boot
 }

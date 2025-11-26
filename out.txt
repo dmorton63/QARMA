@@ -1,0 +1,331 @@
+
+BITS 32
+
+KERNEL_VMA equ 0xFFFFFFFF80000000
+KERNEL_LMA equ 0x200000  ; 2 MiB physical load address
+
+%define PHYS(addr) ((addr) - KERNEL_VMA)
+
+section .multiboot
+align 8
+multiboot2_header_start:
+    dd 0xE85250D6                    ; Multiboot2 magic
+    dd 0                             ; Architecture: i386 protected mode
+    dd multiboot2_header_end - multiboot2_header_start  ; Header length
+    dd -(0xE85250D6 + 0 + (multiboot2_header_end - multiboot2_header_start))  ; Checksum
+
+    align 8
+    dw 3                             ; Type: entry address
+    dw 0                             ; Flags
+    dd 12                            ; Size
+    dd PHYS(_start)                  ; Entry point (computed from _start symbol)
+
+    align 8
+    dw 5                             ; Type: framebuffer
+    dw 0                             ; Flags
+    dd 20                            ; Size
+    dd 1024                          ; Width
+    dd 768                           ; Height
+    dd 32                            ; Depth
+
+    align 8
+    dw 0                             ; Type: end
+    dw 0                             ; Flags
+    dd 8                             ; Size
+multiboot2_header_end:
+
+section .bss
+align 4096
+boot_pml4:
+    resb 4096                        ; PML4 (512 entries × 8 bytes)
+boot_pdpt:
+    resb 4096                        ; PDPT (512 entries × 8 bytes)
+boot_pd:
+    resb 4096                        ; PD (512 entries × 8 bytes)
+boot_pd_hh:
+    resb 4096                        ; PD for higher-half mapping
+boot_stack:
+    resb 32768                       ; 32KB boot stack
+boot_cpu_lock:
+    resd 1                           ; SMP lock: only one CPU proceeds
+
+align 16
+idt64:
+    resb 256*16                      ; 256 IDT entries, 16 bytes each
+idt64_desc:
+    dw (256*16 - 1)                  ; Limit
+    dq 0                             ; Base (will be set at runtime)
+
+section .text
+global _start
+extern quantum_kernel_main
+
+_start:
+    mov eax, 1
+    xchg eax, [PHYS(boot_cpu_lock)]
+    test eax, eax
+    jnz .ap_cpu_halt              ; If lock was already set, this is an AP CPU
+    jmp .bsp_start                ; Bootstrap CPU continues
+    
+.ap_cpu_halt:
+    cli
+    hlt
+    jmp .ap_cpu_halt
+
+.bsp_start:
+    mov word [0xB8000], 0x2F4F  ; Green 'O'
+    mov word [0xB8002], 0x2F4B  ; Green 'K'
+    mov word [0xB8004], 0x2F20  ; Green ' '
+    
+    mov [PHYS(multiboot_magic)], eax
+    mov [PHYS(multiboot_info)], ebx
+    
+    mov esp, PHYS(boot_stack) + 32768
+    
+    cli
+    
+    call check_long_mode
+    test eax, eax
+    jz .no_long_mode
+    
+    mov dx, 0x3F8
+    mov al, 'C'
+    out dx, al
+    
+    call setup_page_tables
+    
+    mov dx, 0x3F8
+    mov al, 'D'
+    out dx, al
+    
+    mov word [0xB8006], 0x2F44  ; Green 'D'
+    
+    mov eax, cr4
+    or eax, (1 << 5)                 ; CR4.PAE = 1
+    mov cr4, eax
+    
+    mov eax, PHYS(boot_pml4)
+    mov cr3, eax
+    
+    mov ecx, 0xC0000080              ; EFER MSR
+    rdmsr
+    or eax, (1 << 8)                 ; LME bit
+    wrmsr
+    
+    mov eax, cr0
+    or eax, (1 << 31)                ; PG bit
+    mov cr0, eax
+    
+    lgdt [PHYS(gdt64_descriptor)]
+    
+    jmp 0x08:PHYS(long_mode_start)
+
+.no_long_mode:
+    cli
+    hlt
+    jmp .no_long_mode
+
+check_long_mode:
+    pushfd
+    pop eax
+    mov ecx, eax
+    xor eax, (1 << 21)               ; Flip CPUID bit
+    push eax
+    popfd
+    pushfd
+    pop eax
+    push ecx
+    popfd
+    cmp eax, ecx
+    je .no_cpuid                      ; CPUID not supported
+    
+    mov eax, 0x80000000
+    cpuid
+    cmp eax, 0x80000001
+    jb .no_cpuid
+    
+    mov eax, 0x80000001
+    cpuid
+    test edx, (1 << 29)              ; LM bit
+    jz .no_cpuid
+    
+    mov eax, 1
+    ret
+
+.no_cpuid:
+    xor eax, eax
+    ret
+
+section .text
+setup_page_tables:
+    push esp
+    
+    mov dx, 0x3F8
+    mov al, 'P'
+    out dx, al
+    
+    mov edi, PHYS(boot_pml4)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov edi, PHYS(boot_pdpt)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov edi, PHYS(boot_pd)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov edi, PHYS(boot_pd_hh)
+    mov ecx, 4096/4
+    xor eax, eax
+    rep stosd
+
+    mov eax, PHYS(boot_pdpt)
+    or  eax, 0x03
+    mov [PHYS(boot_pml4) + 0*8], eax
+
+    mov eax, PHYS(boot_pd)
+    or  eax, 0x03
+    mov [PHYS(boot_pdpt) + 0*8], eax
+
+    mov eax, PHYS(boot_pdpt)
+    or  eax, 0x03
+    mov [PHYS(boot_pml4) + 511*8], eax
+
+    mov eax, PHYS(boot_pd_hh)
+    or  eax, 0x03
+    mov [PHYS(boot_pdpt) + 511*8], eax
+
+    mov edi, PHYS(boot_pd)
+    mov eax, 0x83              ; P | RW | PS
+    mov ecx, 512
+.id_map:
+    mov [edi], eax
+    add eax, 0x200000
+    add edi, 8
+    loop .id_map
+
+    mov edi, PHYS(boot_pd_hh)
+    mov eax, 0x000083               ; Physical 0x000000, P|RW|PS
+    mov ecx, 48                      ; 48 entries = 96 MiB
+.hh_map:
+    mov [edi], eax
+    add eax, 0x200000               ; Next 2 MiB page
+    add edi, 8                       ; Next PD entry
+    loop .hh_map
+
+    pop esp
+    ret
+BITS 64
+section .text
+long_mode_start:
+    mov dx, 0x3F8
+    mov al, 'E'
+    out dx, al
+
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    mov rsp, PHYS(boot_stack) + 32768
+
+    xor rbp, rbp
+
+    mov dx, 0x3F8
+    mov al, 'F'
+    out dx, al
+
+    mov rax, PHYS(idt64)
+    mov [PHYS(idt64_desc) + 2], rax  ; Set IDT base
+    lidt [PHYS(idt64_desc)]          ; Load IDT
+
+    mov dx, 0x3F8
+    mov al, 'X'
+    out dx, al
+
+    lea rax, [rel higher_half_entry]
+    
+    mov dx, 0x3F8
+    mov al, 'Y'
+    out dx, al
+    
+    jmp rax
+
+section .text
+higher_half_entry:
+
+    mov dx, 0x3F8
+    mov al, 'G'
+    out dx, al
+    
+    mov dx, 0x3F8
+    mov al, 'H'
+    out dx, al
+
+    mov rsp, boot_stack + 32768
+    
+    xor rbp, rbp
+    
+    mov rax, PHYS(multiboot_magic)
+    mov edi, [rax]                   ; First argument
+    
+    mov rax, PHYS(multiboot_info)
+    mov esi, [rax]                   ; Second argument (32-bit from bootloader)
+    
+    cmp edi, 0x36D76289              ; Multiboot2 magic
+    jne .bad_multiboot
+    
+    and rsp, ~0xF             ; Align to 16 bytes
+    sub rsp, 8                ; Adjust so after call pushes 8 bytes, we're aligned
+    
+    mov rax, higher_half_entry
+    mov dx, 0x3F8
+    mov al, 'I'
+    out dx, al
+    mov al, al      ; AL already holds the low 8 bits of RAX
+    out dx, al      ; crude check
+
+    mov dx, 0x3F8
+    mov al, 'J'
+    out dx, al
+
+    call quantum_kernel_main
+    
+    mov dx, 0x3F8
+    mov al, 'K'
+    out dx, al
+    
+    jmp .halt
+
+.bad_multiboot:
+.halt:
+    cli
+    hlt
+    jmp .halt
+
+section .data
+align 8
+gdt64:
+    dq 0x0000000000000000
+    
+    dq 0x00AF9A000000FFFF
+    
+    dq 0x00CF92000000FFFF
+
+gdt64_end:
+
+gdt64_descriptor:
+    dw gdt64_end - gdt64 - 1         ; Limit
+    dq PHYS(gdt64)                   ; Base (physical address)
+
+section .data
+align 4
+multiboot_magic: dd 0
+multiboot_info:  dq 0                ; 64-bit pointer

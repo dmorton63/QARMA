@@ -26,7 +26,7 @@ static const uint32_t cursor_bitmap[12][8] = {
 bool cursor_compositor_init(void) {
     extern FramebufferInfo* fb_info;
     
-    if (!fb_info || !fb_info->address) {
+    if (!fb_info || !fb_info->valid || fb_info->virt_addr == 0) {
         SERIAL_LOG("[COMPOSITOR] Error: Framebuffer not initialized\n");
         return false;
     }
@@ -34,7 +34,7 @@ bool cursor_compositor_init(void) {
     g_compositor.width = fb_info->width;
     g_compositor.height = fb_info->height;
     g_compositor.buffer_size = fb_info->width * fb_info->height * 4;  // 32bpp
-    g_compositor.front_buffer = (uint32_t*)fb_info->address;
+    g_compositor.front_buffer = (uint32_t*)(uintptr_t)fb_info->virt_addr;
     
     // Allocate back buffer
     g_compositor.back_buffer = (uint32_t*)heap_alloc(g_compositor.buffer_size);

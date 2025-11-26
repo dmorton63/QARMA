@@ -81,28 +81,9 @@ void test_function_call(void) {
 void graphics_init(multiboot_info_t* mb_info) {
     SERIAL_LOG_MIN("GFX_INIT: Starting graphics initialization");
     
-    if(mb_info && (mb_info->flags && (1 << 12))) {
-        /* framebuffer_addr is 64-bit in multiboot structures; cast via
-           uintptr_t to avoid pointer-size mismatch warnings on 32-bit
-           vs 64-bit builds. */
-        g_display.framebuffer = (uint32_t*)(uintptr_t)mb_info->framebuffer_info.framebuffer_addr;
-        g_display.width = mb_info->framebuffer_info.framebuffer_width;
-        g_display.height = mb_info->framebuffer_info.framebuffer_height;
-        g_display.pitch = mb_info->framebuffer_info.framebuffer_pitch;
-        g_display.bpp = mb_info->framebuffer_info.framebuffer_bpp;
-        g_display.red_mask     = mb_info->framebuffer_info.framebuffer_red_mask_size;
-        g_display.green_mask   = mb_info->framebuffer_info.framebuffer_green_mask_size;
-        g_display.blue_mask    = mb_info->framebuffer_info.framebuffer_blue_mask_size;
-       //g_display.reserved_mask = mb_info->framebuffer_info.framebuffer_reserved_mask_size;
-
-        g_display.red_pos     = mb_info->framebuffer_info.framebuffer_red_field_position;
-        g_display.green_pos   = mb_info->framebuffer_info.framebuffer_green_field_position;
-        g_display.blue_pos    = mb_info->framebuffer_info.framebuffer_blue_field_position;
-        //g_display.reserved_pos = mb_info->framebuffer_info.framebuffer_reserved_field_position;
-
-        SERIAL_LOG_HEX("GFX_INIT: Framebuffer detected at ", (uint32_t)g_display.framebuffer);
-        SERIAL_LOG("\n");   
-    }
+    // Framebuffer info is parsed in multiboot.c and stored in g_display
+    // Don't duplicate parsing here - just use what was already set
+    (void)mb_info;  // Suppress unused warning
     // Get display info from multiboot
     display_info_t* display = graphics_get_display_info();
     uint32_t* saved_framebuffer = display->framebuffer;

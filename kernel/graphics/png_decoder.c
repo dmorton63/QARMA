@@ -398,17 +398,9 @@ void png_free(png_image_t* image) {
 }
 
 png_image_t* load_splash_image(void) {
-    gfx_print("PNG: Loading splash image...\n");
-    
-    png_image_t* result = png_decode(images_splash_png, images_splash_png_len);
-    
-    if (result) {
-        gfx_print("PNG: Successfully decoded image\n");
-    } else {
-        gfx_print("PNG: Decode failed!\n");
-    }
-    
-    return result;
+    // Disabled PNG loading to avoid potential hang
+    SERIAL_LOG("PNG: Splash loading disabled\n");
+    return NULL;
 }
 
 // PNG filter functions

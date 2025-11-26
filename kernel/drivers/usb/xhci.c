@@ -37,24 +37,30 @@ static inline void* phys_to_virt(uint32_t phys) {
 static inline uint64_t virt_to_phys64(void *virt) {
     if (!virt) return 0;
     
-    uint32_t addr = (uint32_t)virt;
+    uint64_t addr = (uint64_t)virt;
+    
+    // Handle higher-half kernel addresses
+    if (addr >= 0xFFFFFFFF80000000ULL) {
+        return addr - 0xFFFFFFFF80000000ULL;
+    }
     
     // The kernel heap and early allocations are identity-mapped in the first 32MB
     // VMM identity-maps the first 32MB (8 PDEs * 4MB each) for kernel use
     if (addr < 0x02000000) {  // < 32MB - identity-mapped region
-        return (uint64_t)addr;
+        return addr;
     }
     
     // For higher addresses, use VMM lookup
-    uint32_t phys = vmm_get_physical_address(addr);
+    uint64_t phys = vmm_get_physical_address(addr);
     if (phys == 0) {
-        SERIAL_LOG("XHCI: ERROR - No physical mapping for virtual address ");
-        SERIAL_LOG_HEX("", addr);
+        SERIAL_LOG("XHCI: ERROR - No physical mapping for virtual address 0x");
+        SERIAL_LOG_HEX("", (uint32_t)(addr >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)addr);
         SERIAL_LOG("\n");
         return 0;
     }
     
-    return (uint64_t)phys;
+    return phys;
 }
 
 int xhci_init(void) {
@@ -149,16 +155,13 @@ int xhci_pci_init(void) {
                     SERIAL_LOG_HEX("", g_xhci->mmio_base);
                     SERIAL_LOG("\n");
                     
-                    // Map MMIO region for register access (typically 64KB for XHCI)
-                    extern bool vmm_map_mmio_region(uint32_t physical_addr, uint32_t size);
-                    if (!vmm_map_mmio_region(g_xhci->mmio_base, 0x10000)) {
-                        SERIAL_LOG("XHCI: ERROR - Failed to map MMIO region\n");
-                        heap_free(g_xhci);
-                        g_xhci = NULL;
-                        return -1;
-                    }
+                    // NOTE: In 64-bit mode, MMIO regions below 4GB are identity-mapped
+                    // by default (boot page tables). VMM is still using 32-bit structures
+                    // that don't affect the active CR3, so we skip mapping and use the
+                    // physical address directly.
+                    // TODO: Update VMM to work with 64-bit page tables (PML4)
                     
-                    SERIAL_LOG("XHCI: MMIO region mapped successfully\n");
+                    SERIAL_LOG("XHCI: Using identity-mapped MMIO (no explicit mapping needed)\n");
                     
                     // Enable bus mastering and memory space
                     uint16_t command = pci_read_config_word(bus, slot, func, 0x04);
@@ -1210,6 +1213,18 @@ static void xhci_process_work_queue(xhci_controller_t *xhci) {
             SERIAL_LOG_DEC("", old_dequeue);
             SERIAL_LOG(" -> 0), new cycle=");
             SERIAL_LOG_DEC("", xhci->transfer_ring_dequeue_cycles[slot_id]);
+            SERIAL_LOG("\n");
+        }
+        
+        // Log ALL completion codes for debugging
+        static int completion_log = 0;
+        if (completion_log++ < 50) {
+            SERIAL_LOG("[XHCI_WORK] Slot=");
+            SERIAL_LOG_DEC("", slot_id);
+            SERIAL_LOG(" EP=");
+            SERIAL_LOG_DEC("", endpoint_id);
+            SERIAL_LOG(" Code=");
+            SERIAL_LOG_DEC("", completion_code);
             SERIAL_LOG("\n");
         }
         

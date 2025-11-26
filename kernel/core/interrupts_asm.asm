@@ -30,7 +30,47 @@ isr%1:
 ; IRQ Stubs (IRQs 0–15 → Vectors 32–47)
 ; ────────────────
 %macro IRQ_STUB 1
-%if %1 = 33
+%if %1 = 32
+extern timer_handler
+global irq32
+irq32:
+    push rbp
+    mov rbp, rsp
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    xor rdi, rdi          ; Pass NULL as regs* argument
+    call timer_handler
+    
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rbp
+    iretq
+%elif %1 = 33
 extern irqkeyboard
 global irq33
 irq33:

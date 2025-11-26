@@ -9,7 +9,13 @@
 
 #include "kernel_types.h"
 
-#define MULTIBOOT_MAGIC 0x2BADB002
+#define MULTIBOOT_MAGIC 0x36D76289  // Multiboot2 magic (was 0x2BADB002 for Multiboot1)
+#define MULTIBOOT2_TAG_END 0
+#define MULTIBOOT2_TAG_CMDLINE 1
+#define MULTIBOOT2_TAG_MODULE 3
+#define MULTIBOOT2_TAG_BASIC_MEMINFO 4
+#define MULTIBOOT2_TAG_MMAP 6
+#define MULTIBOOT2_TAG_FRAMEBUFFER 8
 
 // Multiboot flags
 #define MULTIBOOT_FLAG_MEM     0x1

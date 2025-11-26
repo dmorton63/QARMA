@@ -371,8 +371,9 @@ void usb_mouse_process_report(usb_mouse_report_t *report) {
     int8_t report_x = (int8_t)raw_bytes[1];  // Byte 1 is X
     int8_t report_y = (int8_t)raw_bytes[2];  // Byte 2 is Y
     
-    mouse_state.dx = report_x;
-    mouse_state.dy = report_y;
+    // Apply sensitivity multiplier for better tracking (2.5x default)
+    mouse_state.dx = (report_x * 5) / 2;
+    mouse_state.dy = (report_y * 5) / 2;
     
     bool has_movement = (mouse_state.dx != 0 || mouse_state.dy != 0);
     
@@ -651,6 +652,15 @@ void usb_mouse_init_xhci(void* controller, uint8_t slot) {
     SERIAL_LOG("USB Mouse: XHCI mouse initialized on slot ");
     SERIAL_LOG_HEX("", slot);
     SERIAL_LOG("\n");
+    
+    // Configure endpoint before queuing transfers
+    SERIAL_LOG("[USB_MOUSE] Configuring endpoint...\n");
+    extern int xhci_configure_endpoint(void *xhci, uint8_t slot);
+    if (xhci_configure_endpoint(controller, slot) != 0) {
+        SERIAL_LOG("[USB_MOUSE] ERROR: Failed to configure endpoint\n");
+        return;
+    }
+    SERIAL_LOG("[USB_MOUSE] Endpoint configured successfully\n");
     
     // Queue multiple initial transfers to keep the pipeline full
     // All use the same buffer since we process events synchronously

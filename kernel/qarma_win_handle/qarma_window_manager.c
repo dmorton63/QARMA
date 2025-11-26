@@ -224,7 +224,7 @@ void qarma_console_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data) {
     uint8_t scancode = event->data.key.scancode;
     char character = event->data.key.character;
     
-    // Ctrl+T - toggle console
+    // Ctrl+T - toggle console (ALWAYS handle this, even if console hidden)
     if (scancode == 0x14 && (event->data.key.modifiers & QARMA_MOD_CTRL)) {  // Ctrl+T
         serial_debug("[CONSOLE_HANDLER] Ctrl+T - toggle\n");
         console_compositor_toggle();
@@ -232,10 +232,28 @@ void qarma_console_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data) {
         return;
     }
     
-    // Event routing now handled by target filter - only receive events when console has focus
-    serial_debug("[CONSOLE_HANDLER] Console has focus (target=");
-    SERIAL_LOG_HEX("", (uint32_t)event->target);
-    serial_debug(")\n");
+    // Only process other keys if console is visible AND has keyboard focus
+    extern bool console_compositor_is_visible(void);
+    extern void* keyboard_get_focus(void);
+    extern struct compositor_window_t* console_compositor_get_window(void);
+    
+    if (!console_compositor_is_visible()) {
+        // Console is hidden - don't handle any keys except Ctrl+T (already handled above)
+        event->handled = false;  // Let other handlers try
+        return;
+    }
+    
+    void* current_focus = keyboard_get_focus();
+    void* console_window = console_compositor_get_window();
+    
+    if (current_focus != console_window) {
+        // Console is visible but doesn't have focus - let other handlers process
+        event->handled = false;
+        return;
+    }
+    
+    // Console is visible and has focus - process the key
+    serial_debug("[CONSOLE_HANDLER] Console has focus, processing key\n");
     console_compositor_handle_key(scancode, character);
     event->handled = true;  // Mark as handled to stop propagation
 }

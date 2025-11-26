@@ -17,12 +17,12 @@ struct gdt_entry {
     uint8_t  access;
     uint8_t  granularity;
     uint8_t  base_high;
-} PACKED;
+} __attribute__((packed));
 
 struct gdt_ptr {
     uint16_t limit;
-    uint32_t base;
-} PACKED;
+    uint64_t base;
+} __attribute__((packed));
 
 // ────────────────
 // GDT Table
@@ -33,20 +33,7 @@ static struct gdt_ptr   gdt_pointer;
 // ────────────────
 // External Invocation
 // ────────────────
-extern void gdt_flush(uint32_t gdt_ptr_addr);
-
-// ────────────────
-// Gate Setter
-// ────────────────
-static void gdt_set_gate(int index, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity) {
-    gdt_entries[index].base_low     = base & 0xFFFF;
-    gdt_entries[index].base_middle  = (base >> 16) & 0xFF;
-    gdt_entries[index].base_high    = (base >> 24) & 0xFF;
-
-    gdt_entries[index].limit_low    = limit & 0xFFFF;
-    gdt_entries[index].granularity  = ((limit >> 16) & 0x0F) | (granularity & 0xF0);
-    gdt_entries[index].access       = access;
-}
+extern void gdt_flush(void* gdt_ptr_addr);
 
 // ────────────────
 // GDT Initialization Ritual
@@ -55,21 +42,60 @@ void gdt_init(void) {
     gfx_print("Invoking GDT setup...\n");
 
     gdt_pointer.limit = sizeof(gdt_entries) - 1;
-    gdt_pointer.base  = (uint32_t)&gdt_entries;
+    gdt_pointer.base  = (uint64_t)&gdt_entries;   // 64-bit base
 
-    // Phase 1: Null descriptor (required by legacy)
-    gdt_set_gate(0, 0, 0, 0, 0);
+    // Null descriptor (entry 0)
+    gdt_entries[0] = (struct gdt_entry){
+        .limit_low   = 0,
+        .base_low    = 0,
+        .base_middle = 0,
+        .access      = 0,
+        .granularity = 0,
+        .base_high   = 0,
+    };
 
-    // Phase 2: Kernel segments
-    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Kernel code: ring 0, executable
-    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Kernel data: ring 0, writable
+    // Kernel code segment (entry 1): Access=0x9A, Flags=0xA0 (L=1, D=0)
+    // In 64-bit mode, base and limit are ignored for code/data segments
+    gdt_entries[1] = (struct gdt_entry){
+        .limit_low   = 0,
+        .base_low    = 0,
+        .base_middle = 0,
+        .access      = 0x9A,      // Present, Ring 0, Code, Readable
+        .granularity = 0xA0,      // Long mode (L=1), not 32-bit (D=0)
+        .base_high   = 0,
+    };
 
-    // Phase 3: User segments (reserved for future rituals)
-    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User code: ring 3, executable
-    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User data: ring 3, writable
+    // Kernel data segment (entry 2): Access=0x92, Flags=0x00
+    gdt_entries[2] = (struct gdt_entry){
+        .limit_low   = 0,
+        .base_low    = 0,
+        .base_middle = 0,
+        .access      = 0x92,      // Present, Ring 0, Data, Writable
+        .granularity = 0x00,      // No special flags needed for data
+        .base_high   = 0,
+    };
 
-    // Final invocation: load the GDT
-    gdt_flush((uint32_t)&gdt_pointer);
+    // User code segment (entry 3): Access=0xFA, Flags=0xA0
+    gdt_entries[3] = (struct gdt_entry){
+        .limit_low   = 0,
+        .base_low    = 0,
+        .base_middle = 0,
+        .access      = 0xFA,      // Present, Ring 3, Code, Readable
+        .granularity = 0xA0,      // Long mode (L=1)
+        .base_high   = 0,
+    };
+
+    // User data segment (entry 4): Access=0xF2, Flags=0x00
+    gdt_entries[4] = (struct gdt_entry){
+        .limit_low   = 0,
+        .base_low    = 0,
+        .base_middle = 0,
+        .access      = 0xF2,      // Present, Ring 3, Data, Writable
+        .granularity = 0x00,
+        .base_high   = 0,
+    };
+
+    gdt_flush(&gdt_pointer); // Load 64-bit GDTR
 
     gfx_print("GDT initialized successfully.\n");
 }

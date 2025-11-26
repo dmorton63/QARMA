@@ -329,7 +329,7 @@ bool e1000_detect_pci(uint8_t bus, uint8_t slot, uint8_t func) {
     
     // Map BAR0 into virtual memory (E1000 registers are ~128KB)
     // We'll map 128KB (32 pages) to be safe
-    extern void vmm_map_page(uint32_t virtual_addr, uint32_t physical_addr, uint32_t flags);
+    extern void vmm_map_page(uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
     #define PAGE_PRESENT  0x001
     #define PAGE_WRITE    0x002
     #define PAGE_NO_CACHE 0x040

@@ -314,11 +314,19 @@ void compositor_render_title_bar(compositor_window_t* win) {
     if (win->style.has_close_button) {
         int btn_x = x + width - 20;
         int btn_y = y + 4;
-        rgb_color_t btn_color = {200, 50, 50, 255};  // Red
-        gfx_draw_rectangle(btn_x, btn_y, 16, 16, btn_color);
-        // Draw X
-        gfx_draw_line(btn_x + 4, btn_y + 4, btn_x + 12, btn_y + 12, btn_color);
-        gfx_draw_line(btn_x + 12, btn_y + 4, btn_x + 4, btn_y + 12, btn_color);
+        rgb_color_t btn_bg = {180, 40, 40, 255};  // Dark red background
+        rgb_color_t btn_fg = {255, 255, 255, 255};  // White X
+        
+        // Draw button background (filled rectangle)
+        gfx_draw_filled_rectangle(btn_x, btn_y, 16, 16, btn_bg);
+        
+        // Draw X with thicker lines (2px wide each stroke)
+        // Top-left to bottom-right diagonal
+        gfx_draw_line(btn_x + 4, btn_y + 4, btn_x + 12, btn_y + 12, btn_fg);
+        gfx_draw_line(btn_x + 5, btn_y + 4, btn_x + 13, btn_y + 12, btn_fg);
+        // Top-right to bottom-left diagonal  
+        gfx_draw_line(btn_x + 12, btn_y + 4, btn_x + 4, btn_y + 12, btn_fg);
+        gfx_draw_line(btn_x + 11, btn_y + 4, btn_x + 3, btn_y + 12, btn_fg);
     }
 }
 
@@ -509,6 +517,20 @@ void compositor_render_all(void) {
     extern void serial_debug(const char* msg);
     serial_debug("[COMPOSITOR_RENDER] Called\n");
     
+    // Safety check: Prevent potential issues with uninitialized framebuffer
+    extern uint32_t* backing_store;
+    if (!backing_store) {
+        serial_debug("[COMPOSITOR_RENDER] ERROR: backing_store is NULL\n");
+        return;
+    }
+    
+    if (fb_width == 0 || fb_height == 0) {
+        serial_debug("[COMPOSITOR_RENDER] ERROR: Invalid framebuffer dimensions\n");
+        return;
+    }
+    
+    serial_debug("[COMPOSITOR_RENDER] Clearing background\n");
+    
     // CRITICAL: Clear backing store to desktop background first
     // This prevents window trails during dragging
     extern void fb_draw_rect(int x, int y, int width, int height, uint32_t color);
@@ -516,6 +538,10 @@ void compositor_render_all(void) {
     uint32_t bg_color = (desktop_bg.alpha << 24) | (desktop_bg.red << 16) | 
                         (desktop_bg.green << 8) | desktop_bg.blue;
     fb_draw_rect(0, 0, fb_width, fb_height, bg_color);
+    
+    serial_debug("[COMPOSITOR_RENDER] Background cleared\n");
+    
+    serial_debug("[COMPOSITOR_RENDER] Sorting windows\n");
     
     // Sort windows by z-order (optimized - only sort if needed)
     if (g_z_order_dirty && g_compositor.window_count > 1) {
@@ -535,13 +561,19 @@ void compositor_render_all(void) {
         g_z_order_dirty = false;
     }
     
+    serial_debug("[COMPOSITOR_RENDER] Rendering windows\n");
+    
     // Render from back to front to backing store
     for (uint32_t i = 0; i < g_compositor.window_count; i++) {
         compositor_render_window(g_compositor.windows[i]);
     }
     
+    serial_debug("[COMPOSITOR_RENDER] Windows rendered\n");
+    
     // Invalidate cursor background since we just redrew everything
     cursor_bg_saved = false;
+    
+    serial_debug("[COMPOSITOR_RENDER] Rendering cursor\n");
     
     // Render cursor on top of everything to backing store
     if (cursor_enabled) {
@@ -553,7 +585,11 @@ void compositor_render_all(void) {
         last_cursor_y = mouse_state.y;
     }
     
+    serial_debug("[COMPOSITOR_RENDER] Swapping buffers\n");
+    
     // DOUBLE BUFFERING: Swap back buffer to visible framebuffer in one operation
     extern void framebuffer_swap(void);
     framebuffer_swap();
+    
+    serial_debug("[COMPOSITOR_RENDER] Complete\n");
 }

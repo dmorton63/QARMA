@@ -1,0 +1,116 @@
+Preparing build directories...
+Compiling kernel/drivers/usb/usb_keyboard.c...
+gcc -std=c99 -ffreestanding -Wall -Wextra -O0 -g -fno-exceptions -fno-builtin -fno-stack-protector -m64 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -ffunction-sections -fdata-sections -gdwarf-4 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fcf-protection=none -MMD -MP -DDEBUG_SERIAL -D__x86_64__ -Iheaders -Iheaders -Iheaders/shell -Iheaders/ide -Iheaders/security -Iheaders/quantum -Iheaders/network -Iheaders/gui -Iheaders/gui/controls -Iheaders/keyboard -Iheaders/splash_app -Iheaders/fs -Iheaders/fs/file_subsystem -Iheaders/graphics -Iheaders/graphics/subsystem -Iheaders/qarma_win_handle -Iheaders/core -Iheaders/core/scheduler -Iheaders/core/memory -Iheaders/core/memory/pmm -Iheaders/core/memory/vmm -Iheaders/core/overlay -Iheaders/core/text_functions -Iheaders/core/input -Iheaders/parallel -Iheaders/drivers -Iheaders/drivers/usb -Iheaders/drivers/net -Iheaders/drivers/block -Iheaders/ai -c kernel/drivers/usb/usb_keyboard.c -o build/kernel/drivers/usb/usb_keyboard.o
+In file included from kernel/drivers/usb/usb_keyboard.c:4:
+headers/drivers/usb/usb_vendor_ids.h: In function ‘is_razer_mouse’:
+headers/drivers/usb/usb_vendor_ids.h:64:64: warning: unused parameter ‘product_id’ [-Wunused-parameter]
+   64 | static inline bool is_razer_mouse(uint16_t vendor_id, uint16_t product_id) {
+      |                                                       ~~~~~~~~~^~~~~~~~~~
+headers/drivers/usb/usb_vendor_ids.h: In function ‘is_steelseries_keyboard’:
+headers/drivers/usb/usb_vendor_ids.h:82:73: warning: unused parameter ‘product_id’ [-Wunused-parameter]
+   82 | static inline bool is_steelseries_keyboard(uint16_t vendor_id, uint16_t product_id) {
+      |                                                                ~~~~~~~~~^~~~~~~~~~
+In file included from kernel/drivers/usb/usb_keyboard.c:8:
+headers/config.h: At top level:
+headers/config.h:5: warning: "DEBUG_SERIAL" redefined
+    5 | #define DEBUG_SERIAL
+      | 
+<command-line>: note: this is the location of the previous definition
+kernel/drivers/usb/usb_keyboard.c: In function ‘usb_keyboard_process_report’:
+kernel/drivers/usb/usb_keyboard.c:320:9: warning: implicit declaration of function ‘memcmp’ [-Wimplicit-function-declaration]
+  320 |     if (memcmp(report, &last_report, sizeof(usb_keyboard_report_t)) == 0) {
+      |         ^~~~~~
+kernel/drivers/usb/usb_keyboard.c:10:1: note: ‘memcmp’ is defined in header ‘<string.h>’; did you forget to ‘#include <string.h>’?
+    9 | #include "graphics/graphics.h"
+  +++ |+#include <string.h>
+   10 | 
+kernel/drivers/usb/usb_keyboard.c: In function ‘usb_key_to_scancode’:
+kernel/drivers/usb/usb_keyboard.c:436:17: warning: comparison is always false due to limited range of data type [-Wtype-limits]
+  436 |     if (usb_key >= sizeof(usb_to_scancode)) {
+      |                 ^~
+kernel/drivers/usb/usb_keyboard.c:435:54: warning: unused parameter ‘modifiers’ [-Wunused-parameter]
+  435 | uint8_t usb_key_to_scancode(uint8_t usb_key, uint8_t modifiers) {
+      |                                              ~~~~~~~~^~~~~~~~~
+kernel/drivers/usb/usb_keyboard.c: In function ‘usb_keyboard_init_xhci’:
+kernel/drivers/usb/usb_keyboard.c:483:24: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  483 |     SERIAL_LOG_HEX("", (uint32_t)&g_xhci_keyboard->report_buffer);
+      |                        ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+kernel/drivers/usb/usb_keyboard.c: In function ‘usb_keyboard_poll_xhci’:
+kernel/drivers/usb/usb_keyboard.c:501:28: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  501 |         SERIAL_LOG_HEX("", (uint32_t)&g_xhci_keyboard->report_buffer);
+      |                            ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+make: Warning: File 'kernel/drivers/usb/usb_mouse.c' has modification time 0.74 s in the future
+Compiling kernel/drivers/usb/usb_mouse.c...
+gcc -std=c99 -ffreestanding -Wall -Wextra -O0 -g -fno-exceptions -fno-builtin -fno-stack-protector -m64 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -ffunction-sections -fdata-sections -gdwarf-4 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fcf-protection=none -MMD -MP -DDEBUG_SERIAL -D__x86_64__ -Iheaders -Iheaders -Iheaders/shell -Iheaders/ide -Iheaders/security -Iheaders/quantum -Iheaders/network -Iheaders/gui -Iheaders/gui/controls -Iheaders/keyboard -Iheaders/splash_app -Iheaders/fs -Iheaders/fs/file_subsystem -Iheaders/graphics -Iheaders/graphics/subsystem -Iheaders/qarma_win_handle -Iheaders/core -Iheaders/core/scheduler -Iheaders/core/memory -Iheaders/core/memory/pmm -Iheaders/core/memory/vmm -Iheaders/core/overlay -Iheaders/core/text_functions -Iheaders/core/input -Iheaders/parallel -Iheaders/drivers -Iheaders/drivers/usb -Iheaders/drivers/net -Iheaders/drivers/block -Iheaders/ai -c kernel/drivers/usb/usb_mouse.c -o build/kernel/drivers/usb/usb_mouse.o
+In file included from kernel/drivers/usb/usb_mouse.c:4:
+headers/drivers/usb/usb_vendor_ids.h: In function ‘is_razer_mouse’:
+headers/drivers/usb/usb_vendor_ids.h:64:64: warning: unused parameter ‘product_id’ [-Wunused-parameter]
+   64 | static inline bool is_razer_mouse(uint16_t vendor_id, uint16_t product_id) {
+      |                                                       ~~~~~~~~~^~~~~~~~~~
+headers/drivers/usb/usb_vendor_ids.h: In function ‘is_steelseries_keyboard’:
+headers/drivers/usb/usb_vendor_ids.h:82:73: warning: unused parameter ‘product_id’ [-Wunused-parameter]
+   82 | static inline bool is_steelseries_keyboard(uint16_t vendor_id, uint16_t product_id) {
+      |                                                                ~~~~~~~~~^~~~~~~~~~
+In file included from headers/core/log_timestamp.h:6,
+                 from kernel/drivers/usb/usb_mouse.c:8:
+headers/config.h: At top level:
+headers/config.h:5: warning: "DEBUG_SERIAL" redefined
+    5 | #define DEBUG_SERIAL
+      | 
+<command-line>: note: this is the location of the previous definition
+kernel/drivers/usb/usb_mouse.c: In function ‘usb_mouse_find_endpoints’:
+kernel/drivers/usb/usb_mouse.c:255:42: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  255 |     SERIAL_LOG_HEX("USB Mouse: device=", (uint32_t)dev);
+      |                                          ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+kernel/drivers/usb/usb_mouse.c: In function ‘usb_mouse_start_polling’:
+kernel/drivers/usb/usb_mouse.c:281:54: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  281 |     SERIAL_LOG_HEX("USB Mouse: report_buffer virt=", (uint32_t)report_buffer);
+      |                                                      ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+kernel/drivers/usb/usb_mouse.c: In function ‘usb_mouse_init_xhci’:
+kernel/drivers/usb/usb_mouse.c:672:24: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  672 |     SERIAL_LOG_HEX("", (uint32_t)&g_xhci_mouse->report_buffer);
+      |                        ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+kernel/drivers/usb/usb_mouse.c: In function ‘usb_mouse_poll_xhci’:
+kernel/drivers/usb/usb_mouse.c:728:28: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+  728 |         SERIAL_LOG_HEX("", (uint32_t)&g_xhci_mouse->report_buffer);
+      |                            ^
+headers/config.h:35:30: note: in definition of macro ‘SERIAL_LOG_HEX’
+   35 |             serial_debug_hex(val); \
+      |                              ^~~
+Linking kernel...
+ld -T kernel/linker64.ld -nostdlib -m elf_x86_64 --gc-sections -Map=build/kernel.map -z max-page-size=4096 build/kernel/keyboard/keyboard_asm.o build/kernel/core/boot_stub.o build/kernel/core/scheduler/task_switch.o build/kernel/core/gdt_flush.o build/kernel/core/input/mouse_asm.o build/kernel/core/interrupts_asm.o build/kernel/core/pic.o build/kernel/shell/shell.o build/kernel/ide/nomain_syntax.o build/kernel/ide/ide_stub.o build/kernel/security/security_manager.o build/kernel/quantum/quantum_register.o build/kernel/quantum/quantum_adaptive.o build/kernel/quantum/quantum_scheduler.o build/kernel/quantum/quantum_kernel.o build/kernel/quantum/quantum_cross_learning.o build/kernel/quantum/quantum_ai_observer.o build/kernel/quantum/quantum_register_example.o build/kernel/network/icmp.o build/kernel/network/network_subsystem.o build/kernel/network/tcp.o build/kernel/network/ipv4.o build/kernel/network/ethernet.o build/kernel/network/udp.o build/kernel/network/arp.o build/kernel/gui/renderer.o build/kernel/gui/boot_messages.o build/kernel/gui/control_base.o build/kernel/gui/status_bar.o build/kernel/gui/controls/close_button.o build/kernel/gui/controls/button.o build/kernel/gui/controls/scrollbar.o build/kernel/gui/controls/label.o build/kernel/gui/controls/menu.o build/kernel/gui/controls/textbox.o build/kernel/gui/console_window.o build/kernel/keyboard/command.o build/kernel/keyboard/fs_commands.o build/kernel/keyboard/keyboard.o build/kernel/splash_app/qarma_splash_app.o build/kernel/splash_app/qarma_splash_window.o build/kernel/fs/file_subsystem/file_subsystem.o build/kernel/fs/simplefs.o build/kernel/fs/vfs.o build/kernel/fs/fat16.o build/kernel/fs/iso9660.o build/kernel/fs/fs_init.o build/kernel/graphics/framebuffer.o build/kernel/graphics/message_box.o build/kernel/graphics/fonts.o build/kernel/graphics/irq_logger.o build/kernel/graphics/compositor.o build/kernel/graphics/serial_console.o build/kernel/graphics/graphics.o build/kernel/graphics/vga_text.o build/kernel/graphics/popup.o build/kernel/graphics/png_decoder.o build/kernel/graphics/subsystem/video_subsystem.o build/kernel/qarma_win_handle/qarma_window_manager.o build/kernel/qarma_win_handle/window_compositor.o build/kernel/qarma_win_handle/panic.o build/kernel/qarma_win_handle/console_compositor.o build/kernel/qarma_win_handle/main_window.o build/kernel/qarma_win_handle/window_demo.o build/kernel/qarma_win_handle/qarma_win_factory.o build/kernel/qarma_win_handle/qarma_input_events.o build/kernel/qarma_win_handle/login_screen.o build/kernel/qarma_win_handle/qarma_win_handle.o build/kernel/core/scheduler/task_manager.o build/kernel/core/scheduler/scheduler_demo.o build/kernel/core/scheduler/subsystem_registry.o build/kernel/core/scheduler/task_test.o build/kernel/core/interrupts.o build/kernel/core/memory/pmm/pmm.o build/kernel/core/memory/dma_allocator.o build/kernel/core/memory/memory_pool.o build/kernel/core/memory/heap.o build/kernel/core/memory/vmm/vmm.o build/kernel/core/gdt.o build/kernel/core/core_manager.o build/kernel/core/sleep.o build/kernel/core/overlay/overlay.o build/kernel/core/console.o build/kernel/core/timer.o build/kernel/core/text_functions/text.o build/kernel/core/boot_log.o build/kernel/core/memory.o build/kernel/core/clock_overlay.o build/kernel/core/kernel.o build/kernel/core/input/input.o build/kernel/core/input/mouse.o build/kernel/core/input/mock_mouse.o build/kernel/core/blockdev.o build/kernel/core/multiboot.o build/kernel/core/idt.o build/kernel/core/init.o build/kernel/core/string.o build/kernel/core/math.o build/kernel/core/pci.o build/kernel/parallel/pipeline_example.o build/kernel/parallel/parallel_engine.o build/kernel/parallel/execution_pipeline.o build/kernel/drivers/usb/uhci.o build/kernel/drivers/usb/xhci.o build/kernel/drivers/usb/usb_keyboard.o build/kernel/drivers/usb/usb_hid.o build/kernel/drivers/usb/usb_mouse.o build/kernel/drivers/usb/usb.o build/kernel/drivers/usb/usb_msc.o build/kernel/drivers/net/e1000.o build/kernel/drivers/block/ata.o build/kernel/drivers/block/ata_blockdev.o build/kernel/drivers/block/ramdisk.o build/kernel/drivers/block/cdrom.o build/kernel/ai/ai_subsystem.o build/kernel/ai/command_predictor.o build/kernel/ai/ai_persistence.o  -o build/kernel.elf
+ld: warning: build/kernel/core/pic.o: missing .note.GNU-stack section implies executable stack
+ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+objcopy -O binary build/kernel.elf build/kernel.bin
+Creating QARMA OS ISO...
+xorriso 1.5.6 : RockRidge filesystem manipulator, libburnia project.
+
+Drive current: -outdev 'stdio:build/qarma.iso'
+Media current: stdio file, overwriteable
+Media status : is blank
+Media summary: 0 sessions, 0 data blocks, 0 data,  936g free
+Added to ISO image: directory '/'='/tmp/grub.AiLM4B'
+xorriso : UPDATE :     295 files added in 1 seconds
+Added to ISO image: directory '/'='/home/dmort/qarma/build/iso'
+xorriso : UPDATE :     299 files added in 1 seconds
+xorriso : NOTE : Copying to System Area: 512 bytes from file '/usr/lib/grub/i386-pc/boot_hybrid.img'
+ISO image produced: 2966 sectors
+Written to medium : 2966 sectors at LBA 0
+Writing to 'stdio:build/qarma.iso' completed successfully.
+
+make: warning:  Clock skew detected.  Your build may be incomplete.

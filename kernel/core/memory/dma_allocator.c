@@ -72,12 +72,12 @@ void dma_allocator_create_pool(size_t block_size, size_t alignment, size_t max_b
     size_t total_pages = pool_pages + alignment_pages;
     
     // Allocate contiguous physical pages
-    uint32_t phys_base_alloc = 0;
+    uint64_t phys_base_alloc = 0;
     void* virt_base_alloc = NULL;
     
     // Try to allocate contiguous physical memory
     for (size_t i = 0; i < total_pages; i++) {
-        uint32_t page = pmm_alloc_page();
+        uint64_t page = pmm_alloc_page();
         if (page == 0) {
             SERIAL_LOG("DMA pool creation failed: PMM allocation failed\n");
             // TODO: Free previously allocated pages
@@ -100,7 +100,7 @@ void dma_allocator_create_pool(size_t block_size, size_t alignment, size_t max_b
     }
     
     // Find aligned physical base within allocated range
-    uint32_t aligned_phys_base = (uint32_t)phys_base_alloc;
+    uint64_t aligned_phys_base = phys_base_alloc;
     if (aligned_phys_base % alignment != 0) {
         aligned_phys_base += alignment - (aligned_phys_base % alignment);
     }

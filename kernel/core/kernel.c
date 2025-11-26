@@ -77,6 +77,14 @@ static void on_login_success(const char* username) {
  * Main kernel entry point
  */
 int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
+    // Debug marker M - entered kernel_main
+    __asm__ volatile (
+        "mov $0x3F8, %%dx\n"
+        "mov $'M', %%al\n"
+        "out %%al, %%dx\n"
+        ::: "rax", "rdx"
+    );
+    
     // Early debug output using VGA text mode
     volatile char* vga_buffer = (volatile char*)0xB8000;
     const char* msg = "BOOT: kernel_main started     ";
@@ -87,9 +95,11 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
 
     // Initialize all subsystems
     qarma_init_all(magic, mbi);
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'N', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Run login screen
     qarma_run_login_screen(on_login_success);
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'O', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Run shell instead of desktop (for testing)
     extern void shell_init(void);
@@ -99,4 +109,26 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     
     // Should never reach here
     return 0;
+}
+
+/**
+ * Kernel idle loop - runs when all tasks complete
+ * This is the final fallback scheduler that never returns
+ */
+void kernel_idle_loop(void) {
+    SERIAL_LOG("[KERNEL] Entering idle loop\n");
+    
+    // Infinite loop with HLT to save power
+    while (1) {
+        // Enable interrupts and halt
+        // CPU will wake on next interrupt, then loop back
+        __asm__ volatile(
+            "sti\n"     // Enable interrupts
+            "hlt\n"     // Halt until interrupt
+            "cli\n"     // Disable interrupts before loop
+        );
+        
+        // Optional: Call scheduler tick or task management here
+        // quantum_scheduler_tick();
+    }
 }

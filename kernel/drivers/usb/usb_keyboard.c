@@ -469,6 +469,15 @@ void usb_keyboard_init_xhci(void* controller, uint8_t slot) {
     SERIAL_LOG_HEX("", slot);
     SERIAL_LOG("\n");
     
+    // Configure endpoint 1 (interrupt IN) for keyboard
+    SERIAL_LOG("[USB_KEYBOARD] Configuring endpoint...\n");
+    extern int xhci_configure_endpoint(void *xhci, uint8_t slot);
+    if (xhci_configure_endpoint(controller, slot) != 0) {
+        SERIAL_LOG("[USB_KEYBOARD] ERROR: Failed to configure endpoint\n");
+        return;
+    }
+    SERIAL_LOG("[USB_KEYBOARD] Endpoint configured successfully\n");
+    
     // Don't queue transfer yet - wait for init to complete
     SERIAL_LOG("[USB_KEYBOARD] Init complete, buffer at ");
     SERIAL_LOG_HEX("", (uint32_t)&g_xhci_keyboard->report_buffer);
@@ -477,6 +486,12 @@ void usb_keyboard_init_xhci(void* controller, uint8_t slot) {
 }
 
 void usb_keyboard_poll_xhci(void) {
+    static int poll_count = 0;
+    if (poll_count < 5) {
+        SERIAL_LOG("[USB_KEYBOARD] Poll called\n");
+        poll_count++;
+    }
+    
     if (!g_xhci_keyboard) return;
     
     // Queue initial transfers on first poll after init complete

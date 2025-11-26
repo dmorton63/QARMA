@@ -11,49 +11,49 @@ ENTRY(_start)
 
 SECTIONS
 {
-  /* Keep the Multiboot2 header at the start of the file (first 32 KiB), 8-byte aligned */
-  .multiboot 0 : ALIGN(8)
+  /* Start at higher-half virtual address + physical offset */
+  . = VMA_BASE + LMA_BASE;
+  
+  /* Keep the Multiboot2 header at the start, 8-byte aligned */
+  .multiboot ALIGN(8) : AT(ADDR(.multiboot) - VMA_BASE)
   {
     KEEP(*(.multiboot))
   }
 
-  /* Move the location counter to the higher-half virtual address */
-  . = VMA_BASE;
-
-  /* Text */
-  .text ALIGN(4K) : AT(ADDR(.text) - VMA_BASE + LMA_BASE)
+  /* Text section follows multiboot */
+  .text ALIGN(4K) : AT(ADDR(.text) - VMA_BASE)
   {
     *(.text .text.*)
   }
 
   /* Read-only data */
-  .rodata ALIGN(4K) : AT(ADDR(.rodata) - VMA_BASE + LMA_BASE)
+  .rodata ALIGN(4K) : AT(ADDR(.rodata) - VMA_BASE)
   {
     *(.rodata .rodata.*)
   }
 
   /* Data */
-  .data ALIGN(4K) : AT(ADDR(.data) - VMA_BASE + LMA_BASE)
+  .data ALIGN(4K) : AT(ADDR(.data) - VMA_BASE)
   {
     *(.data .data.*)
   }
 
   /* BSS (zero-initialized); still gets a load region but takes no file space */
-  .bss ALIGN(4K) : AT(ADDR(.bss) - VMA_BASE + LMA_BASE)
+  .bss ALIGN(4K) : AT(ADDR(.bss) - VMA_BASE)
   {
     *(COMMON)
     *(.bss .bss.*)
   }
 
-  /* Optional runtime-reserved sections (don’t bloat file; place in .bss or initialize at boot) */
-  .heap ALIGN(4K) : AT(ADDR(.heap) - VMA_BASE + LMA_BASE)
+  /* Optional runtime-reserved sections (don't bloat file; place in .bss or initialize at boot) */
+  .heap ALIGN(4K) : AT(ADDR(.heap) - VMA_BASE)
   {
     heap_start = .;
     . += 0x400000;  /* 4 MiB */
     heap_end = .;
   }
 
-  .stack ALIGN(16) : AT(ADDR(.stack) - VMA_BASE + LMA_BASE)
+  .stack ALIGN(16) : AT(ADDR(.stack) - VMA_BASE)
   {
     stack_bottom = .;
     . += 0x20000;   /* 128 KiB */

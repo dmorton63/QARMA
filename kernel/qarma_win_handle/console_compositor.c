@@ -199,42 +199,86 @@ void console_compositor_show(void) {
     
     serial_debug("[CONSOLE_SHOW] Setting VISIBLE flag\n");
     
-    // Show console and focus it
+    // Show console - just set flags, no complex operations in interrupt context
     g_console->window->base.flags |= QARMA_FLAG_VISIBLE;
-    compositor_focus_window(g_console->window);
+    g_console->window->is_focused = true;
     
     // Set keyboard focus to console window for proper event targeting
     extern void keyboard_set_focus(void* target);
     keyboard_set_focus(g_console->window);
     
-    // Full render to show
-    compositor_render_all();
+    serial_debug("[CONSOLE_SHOW] Marking framebuffer dirty (deferred render)\n");
     
-    serial_debug("[CONSOLE_SHOW] Console shown and rendered\n");
+    // Mark dirty instead of immediate render to avoid interrupt context issues
+    extern void fb_mark_dirty(void);
+    fb_mark_dirty();
+    
+    serial_debug("[CONSOLE_SHOW] Console shown (render deferred)\n");
 }
 
 void console_compositor_hide(void) {
-    if (!g_console || !g_console->window) return;
+    extern void serial_debug(const char* msg);
+    
+    serial_debug("[CONSOLE_HIDE] Entry\n");
+    
+    if (!g_console || !g_console->window) {
+        serial_debug("[CONSOLE_HIDE] NULL check failed\n");
+        return;
+    }
+    
+    serial_debug("[CONSOLE_HIDE] Clearing VISIBLE flag\n");
     
     // Hide console
     g_console->window->base.flags &= ~QARMA_FLAG_VISIBLE;
+    
+    serial_debug("[CONSOLE_HIDE] Clearing keyboard focus\n");
     
     // Clear keyboard focus when hiding console
     extern void keyboard_set_focus(void* target);
     keyboard_set_focus(NULL);
     
-    // Full render to hide
-    compositor_render_all();
+    serial_debug("[CONSOLE_HIDE] Marking framebuffer dirty (deferred render)\n");
+    
+    // Mark dirty instead of immediate render to avoid interrupt context issues
+    extern void fb_mark_dirty(void);
+    fb_mark_dirty();
+    
+    serial_debug("[CONSOLE_HIDE] Exit\n");
 }
 
 void console_compositor_toggle(void) {
-    if (!g_console || !g_console->window) return;
+    extern void serial_debug(const char* msg);
+    
+    serial_debug("[CONSOLE_TOGGLE] Entry\n");
+    
+    if (!g_console) {
+        serial_debug("[CONSOLE_TOGGLE] ERROR: g_console is NULL\n");
+        return;
+    }
+    
+    if (!g_console->window) {
+        serial_debug("[CONSOLE_TOGGLE] ERROR: g_console->window is NULL\n");
+        return;
+    }
+    
+    serial_debug("[CONSOLE_TOGGLE] Checking visibility flags\n");
     
     if (g_console->window->base.flags & QARMA_FLAG_VISIBLE) {
+        serial_debug("[CONSOLE_TOGGLE] Hiding console\n");
         console_compositor_hide();
+        serial_debug("[CONSOLE_TOGGLE] Hide complete\n");
     } else {
+        serial_debug("[CONSOLE_TOGGLE] Showing console\n");
         console_compositor_show();
+        serial_debug("[CONSOLE_TOGGLE] Show complete\n");
     }
+    
+    // Trigger immediate refresh so user sees the toggle result
+    serial_debug("[CONSOLE_TOGGLE] Triggering immediate refresh\n");
+    extern void fb_mark_dirty(void);
+    fb_mark_dirty();
+    
+    serial_debug("[CONSOLE_TOGGLE] Exit\n");
 }
 
 bool console_compositor_is_visible(void) {

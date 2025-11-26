@@ -130,8 +130,15 @@ void qarma_input_event_unlisten(QARMA_INPUT_EVENT_LISTENER* listener) {
 // ============================================================================
 
 void qarma_input_event_dispatch(QARMA_INPUT_EVENT* event) {
+    extern void serial_debug(const char* msg);
+    
     if (!event_system.initialized || !event) {
         return;
+    }
+    
+    static int dispatch_count = 0;
+    if (dispatch_count++ < 10) {
+        serial_debug("[DISPATCH] Entry\n");
     }
     
     event->handled = false;
@@ -139,13 +146,21 @@ void qarma_input_event_dispatch(QARMA_INPUT_EVENT* event) {
     
     // Iterate through all listeners
     QARMA_INPUT_EVENT_LISTENER* listener = event_system.listeners;
+    int listener_index = 0;
     while (listener) {
+        if (dispatch_count <= 10) {
+            serial_debug("[DISPATCH] Checking listener\n");
+        }
+        
         // Check if listener should handle this event
         bool should_handle = listener->enabled &&
                            (listener->event_type == 0 || listener->event_type == event->type) &&
                            (listener->target_filter == NULL || listener->target_filter == event->target);
         
         if (should_handle) {
+            if (dispatch_count <= 10) {
+                serial_debug("[DISPATCH] Calling handler\n");
+            }
             listener->handler(event, listener->user_data);
             
             // Stop propagation if event was marked as handled
@@ -155,6 +170,11 @@ void qarma_input_event_dispatch(QARMA_INPUT_EVENT* event) {
         }
         
         listener = listener->next;
+        listener_index++;
+    }
+    
+    if (dispatch_count <= 10) {
+        serial_debug("[DISPATCH] Exit\n");
     }
 }
 

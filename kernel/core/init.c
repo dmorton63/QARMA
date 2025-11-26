@@ -103,77 +103,40 @@ void qarma_init_core_subsystems(void) {
 }
 
 void qarma_init_filesystems(void) {
-    // TEST PNG LOADING
-    SERIAL_LOG("===EARLY PNG TEST START===\n");
-    gfx_print("===EARLY PNG TEST START===\n");
-    png_image_t* early_splash = load_splash_image();
-    if (early_splash) {
-        SERIAL_LOG("SUCCESS: PNG image loaded and decoded!\n");
-        gfx_print("SUCCESS: PNG image loaded and decoded!\n");
-        
-        // Show memory pool stats while PNG allocation is active
-        gfx_print("\n");
-        memory_pool_print_all_stats();
-        gfx_print("\n");
-        
-        // Display title showing PNG loaded
-        video_subsystem_splash_title("PNG CHECKERBOARD LOADED!", 
-                                    (rgb_color_t){255, 255, 0, 255},  // Yellow text
-                                    (rgb_color_t){255, 0, 255, 255}); // Magenta bg
-        
-        png_free(early_splash);
-        SERIAL_LOG("PNG test complete - image freed\n");
-        gfx_print("PNG test complete - image freed\n");
-    } else {
-        SERIAL_LOG("FAILED: Could not load PNG image\n");
-        gfx_print("FAILED: Could not load PNG image\n");
-    }
-    SERIAL_LOG("===EARLY PNG TEST END===\n");
-    gfx_print("===EARLY PNG TEST END===\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'1', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize filesystem subsystem
-    SERIAL_LOG("[KERNEL] About to init filesystem subsystem\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'2', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     filesystem_subsystem_init(NULL);
-    SERIAL_LOG("[KERNEL] Filesystem subsystem initialized\n");
-    gfx_print("Filesystem subsystem initialized.\n");
-    
-    SERIAL_LOG("[KERNEL] About to initialize VFS\n");
-    gfx_print("DEBUG: About to initialize VFS...\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'3', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize VFS and mount RAM disk
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'4', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     vfs_init();
-    SERIAL_LOG("[KERNEL] VFS init completed\n");
-    gfx_print("DEBUG: VFS init completed successfully.\n");
-    gfx_print("VFS initialized and RAM disk mounted.\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'5', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize filesystem drivers and ATA disk
-    SERIAL_LOG("[KERNEL] Initializing filesystem drivers...\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'6', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     fs_init();
-    SERIAL_LOG("[KERNEL] Filesystem drivers initialized\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'7', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize ISO9660 filesystem
-    SERIAL_LOG("[KERNEL] ===== INITIALIZING ISO9660 FILESYSTEM =====\n");
     iso9660_init();
-    SERIAL_LOG("[KERNEL] ISO9660 init completed\n");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'8', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
 }
 
 void qarma_init_cpu(void) {
     gfx_print("=== QARMA v1.0 Starting ===\n");
     gfx_print("Keyboard Testing Version\n");
     
-    // Initialize GDT
-    gfx_print("Initializing GDT...\n");
-    gdt_init();
-    
-    // Initialize IDT and interrupts
-    gfx_print("Initializing IDT and interrupts...\n");
+    // Initialize IDT and interrupts (includes GDT setup)
+    gfx_print("Initializing GDT, IDT and interrupts...\n");
     __asm__ volatile("cli");
     interrupts_system_init();
 }
 
 void qarma_init_input(void) {
     // Initialize PS/2 keyboard driver (for fallback)
-    gfx_print("Initializing PS/2 keyboard driver...\n");
     keyboard_init();
     keyboard_set_enabled(true);
     
@@ -181,14 +144,10 @@ void qarma_init_input(void) {
     pci_init();
     
     // Initialize USB stack and devices (mouse + keyboard)
-    gfx_print("Initializing USB mouse driver...\n");
     usb_mouse_init();
-    gfx_print("USB mouse driver initialized.\n");
     
-    gfx_print("Initializing USB keyboard driver...\n");
     extern int usb_keyboard_init(void);
     usb_keyboard_init();
-    gfx_print("USB keyboard driver initialized.\n");
 }
 
 // Debug mouse event handler (can be quickly disabled via DEBUG_MOUSE_EVENTS flag)
@@ -281,22 +240,16 @@ static void debug_mouse_event_handler(QARMA_INPUT_EVENT* event, void* user_data)
 
 void qarma_init_gui(void) {
     // Initialize QARMA window manager
-    gfx_print("Initializing window manager...\n");
     qarma_window_manager_init();
-    gfx_print("Window manager initialized.\n");
     
     // Initialize window compositor for draggable windows with title bars
-    gfx_print("Initializing window compositor...\n");
     extern void compositor_init(void);
     extern void console_compositor_init(void);
     compositor_init();
     console_compositor_init();  // Create console window immediately after compositor
-    gfx_print("Window compositor and console initialized.\n");
     
     // Initialize input event system
-    gfx_print("Initializing input event system...\n");
     qarma_input_events_init();
-    gfx_print("Input event system initialized.\n");
     
     // Register window manager's mouse event handler
     extern void qarma_window_manager_handle_mouse_event(QARMA_INPUT_EVENT* event);
@@ -309,20 +262,19 @@ void qarma_init_gui(void) {
     );
     SERIAL_LOG("[INIT] Window manager mouse handler registered\n");
     
-    // Register console keyboard handler with proper target filtering
-    // This handler only receives events when console window has keyboard focus
+    // Register console keyboard handler WITHOUT target filtering
+    // This handler must receive ALL keyboard events to detect Ctrl+T even when console is hidden
+    // The handler itself checks console visibility and handles Ctrl+T specially
     extern void qarma_console_keyboard_handler(QARMA_INPUT_EVENT* event, void* user_data);
-    extern struct compositor_window_t* console_compositor_get_window(void);
     SERIAL_LOG("[INIT] Registering console keyboard handler...\n");
-    void* console_window = console_compositor_get_window();
     qarma_input_event_listen_filtered(
         QARMA_INPUT_EVENT_KEY_DOWN,
-        console_window,  // Only handle events targeted at console window
+        NULL,  // No target filter - receive all keyboard events
         qarma_console_keyboard_handler,
         NULL,
-        50  // Normal priority - filtering handles routing
+        50  // Normal priority - runs before shell handler (priority 100)
     );
-    SERIAL_LOG("[INIT] Console keyboard handler registered with target filter\n");
+    SERIAL_LOG("[INIT] Console keyboard handler registered (no target filter for Ctrl+T support)\n");
     
     // Register shell keyboard handler now that event system is ready
     extern void keyboard_register_shell_handler(void);
@@ -403,7 +355,7 @@ void qarma_show_boot_messages(void) {
     boot_messages_render(boot_msg_win);
     
     // Blit to framebuffer
-    uint32_t* fb = (uint32_t*)fb_info->address;
+    uint32_t* fb = (uint32_t*)(uintptr_t)fb_info->virt_addr;
     if (boot_msg_win->main_window && boot_msg_win->main_window->pixel_buffer) {
         uint32_t* win_buffer = boot_msg_win->main_window->pixel_buffer;
         int src_w = boot_msg_win->main_window->size.width;
@@ -491,58 +443,186 @@ void qarma_show_boot_messages(void) {
     SERIAL_LOG("[KERNEL] Boot messages window closed\n");
     
     // Clear screen before showing desktop
-    memset((void*)fb_info->address, 0, fb_info->pitch * fb_info->height);
+    memset((void*)(uintptr_t)fb_info->virt_addr, 0, fb_info->pitch * fb_info->height);
 }
 
 void qarma_run_login_screen(void (*on_success)(const char* username)) {
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'1', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     gfx_print("Starting desktop environment...\n");
     SERIAL_LOG("[KERNEL] ===== STARTING DESKTOP ENVIRONMENT =====\n");
     
     // Enable interrupts for GUI
     __asm__ volatile("sti");
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'2', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     SERIAL_LOG("[KERNEL] Interrupts enabled for desktop\n");
     
-    if (!fb_info || !fb_info->address) {
+    if (!fb_info || !fb_info->virt_addr) {
         SERIAL_LOG("[KERNEL] ERROR: No framebuffer available\n");
         gfx_print("ERROR: No framebuffer available!\n");
         while(1) __asm__ volatile("hlt");
     }
     
-    // Setup framebuffer for desktop
-    SERIAL_LOG("[KERNEL] Setting up desktop\n");
-    gfx_print("Setting up desktop...\n");
+    // Check if we're in text mode or graphics mode
+    bool is_text_mode = (fb_info->virt_addr == 0xB8000);
     
-    // Clear all windows from window manager
-    qarma_window_manager.destroy_all(&qarma_window_manager);
-    
-    uint32_t* fb = (uint32_t*)fb_info->address;
-    int fb_w = fb_info->width;
-    int fb_h = fb_info->height;
-    
-    SERIAL_LOG("[KERNEL] Desktop ready\n");
+    if (is_text_mode) {
+        SERIAL_LOG("[KERNEL] Text mode detected - skipping graphical desktop\n");
+        gfx_print("QARMA OS - Text Mode\n");
+        gfx_print("===================\n");
+        gfx_print("\n");
+    } else {
+        // Setup framebuffer for graphical desktop
+        SERIAL_LOG("[KERNEL] Setting up graphical desktop\n");
+        gfx_print("Setting up desktop...\n");
+        
+        // Clear all windows from window manager
+        qarma_window_manager.destroy_all(&qarma_window_manager);
+        
+        SERIAL_LOG("[KERNEL] Desktop ready\n");
+    }
     
     // Skip login screen and go directly to shell
     SERIAL_LOG("[KERNEL] Bypassing login screen\n");
     
-    // Clear the screen completely (remove all boot text)
-    memset((void*)fb_info->address, 0, fb_info->pitch * fb_info->height);
-    SERIAL_LOG("[KERNEL] Screen cleared\n");
+    // In text mode, just clear the screen using VGA text mode
+    if (is_text_mode) {
+        SERIAL_LOG("[KERNEL] Clearing VGA text screen\n");
+        extern void vga_text_clear(void);
+        vga_text_clear();
+        gfx_print("QARMA OS v1.0 - 64-bit Mode\n");
+        gfx_print("Ready.\n\n");
+        SERIAL_LOG("[KERNEL] VGA text screen cleared\n");
+    } else {
+        // Graphics mode - clear framebuffer
+        SERIAL_LOG("[KERNEL] Clearing graphics framebuffer\n");
+    SERIAL_LOG("[KERNEL] FB address: 0x");
+    SERIAL_LOG_HEX("", (uint32_t)(fb_info->virt_addr >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)(fb_info->virt_addr));
+    SERIAL_LOG("\n");
     
-    // Clear screen to desktop background
-    extern void splash_clear(rgb_color_t bg);
-    rgb_color_t desktop_bg = {0x2C, 0x3E, 0x50, 255};  // Dark blue-gray
-    splash_clear(desktop_bg);
-    SERIAL_LOG("[KERNEL] Screen cleared to desktop background\n");
+    // Check current CR3 value
+    uint64_t cr3_val;
+    __asm__ volatile("mov %%cr3, %0" : "=r"(cr3_val));
+    uint64_t pml4_addr = cr3_val & 0xFFFFFFFFFFFFF000ULL;  // Mask off flags
+    SERIAL_LOG("[KERNEL] Current CR3/PML4: 0x");
+    SERIAL_LOG_HEX("", (uint32_t)(pml4_addr >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)pml4_addr);
+    SERIAL_LOG("\n");
     
-    // Show compositor console window
-    SERIAL_LOG("[KERNEL] Showing console window\n");
-    extern void console_compositor_show(void);
-    console_compositor_show();
+    // Walk page tables for 7GB address to see if it's mapped
+    uint64_t test_addr = fb_info->virt_addr;  // Framebuffer virtual address
+    SERIAL_LOG("[KERNEL] Walking page tables for VA 0x");
+    SERIAL_LOG_HEX("", (uint32_t)(test_addr >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)test_addr);
+    SERIAL_LOG("\n");
     
-    // Render compositor windows (console)
-    extern void compositor_render_all(void);
-    compositor_render_all();
-    SERIAL_LOG("[KERNEL] Console window rendered and visible\n");
+    // Extract indices: PML4[addr[47:39]] -> PDPT[addr[38:30]] -> PD[addr[29:21]] -> PT[addr[20:12]]
+    uint64_t pml4_idx = (test_addr >> 39) & 0x1FF;
+    uint64_t pdpt_idx = (test_addr >> 30) & 0x1FF;
+    uint64_t pd_idx = (test_addr >> 21) & 0x1FF;
+    
+    SERIAL_LOG("[KERNEL] Indices: PML4[");
+    SERIAL_LOG_DEC("", pml4_idx);
+    SERIAL_LOG("] PDPT[");
+    SERIAL_LOG_DEC("", pdpt_idx);
+    SERIAL_LOG("] PD[");
+    SERIAL_LOG_DEC("", pd_idx);
+    SERIAL_LOG("]\n");
+    
+    // Read PML4 entry (physical address, need to access via identity mapping or direct)
+    // In higher-half kernel, physical addresses < 32MB are identity-mapped
+    // But PML4 might be > 32MB. Let's try reading it assuming identity map works
+    uint64_t* pml4_table = (uint64_t*)pml4_addr;
+    uint64_t pml4_entry = pml4_table[pml4_idx];
+    SERIAL_LOG("[KERNEL] PML4[");
+    SERIAL_LOG_DEC("", pml4_idx);
+    SERIAL_LOG("] = 0x");
+    SERIAL_LOG_HEX("", (uint32_t)(pml4_entry >> 32));
+    SERIAL_LOG_HEX("", (uint32_t)pml4_entry);
+    if (!(pml4_entry & 0x1)) {
+        SERIAL_LOG(" (NOT PRESENT!)\n");
+    } else {
+        SERIAL_LOG(" (present)\n");
+        
+        uint64_t pdpt_addr = pml4_entry & 0xFFFFFFFFFFFFF000ULL;
+        uint64_t* pdpt_table = (uint64_t*)pdpt_addr;
+        uint64_t pdpt_entry = pdpt_table[pdpt_idx];
+        SERIAL_LOG("[KERNEL] PDPT[");
+        SERIAL_LOG_DEC("", pdpt_idx);
+        SERIAL_LOG("] = 0x");
+        SERIAL_LOG_HEX("", (uint32_t)(pdpt_entry >> 32));
+        SERIAL_LOG_HEX("", (uint32_t)pdpt_entry);
+        if (!(pdpt_entry & 0x1)) {
+            SERIAL_LOG(" (NOT PRESENT!)\n");
+        } else {
+            SERIAL_LOG(" (present)\n");
+            
+            uint64_t pd_addr = pdpt_entry & 0xFFFFFFFFFFFFF000ULL;
+            uint64_t* pd_table = (uint64_t*)pd_addr;
+            uint64_t pd_entry = pd_table[pd_idx];
+            SERIAL_LOG("[KERNEL] PD[");
+            SERIAL_LOG_DEC("", pd_idx);
+            SERIAL_LOG("] = 0x");
+            SERIAL_LOG_HEX("", (uint32_t)(pd_entry >> 32));
+            SERIAL_LOG_HEX("", (uint32_t)pd_entry);
+            if (!(pd_entry & 0x1)) {
+                SERIAL_LOG(" (NOT PRESENT!)\n");
+            } else if (pd_entry & 0x80) {
+                SERIAL_LOG(" (2MB page)\n");
+            } else {
+                SERIAL_LOG(" (points to PT)\n");
+            }
+        }
+    }
+    
+    // Test single byte write first
+    SERIAL_LOG("[KERNEL] Testing single byte write...\n");
+    volatile uint8_t* test_ptr = (volatile uint8_t*)(uintptr_t)fb_info->virt_addr;
+    *test_ptr = 0x42;
+    SERIAL_LOG("[KERNEL] Single byte write OK\n");
+    
+    // Test reading it back
+    uint8_t read_val = *test_ptr;
+    SERIAL_LOG("[KERNEL] Read back: 0x");
+    SERIAL_LOG_HEX("", read_val);
+    SERIAL_LOG("\n");
+    
+    // Now try clearing in chunks to see where it fails
+    SERIAL_LOG("[KERNEL] Clearing screen in 1KB chunks...\n");
+    size_t total_size = fb_info->pitch * fb_info->height;
+    size_t chunk_size = 1024;
+    uint8_t* fb_addr = (uint8_t*)(uintptr_t)fb_info->virt_addr;
+    
+    for (size_t offset = 0; offset < total_size; offset += chunk_size) {
+        size_t bytes_to_clear = (offset + chunk_size > total_size) ? (total_size - offset) : chunk_size;
+        memset(fb_addr + offset, 0, bytes_to_clear);
+        
+        // Log every 256KB
+        if (offset % (256 * 1024) == 0) {
+            SERIAL_LOG("[KERNEL] Cleared ");
+            SERIAL_LOG_DEC("", offset / 1024);
+            SERIAL_LOG(" KB\n");
+        }
+    }
+    
+    SERIAL_LOG("[KERNEL] Screen cleared successfully\n");
+    
+        // Clear screen to desktop background (graphics mode only)
+        extern void splash_clear(rgb_color_t bg);
+        rgb_color_t desktop_bg = {0x2C, 0x3E, 0x50, 255};  // Dark blue-gray
+        splash_clear(desktop_bg);
+        SERIAL_LOG("[KERNEL] Screen cleared to desktop background\n");
+        
+        // Show compositor console window (graphics mode only)
+        SERIAL_LOG("[KERNEL] Showing console window\n");
+        extern void console_compositor_show(void);
+        console_compositor_show();
+        
+        // Render compositor windows (console)
+        extern void compositor_render_all(void);
+        compositor_render_all();
+        SERIAL_LOG("[KERNEL] Console window rendered and visible\n");
+    }
     
     // Enable keyboard
     keyboard_set_enabled(true);
@@ -565,6 +645,7 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
     }
     
     // Run shell with desktop visible in background
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'B', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     extern void shell_run(void);
     SERIAL_LOG("[KERNEL] Starting shell with desktop\n");
     shell_run();
@@ -728,36 +809,47 @@ void qarma_run_desktop(void) {
 }
 
 void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'A', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     // Parse multiboot info
     qarma_init_memory(mbi);
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'B', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     multiboot_parse_info(magic, mbi);
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'C', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize graphics
     qarma_init_graphics(mbi);
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'D', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize core subsystems
     qarma_init_core_subsystems();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'E', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize task manager
     extern void task_manager_init(void);
     task_manager_init();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'F', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     SERIAL_LOG("[KERNEL] Task manager initialized\n");
     
     // Initialize filesystems
     qarma_init_filesystems();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'G', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize CPU and interrupts
     qarma_init_cpu();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'H', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize input devices
     qarma_init_input();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'I', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize GUI
     qarma_init_gui();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'J', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Initialize AI persistence
     extern void ai_persistence_init(void);
     ai_persistence_init();
+    __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'K', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Try to load previous AI learning data
     extern int ai_load_state(void);

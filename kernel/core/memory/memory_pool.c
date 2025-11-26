@@ -118,7 +118,7 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
                 return NULL;
             }
             virtual_addr = buf.virt;
-            physical_addr = (uint32_t)buf.phys;
+            physical_addr = buf.phys;
             SERIAL_LOG("Memory Pool: DMA allocation succeeded\n");
         } else {
             // Non-DMA large allocation
@@ -128,7 +128,7 @@ void* memory_pool_alloc(subsystem_id_t subsystem, size_t size, uint32_t flags) {
                 SERIAL_LOG("Memory Pool: heap_alloc FAILED\n");
                 return NULL;
             }
-            physical_addr = (uint32_t)virtual_addr; // Identity-mapped
+            physical_addr = (uint64_t)virtual_addr; // Identity-mapped
         }
     } else {
         // Small allocation - use PMM
@@ -462,7 +462,7 @@ void* memory_pool_alloc_aligned(subsystem_id_t subsystem, size_t size, size_t al
 /**
  * Allocate DMA buffer with physical address
  */
-void* memory_pool_alloc_dma(subsystem_id_t subsystem, size_t size, uint32_t* physical_addr_out) {
+void* memory_pool_alloc_dma(subsystem_id_t subsystem, size_t size, uint64_t* physical_addr_out) {
     if (!physical_addr_out) return NULL;
     
     uint32_t flags = POOL_FLAG_DMA_CAPABLE | POOL_FLAG_CONTIGUOUS | POOL_FLAG_ZERO_INIT;

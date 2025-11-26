@@ -28,7 +28,7 @@ typedef enum {
 // Memory block tracking
 typedef struct memory_block {
     void* virtual_addr;              // Virtual address
-    uint32_t physical_addr;          // Physical address
+    uint64_t physical_addr;          // Physical address (64-bit)
     size_t size;                     // Size in bytes
     uint32_t flags;                  // Allocation flags
     subsystem_id_t owner;            // Owning subsystem
@@ -93,7 +93,7 @@ memory_block_t* memory_pool_find_block(void* ptr);
 void* memory_pool_alloc_numa(subsystem_id_t subsystem, size_t size, uint32_t numa_node, uint32_t flags);
 
 // DMA buffer allocation (physically contiguous)
-void* memory_pool_alloc_dma(subsystem_id_t subsystem, size_t size, uint32_t* physical_addr_out);
+void* memory_pool_alloc_dma(subsystem_id_t subsystem, size_t size, uint64_t* physical_addr_out);
 
 // Statistics
 memory_pool_stats_t* memory_pool_get_stats(void);

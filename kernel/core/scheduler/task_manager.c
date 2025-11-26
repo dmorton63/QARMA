@@ -221,23 +221,23 @@ static void task_setup_initial_stack(task_t *task, task_entry_func_t entry_point
     /* Clear context */
     memset(&task->context, 0, sizeof(cpu_context_t));
     
-    /* Set up stack pointer at end of stack */
-    uint32_t *stack_ptr = (uint32_t*)((char*)task->stack_base + task->stack_size);
+    /* Set up stack pointer at end of stack (64-bit aligned) */
+    uint64_t *stack_ptr = (uint64_t*)((char*)task->stack_base + task->stack_size);
     
-    /* Push initial values onto stack for context switch */
-    *(--stack_ptr) = (uint32_t)entry_point;  /* Return address (EIP) */
-    *(--stack_ptr) = 0;                       /* EBP */
-    *(--stack_ptr) = 0;                       /* EDI */
-    *(--stack_ptr) = 0;                       /* ESI */
-    *(--stack_ptr) = 0;                       /* EDX */
-    *(--stack_ptr) = 0;                       /* ECX */
-    *(--stack_ptr) = 0;                       /* EBX */
-    *(--stack_ptr) = (uint32_t)user_data;    /* EAX (first parameter) */
+    /* Push initial values onto stack for context switch (64-bit) */
+    *(--stack_ptr) = (uint64_t)entry_point;  /* Return address (RIP) */
+    *(--stack_ptr) = 0;                       /* RBP */
+    *(--stack_ptr) = 0;                       /* RDI */
+    *(--stack_ptr) = 0;                       /* RSI */
+    *(--stack_ptr) = 0;                       /* RDX */
+    *(--stack_ptr) = 0;                       /* RCX */
+    *(--stack_ptr) = 0;                       /* RBX */
+    *(--stack_ptr) = (uint64_t)user_data;    /* RAX (first parameter) */
     
-    /* Set initial context for task switching */
-    task->context.esp = (uint32_t)stack_ptr;
-    task->context.eip = (uint32_t)entry_point;
-    task->context.eflags = 0x202;  /* Enable interrupts */
+    /* Set initial context for task switching (64-bit) */
+    task->context.rsp = (uint64_t)stack_ptr;
+    task->context.rip = (uint64_t)entry_point;
+    task->context.rflags = 0x202;  /* Enable interrupts */
 }
 
 /**

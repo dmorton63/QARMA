@@ -1,6 +1,7 @@
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
 
+#include <stdbool.h>
 #include "core/stdtools.h"
 #include "graphics.h"
 #include "qarma_win_handle/qarma_win_handle.h"
@@ -15,11 +16,14 @@ typedef struct {
 } FRAMEBUFFER_LAYER;
 
 typedef struct {
-    uint32_t width;
-    uint32_t height;
-    uint32_t pitch;
-    uint32_t bpp;
-    uint8_t* address;
+    uint64_t phys_addr;   // Physical base address from Multiboot (DO NOT USE DIRECTLY)
+    uint64_t virt_addr;   // Mapped linear address (use this for access)
+    uint32_t pitch;       // Bytes per scanline
+    uint32_t width;       // Width in pixels
+    uint32_t height;      // Height in pixels
+    uint8_t  bpp;         // Bits per pixel
+    uint8_t  type;        // Framebuffer type from multiboot
+    bool     valid;       // True if framebuffer is available
 } FramebufferInfo;
 
 extern FramebufferInfo* fb_info;
