@@ -104,6 +104,11 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     // Run shell instead of desktop (for testing)
     extern void shell_init(void);
     extern void shell_run(void);
+    
+    // Enable interrupts for shell
+    __asm__ volatile("sti");
+    SERIAL_LOG("[KERNEL] Interrupts enabled for shell\n");
+    
     SERIAL_LOG("[KERNEL] About to call shell_init\n");
     shell_init();
     SERIAL_LOG("[KERNEL] shell_init returned, about to call shell_run\n");

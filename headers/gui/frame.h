@@ -52,7 +52,7 @@ typedef struct {
 // Frame Structure
 // ============================================================================
 
-#define MAX_CHILD_CONTROLS 64
+#define MAX_CHILD_CONTROLS 128  // Increased for windows with many controls (e.g., boot messages)
 #define MAX_CHILD_FRAMES 16
 
 struct qarma_frame {

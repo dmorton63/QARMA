@@ -34,7 +34,7 @@
 // Debug flag: Set to 1 to enable mouse event logging, 0 to disable
 #define DEBUG_MOUSE_EVENTS 1
 #include "qarma_win_handle/main_window.h"
-// #include "gui/boot_messages.h"  // Legacy - disabled
+#include "gui/boot_messages.h"  // New architecture
 
 // External function declarations
 extern void gdt_init(void);
@@ -315,36 +315,33 @@ void qarma_init_gui(void) {
     #endif
 }
 
-#if 0  // Legacy - boot messages disabled
 void qarma_show_boot_messages(void) {
+    SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW (NEW) =====\n");
+    
     // Enable interrupts for keyboard input
     __asm__ volatile("sti");
     SERIAL_LOG("[KERNEL] Interrupts enabled for boot messages\n");
     
-    SERIAL_LOG("[KERNEL] ===== SKIPPING BOOT MESSAGES WINDOW =====\n");
-    // Skip boot messages and go straight to desktop
-    // Clear screen and backing store before continuing (for double buffering)
-    extern void splash_clear(rgb_color_t bg);
-    rgb_color_t desktop_bg = {0x2C, 0x3E, 0x50, 255};  // Dark blue-gray
-    splash_clear(desktop_bg);
-    SERIAL_LOG("[KERNEL] Screen and backing store cleared, continuing to login\n");
-    return;
-    
-    SERIAL_LOG("[KERNEL] ===== CREATING BOOT MESSAGES WINDOW =====\n");
-    
-    // Create boot messages window (centered on screen)
-    int win_w = 600;
-    int win_h = 400;
-    int win_x = (fb_info->width - win_w) / 2;
-    int win_y = (fb_info->height - win_h) / 2;
-    
-    BootMessagesWindow* boot_msg_win = boot_messages_create(win_x, win_y, win_w, win_h);
-    if (!boot_msg_win) {
-        SERIAL_LOG("[KERNEL] Failed to create boot messages window\n");
+    // Get screen dimensions
+    display_info_t* display = graphics_get_info();
+    if (!display) {
+        SERIAL_LOG("[KERNEL] ERROR: Could not get display info\n");
         return;
     }
     
-    SERIAL_LOG("[KERNEL] Boot messages window created\n");
+    // Create boot messages window (centered on screen)
+    int32_t win_w = 600;
+    int32_t win_h = 400;
+    int32_t win_x = (display->width - win_w) / 2;
+    int32_t win_y = (display->height - win_h) / 2;
+    
+    boot_messages_window_t* boot_msg_win = boot_messages_create(win_x, win_y, win_w, win_h);
+    if (!boot_msg_win) {
+        SERIAL_LOG("[KERNEL] ERROR: Failed to create boot messages window\n");
+        return;
+    }
+    
+    SERIAL_LOG("[KERNEL] Boot messages window created successfully\n");
     
     // Add boot messages
     boot_messages_add(boot_msg_win, "QARMA Boot Sequence");
@@ -352,122 +349,56 @@ void qarma_show_boot_messages(void) {
     boot_messages_add(boot_msg_win, "");
     boot_messages_add(boot_msg_win, "[OK] Multiboot information parsed");
     boot_messages_add(boot_msg_win, "[OK] Memory manager initialized");
+    boot_messages_add(boot_msg_win, "[OK] Handle manager initialized");
+    boot_messages_add(boot_msg_win, "[OK] Message system ready");
+    boot_messages_add(boot_msg_win, "[OK] Frame system initialized");
+    boot_messages_add(boot_msg_win, "[OK] Control system ready");
     boot_messages_add(boot_msg_win, "[OK] Heap allocator ready");
     boot_messages_add(boot_msg_win, "[OK] Framebuffer detected");
     boot_messages_add(boot_msg_win, "[OK] Graphics subsystem initialized");
     boot_messages_add(boot_msg_win, "[OK] Video subsystem ready");
-    boot_messages_add(boot_msg_win, "[OK] PNG decoder functional");
     boot_messages_add(boot_msg_win, "[OK] Filesystem subsystem initialized");
-    boot_messages_add(boot_msg_win, "[OK] VFS mounted");
-    boot_messages_add(boot_msg_win, "[OK] ISO9660 filesystem ready");
     boot_messages_add(boot_msg_win, "[OK] GDT initialized");
     boot_messages_add(boot_msg_win, "[OK] IDT and interrupts configured");
     boot_messages_add(boot_msg_win, "[OK] Keyboard driver loaded");
     boot_messages_add(boot_msg_win, "[OK] PCI subsystem initialized");
-    boot_messages_add(boot_msg_win, "[OK] USB mouse driver initialized");
     boot_messages_add(boot_msg_win, "[OK] QARMA window manager started");
     boot_messages_add(boot_msg_win, "[OK] Input event system ready");
     boot_messages_add(boot_msg_win, "");
     boot_messages_add(boot_msg_win, "System initialization complete!");
     boot_messages_add(boot_msg_win, "");
-    boot_messages_add(boot_msg_win, "Press TAB to focus close button,");
-    boot_messages_add(boot_msg_win, "then ENTER to continue to login.");
+    boot_messages_add(boot_msg_win, "Press ESC to continue...");
+    
+    SERIAL_LOG("[KERNEL] Messages added, rendering window\n");
     
     // Render the window
     boot_messages_render(boot_msg_win);
     
-    // Blit to framebuffer
-    uint32_t* fb = (uint32_t*)(uintptr_t)fb_info->virt_addr;
-    if (boot_msg_win->main_window && boot_msg_win->main_window->pixel_buffer) {
-        uint32_t* win_buffer = boot_msg_win->main_window->pixel_buffer;
-        int src_w = boot_msg_win->main_window->size.width;
-        int src_h = boot_msg_win->main_window->size.height;
-        int src_x = boot_msg_win->main_window->x;
-        int src_y = boot_msg_win->main_window->y;
-        
-        for (int y = 0; y < src_h; y++) {
-            for (int x = 0; x < src_w; x++) {
-                int fb_x = src_x + x;
-                int fb_y = src_y + y;
-                if (fb_x >= 0 && fb_x < (int)fb_info->width && 
-                    fb_y >= 0 && fb_y < (int)fb_info->height) {
-                    fb[fb_y * fb_info->width + fb_x] = win_buffer[y * src_w + x];
-                }
-            }
-        }
-    }
+    SERIAL_LOG("[KERNEL] Window rendered, entering event loop\n");
     
-    SERIAL_LOG("[KERNEL] Boot messages window rendered\n");
-    
-    // Wait for user to acknowledge boot complete
-    keyboard_enable_window_mode(true);
-    keyboard_set_enabled(false);
-    
-    SERIAL_LOG("[KERNEL] Waiting for user to close boot messages (auto-close in 10 frames)\n");
-    
-    bool boot_msg_closed = false;
-    uint32_t wait_count = 0;
-    const uint32_t auto_close_delay = 10;
-    
-    while (!boot_msg_closed) {
-        // Auto-close after delay
-        if (wait_count++ >= auto_close_delay) {
-            SERIAL_LOG("[KERNEL] Auto-closing boot window\n");
-            boot_msg_closed = true;
-            break;
-        }
-        
-        key_event_t key_event;
-        if (keyboard_get_window_key_event(&key_event)) {
-            if (!key_event.released) {
-                // Handle close (Enter when focused)
-                if (key_event.scancode == KEY_ENTER && boot_msg_win->close_button_ctrl.focused) {
-                    SERIAL_LOG("[KERNEL] Proceeding to login\n");
-                    boot_msg_closed = true;
-                    break;
-                }
-                
-                // Handle tab (focus close button)
-                if (key_event.scancode == KEY_TAB) {
-                    extern void close_button_set_focus(CloseButton* cb, bool focused);
-                    close_button_set_focus(&boot_msg_win->close_button_ctrl, 
-                                         !boot_msg_win->close_button_ctrl.focused);
-                    boot_messages_render(boot_msg_win);
-                    
-                    // Re-blit to framebuffer
-                    if (boot_msg_win->main_window && boot_msg_win->main_window->pixel_buffer) {
-                        uint32_t* win_buffer = boot_msg_win->main_window->pixel_buffer;
-                        int src_w = boot_msg_win->main_window->size.width;
-                        int src_h = boot_msg_win->main_window->size.height;
-                        int src_x = boot_msg_win->main_window->x;
-                        int src_y = boot_msg_win->main_window->y;
-                        
-                        for (int y = 0; y < src_h; y++) {
-                            for (int x = 0; x < src_w; x++) {
-                                int fb_x = src_x + x;
-                                int fb_y = src_y + y;
-                                if (fb_x >= 0 && fb_x < (int)fb_info->width && 
-                                    fb_y >= 0 && fb_y < (int)fb_info->height) {
-                                    fb[fb_y * fb_info->width + fb_x] = win_buffer[y * src_w + x];
-                                }
-                            }
-                        }
-                    }
-                }
+    // Simple event loop - wait for ESC key
+    bool done = false;
+    while (!done) {
+        // Check for keyboard events
+        if (keyboard_has_event()) {
+            key_event_t event = keyboard_poll_event();
+            if (!event.released && event.scancode == 0x01) {  // ESC key pressed (not released)
+                SERIAL_LOG("[KERNEL] ESC pressed, closing boot messages\n");
+                done = true;
             }
         }
         
-        sleep_ms(16); // ~60fps
+        // Small delay to avoid tight loop
+        sleep_ms(10);
     }
+    
+    SERIAL_LOG("[KERNEL] Boot messages acknowledged, cleaning up\n");
     
     // Destroy boot messages window
     boot_messages_destroy(boot_msg_win);
-    SERIAL_LOG("[KERNEL] Boot messages window closed\n");
     
-    // Clear screen before showing desktop
-    memset((void*)(uintptr_t)fb_info->virt_addr, 0, fb_info->pitch * fb_info->height);
+    SERIAL_LOG("[KERNEL] Boot messages complete\n");
 }
-#endif  // End legacy boot messages
 
 #if 0  // Legacy - login screen disabled
 void qarma_run_login_screen(void (*on_success)(const char* username)) {
@@ -880,6 +811,8 @@ void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     extern int ai_load_state(void);
     ai_load_state();
     
-    // Show boot messages
-    //qarma_show_boot_messages();
+    // Show boot messages - DISABLED: frame_render() is not implemented yet
+    // qarma_show_boot_messages();
+    
+    SERIAL_LOG("[KERNEL] Skipping boot messages (rendering not implemented)\n");
 }
