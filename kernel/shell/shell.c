@@ -38,8 +38,9 @@ void show_prompt(const char* path) {
     static char prompt[256];  // Use static to avoid stack overflow
     SERIAL_LOG("[SHELL] About to sprintf\n");
     sprintf(prompt, "[Qarma OS]%s", path);
-    SERIAL_LOG("[SHELL] About to gfx_print prompt\n");
-    gfx_print(prompt);
+    SERIAL_LOG("[SHELL] Prompt formatted, skipping gfx_print (using console window instead)\n");
+    // TODO: Send to console window instead of gfx_print
+    // gfx_print(prompt);
     SERIAL_LOG("[SHELL] show_prompt() exit\n");
 }
 
@@ -53,9 +54,12 @@ void process_command(const char* command) {
 }
 
 void screen_printf(const char* format, ...) {
-    // Simple implementation - just pass to gfx_print for now
-    // In a full implementation, this would handle printf-style formatting
-    gfx_print(format);
+    // Simple implementation - log to serial for now
+    SERIAL_LOG("[SHELL] screen_printf: ");
+    SERIAL_LOG(format);
+    SERIAL_LOG("\n");
+    // TODO: Send to console window instead
+    // gfx_print(format);
 }
 
 // Printf-style function for commands

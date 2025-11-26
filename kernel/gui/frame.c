@@ -429,12 +429,15 @@ void frame_render(qarma_frame_t* frame) {
     
     // Get framebuffer info
     extern FramebufferInfo* fb_info;
+    extern uint32_t* backing_store;  // Use backing store for double buffering
+    
     if (!fb_info || !fb_info->virt_addr) {
         frame->dirty = false;
         return;
     }
     
-    uint32_t* framebuffer = (uint32_t*)(uintptr_t)fb_info->virt_addr;
+    // Render to backing store if available, otherwise to framebuffer
+    uint32_t* framebuffer = backing_store ? backing_store : (uint32_t*)(uintptr_t)fb_info->virt_addr;
     int32_t fb_width = fb_info->width;
     int32_t fb_height = fb_info->height;
     
@@ -496,6 +499,24 @@ void frame_render(qarma_frame_t* frame) {
 void frame_render_all(void) {
     if (g_frame_system.root_frame) {
         frame_render(g_frame_system.root_frame);
+    }
+}
+
+void frame_swap_buffers(void) {
+    // Copy backing store to actual framebuffer
+    extern FramebufferInfo* fb_info;
+    extern uint32_t* backing_store;
+    
+    if (!fb_info || !fb_info->virt_addr || !backing_store) {
+        return;
+    }
+    
+    uint32_t* framebuffer = (uint32_t*)(uintptr_t)fb_info->virt_addr;
+    uint32_t pixels = fb_info->width * fb_info->height;
+    
+    // Fast memory copy from back buffer to front buffer
+    for (uint32_t i = 0; i < pixels; i++) {
+        framebuffer[i] = backing_store[i];
     }
 }
 

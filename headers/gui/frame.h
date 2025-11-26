@@ -275,6 +275,11 @@ void frame_render(qarma_frame_t* frame);
 void frame_render_all(void);
 
 /**
+ * Swap back buffer to front buffer (double buffering).
+ */
+void frame_swap_buffers(void);
+
+/**
  * Check if point is inside frame.
  * @param frame Frame to test
  * @param x X coordinate (absolute)
