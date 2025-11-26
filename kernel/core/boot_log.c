@@ -56,12 +56,12 @@ void boot_log_push_hex(const char* label, uint32_t value) {
 
 
 void boot_log_flush(void){
-    for (uint32_t i = 0; i < boot_log_count; i++) {
-        gfx_print(boot_log[i]);
-        gfx_print("\n");
-    }
-    boot_log_count = 0;
-
+    // Boot log messages are now in boot_log[] array
+    // They can be retrieved with boot_log_get_messages()
+    // Don't use gfx_print() - it causes crashes
+    // The messages will be displayed via boot_messages window
+    SERIAL_LOG("[BOOT_LOG] Flush called, messages ready for display\n");
+    // Don't clear - let boot_messages window read them
 }
 
 
@@ -248,4 +248,15 @@ void debug_buffer_flush_lines() {
         SERIAL_LOG("\n");
     }
     debug_line_count = 0;
+}
+
+void boot_log_get_messages(char messages[][BOOT_LOG_LINE_LENGTH], uint32_t* count) {
+    *count = boot_log_count;
+    for (uint32_t i = 0; i < boot_log_count; i++) {
+        strncpy(messages[i], boot_log[i], BOOT_LOG_LINE_LENGTH);
+    }
+}
+
+void boot_log_clear(void) {
+    boot_log_count = 0;
 }

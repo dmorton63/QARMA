@@ -27,3 +27,7 @@ void debug_buffer_push_dec(const char *label, uint32_t value);
 void debug_buffer_flush_lines();
 void debug_buffer_append_hex(const char* label, uint32_t value);
 void debug_buffer_append_dec(const char* label, uint32_t value);
+
+// Get boot log messages for display in boot_messages window
+void boot_log_get_messages(char messages[][BOOT_LOG_LINE_LENGTH], uint32_t* count);
+void boot_log_clear(void);

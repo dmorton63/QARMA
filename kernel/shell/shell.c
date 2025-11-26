@@ -34,14 +34,10 @@ void shell_init(void) {
 }
 
 void show_prompt(const char* path) {
-    SERIAL_LOG("[SHELL] show_prompt() entry\n");
-    static char prompt[256];  // Use static to avoid stack overflow
-    SERIAL_LOG("[SHELL] About to sprintf\n");
-    sprintf(prompt, "[Qarma OS]%s", path);
-    SERIAL_LOG("[SHELL] Prompt formatted, skipping gfx_print (using console window instead)\n");
-    // TODO: Send to console window instead of gfx_print
-    // gfx_print(prompt);
-    SERIAL_LOG("[SHELL] show_prompt() exit\n");
+    SERIAL_LOG("[SHELL] show_prompt() called - skipping display (console window will handle)\n");
+    // Don't use sprintf or gfx_print - both cause crashes
+    // The console window will display the prompt when ready
+    // For now, just log to serial
 }
 
 void process_command(const char* command) {
