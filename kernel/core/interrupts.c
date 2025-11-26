@@ -179,9 +179,25 @@ void send_eoi(uint8_t int_no) {
 // System Initialization
 // ────────────────
 void keyboard_service_handler(regs_t* regs) {
+    // Check status register to determine if data is from keyboard or mouse
+    uint8_t status = inb(0x64);
     uint8_t scancode = inb(0x60);
     
-    // Debug logging
+    // Bit 5 of status register: 0 = keyboard data, 1 = mouse data
+    if (status & 0x20) {
+        // This is mouse data leaking into keyboard IRQ - discard it
+        static int mouse_discard_count = 0;
+        if (mouse_discard_count < 10) {
+            SERIAL_LOG("KBD IRQ: Discarding mouse data 0x");
+            SERIAL_LOG_HEX("", scancode);
+            SERIAL_LOG("\n");
+            mouse_discard_count++;
+        }
+        send_eoi(33);
+        return;
+    }
+    
+    // Debug logging for actual keyboard data
     static int kbd_log_count = 0;
     if (kbd_log_count < 100) {
         SERIAL_LOG_HEX("KBD IRQ: 0x", scancode);
