@@ -5,14 +5,14 @@
 #include "qarma_win_handle/qarma_win_factory.h"
 #include "core/memory/heap.h"
 #include "gui/controls/close_button.h"
-#include "gui/controls/label.h"
-#include "gui/status_bar.h"
-#include "gui/console_window.h"
+// #include "gui/controls/label.h"  // Legacy - disabled
+// #include "gui/status_bar.h"  // Legacy - disabled
+// #include "gui/console_window.h"  // Legacy - disabled
 #include "quantum/quantum_register_example.h"
 #include "config.h"
 
 // Old console window (DISABLED - using compositor console instead)
-static ConsoleWindow* g_console_old = NULL;
+// static ConsoleWindow* g_console_old = NULL;  // Legacy - disabled
 
 // Forward declarations for vtable
 static void main_window_vtable_update(QARMA_WIN_HANDLE* self, QARMA_TICK_CONTEXT* ctx);
@@ -86,7 +86,7 @@ MainWindow* main_window_create(void) {
     win->traits = mw;  // Store MainWindow pointer in traits
     
     // Old console system disabled - using compositor console instead
-    g_console_old = NULL;
+    // g_console_old = NULL;  // Legacy - disabled
     win->buffer_size = win->size;
     // Allocate pixel buffer for title bar only
     size_t buffer_bytes = screen_w * TITLE_BAR_HEIGHT * sizeof(uint32_t);
@@ -115,10 +115,10 @@ MainWindow* main_window_create(void) {
     }
 
     // Create title bar label (10px from left, 8px from top)
-    label_init(&mw->title_label, 10, 8, win->title, 0xE0E0E0);
-    mw->title_label.base.visible = true;
-    mw->title_label.base.enabled = false;  // Title is not interactive
-    qarma_win_add_control(win, &mw->title_label.base);
+    // Legacy label disabled - TODO: Use hardened label control
+    // mw->title_label.base.visible = true;
+    // mw->title_label.base.enabled = false;
+    // qarma_win_add_control(win, &mw->title_label.base);
 
     // Create close button in top-right corner (20x20 button, 5px margin)
     int close_btn_size = 20;
@@ -169,10 +169,10 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
     
     // Old console disabled - using compositor console
     // If console is visible, it gets priority for events
-    if (g_console_old && g_console_old->visible) {
-        console_window_handle_event(g_console_old, event);
-        return;
-    }
+    // if (g_console_old && g_console_old->visible) {  // Legacy - disabled
+    //     console_window_handle_event(g_console_old, event);
+    //     return;
+    // }
 
     // Try dispatching to controls first
     if (qarma_win_dispatch_event(mw->win, event)) {
@@ -225,9 +225,9 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
         }
         // Ctrl+T - Toggle console (handled by compositor console handler now)
         else if (event->data.key.scancode == 0x14 && (event->data.key.modifiers & QARMA_MOD_CTRL)) {  // Ctrl+T
-            if (g_console_old) {
-                console_window_set_visible(g_console_old, !g_console_old->visible);
-            }
+            // if (g_console_old) {  // Legacy - disabled
+            //     console_window_set_visible(g_console_old, !g_console_old->visible);
+            // }
         }
         // Q key - Run quantum register examples
         else if (event->data.key.scancode == 0x10) {  // Q

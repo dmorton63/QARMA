@@ -97,8 +97,8 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     qarma_init_all(magic, mbi);
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'N', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
-    // Run login screen
-    qarma_run_login_screen(on_login_success);
+    // Run login screen - Legacy disabled
+    // qarma_run_login_screen(on_login_success);
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'O', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
     // Run shell instead of desktop (for testing)

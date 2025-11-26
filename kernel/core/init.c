@@ -29,12 +29,12 @@
 #include "core/memory/heap.h"
 #include "drivers/usb/usb_mouse.h"
 #include "keyboard/command.h"
-#include "qarma_win_handle/login_screen.h"
+// #include "qarma_win_handle/login_screen.h"  // Legacy - disabled
 
 // Debug flag: Set to 1 to enable mouse event logging, 0 to disable
 #define DEBUG_MOUSE_EVENTS 1
 #include "qarma_win_handle/main_window.h"
-#include "gui/boot_messages.h"
+// #include "gui/boot_messages.h"  // Legacy - disabled
 
 // External function declarations
 extern void gdt_init(void);
@@ -63,9 +63,10 @@ extern png_image_t* load_splash_image(void);
 extern FramebufferInfo* fb_info;
 extern void sleep_ms(uint32_t ms);
 extern bool keyboard_get_window_key_event(key_event_t* out);
-extern void login_screen_handle_event(LoginScreen* login, QARMA_INPUT_EVENT* event);
-extern void login_screen_update(LoginScreen* login);
-extern void login_screen_render(LoginScreen* login);
+// Legacy - disabled
+// extern void login_screen_handle_event(LoginScreen* login, QARMA_INPUT_EVENT* event);
+// extern void login_screen_update(LoginScreen* login);
+// extern void login_screen_render(LoginScreen* login);
 
 void qarma_init_memory(multiboot_info_t* mbi) {
     memory_init();
@@ -314,6 +315,7 @@ void qarma_init_gui(void) {
     #endif
 }
 
+#if 0  // Legacy - boot messages disabled
 void qarma_show_boot_messages(void) {
     // Enable interrupts for keyboard input
     __asm__ volatile("sti");
@@ -465,7 +467,9 @@ void qarma_show_boot_messages(void) {
     // Clear screen before showing desktop
     memset((void*)(uintptr_t)fb_info->virt_addr, 0, fb_info->pitch * fb_info->height);
 }
+#endif  // End legacy boot messages
 
+#if 0  // Legacy - login screen disabled
 void qarma_run_login_screen(void (*on_success)(const char* username)) {
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'1', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     gfx_print("Starting desktop environment...\n");
@@ -784,6 +788,7 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
     SERIAL_LOG("[KERNEL] Console input/output re-enabled\n");
     #endif
 }
+#endif  // End legacy login screen
 
 void qarma_run_desktop(void) {
     SERIAL_LOG("[KERNEL] Entering desktop loop\n");

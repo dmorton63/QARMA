@@ -8,9 +8,12 @@
 // Core components
 #include "control_base.h"
 #include "renderer.h"
+#include "qarma_control.h"
 
-// Controls
-#include "controls/textbox.h"
-#include "controls/button.h"
-#include "controls/label.h"
+// Hardened Controls (message-driven)
+#include "controls/qarma_textbox.h"
+#include "controls/qarma_button.h"
+#include "controls/qarma_label.h"
+
+// Legacy Controls (still in use)
 #include "controls/close_button.h"
