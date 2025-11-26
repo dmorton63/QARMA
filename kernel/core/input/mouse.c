@@ -99,6 +99,26 @@ void mouse_init(void) {
     // Clear packet buffer
     packet_index = 0;
     
+    // Disable PS/2 mouse to prevent interference with USB mouse
+    SERIAL_LOG("Mouse: Disabling PS/2 mouse controller\n");
+    wait_for_ps2();
+    outb(PS2_CMD_PORT, 0xA7);  // Disable mouse port
+    wait_for_ps2();
+    
+    // Also disable mouse interrupts in the controller config
+    outb(PS2_CMD_PORT, 0x20);  // Read controller config
+    wait_for_ps2();
+    uint8_t config = ps2_read_data();
+    config &= ~0x02;  // Disable mouse interrupt (IRQ12)
+    config |= 0x20;   // Disable mouse clock
+    wait_for_ps2();
+    outb(PS2_CMD_PORT, 0x60);  // Write controller config
+    wait_for_ps2();
+    outb(PS2_DATA_PORT, config);
+    wait_for_ps2();
+    
+    SERIAL_LOG("Mouse: PS/2 mouse disabled\n");
+    
     // Initialize USB mouse
     extern int usb_mouse_init(void);
     int result = usb_mouse_init();
