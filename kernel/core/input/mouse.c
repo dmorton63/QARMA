@@ -99,13 +99,14 @@ void mouse_init(void) {
     // Clear packet buffer
     packet_index = 0;
     
-    // Initialize USB mouse - focus on fixing UHCI/TD issues
+    // Initialize USB mouse
     extern int usb_mouse_init(void);
     int result = usb_mouse_init();
     if (result == 0) {
         SERIAL_LOG("Mouse: USB mouse initialized successfully\n");
     } else {
         SERIAL_LOG("Mouse: USB mouse initialization failed\n");
+        SERIAL_LOG("Mouse: No mouse available\n");
     }
 }
 

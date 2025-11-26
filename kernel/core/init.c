@@ -685,7 +685,9 @@ void qarma_run_desktop(void) {
     }
     console_compositor_print("======================");
     console_compositor_print("");
-    console_compositor_print("System ready. Press Ctrl+T to toggle console.");
+    console_compositor_print("System ready.");
+    console_compositor_print("Keyboard: Ctrl+T = toggle console, Type commands");
+    console_compositor_print("Mouse: Arrow keys = move cursor, Space = click");
     console_compositor_print("");
     
     SERIAL_LOG("[KERNEL] Boot log added to console, desktop active\n");
