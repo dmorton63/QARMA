@@ -16,19 +16,13 @@
 
 /*
  * Boot Messages Window Structure
- * Uses qarma_frame_t container with qarma_control_t* label array for message lines
+ * Uses qarma_frame_t container with a single textbox control for all messages
  */
 typedef struct {
     qarma_frame_t* main_frame;           // Main window frame
     qarma_control_t* title_label;        // Window title
     qarma_control_t* close_button;       // Close button
-    qarma_control_t* message_labels[MAX_BOOT_MESSAGES];  // Message line labels
-    
-    // Message data
-    char messages[MAX_BOOT_MESSAGES][MAX_MESSAGE_LENGTH];
-    int32_t message_count;
-    int32_t scroll_offset;               // For scrolling
-    int32_t visible_lines;               // How many lines can be displayed
+    qarma_control_t* message_textbox;    // Single textbox for all messages
     
     // State
     bool visible;
@@ -53,7 +47,7 @@ void boot_messages_destroy(boot_messages_window_t* bmw);
 
 /*
  * Add a message to the window
- * Automatically scrolls to show latest message
+ * Appends message as new line in textbox
  */
 void boot_messages_add(boot_messages_window_t* bmw, const char* message);
 
@@ -61,12 +55,6 @@ void boot_messages_add(boot_messages_window_t* bmw, const char* message);
  * Clear all messages
  */
 void boot_messages_clear(boot_messages_window_t* bmw);
-
-/*
- * Scroll messages
- * delta: positive = scroll down, negative = scroll up
- */
-void boot_messages_scroll(boot_messages_window_t* bmw, int32_t delta);
 
 /*
  * Render the window
