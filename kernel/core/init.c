@@ -48,6 +48,7 @@ extern void memory_pool_init(void);
 extern void pipeline_system_init(void);
 extern void handle_manager_init(void);
 extern void message_system_init(void);
+extern void frame_system_init(void);
 extern void fs_init(void);
 extern void pci_init(void);
 extern int usb_mouse_init(void);
@@ -91,13 +92,9 @@ void qarma_init_core_subsystems(void) {
     message_system_init();
     gfx_print("Message system initialized.\n");
     
-    // Initialize handle manager (must be first - everything needs handles)
-    handle_manager_init();
-    gfx_print("Handle manager initialized.\n");
-    
-    // Initialize message system (second - communication layer)
-    message_system_init();
-    gfx_print("Message system initialized.\n");
+    // Initialize frame system (third - UI containment layer)
+    frame_system_init();
+    gfx_print("Frame system initialized.\n");
     
     // Initialize core allocation manager
     core_manager_init();
