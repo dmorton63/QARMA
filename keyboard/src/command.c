@@ -399,6 +399,7 @@ static const simple_command_t commands[] = {
     {"aisave", cmd_aisave},
     {"aiload", cmd_aiload},
     {"aistats", cmd_aistats},
+    {"ai_quicktest", cmd_aiquicktest},
     {"quantum", cmd_quantum},
     {"tasktest", cmd_tasktest},
     {"ide", cmd_ide},
@@ -649,6 +650,62 @@ void cmd_aistats(int argc, char** argv) {
     // Show command predictor stats
     extern void command_cache_print_stats(void);
     command_cache_print_stats();
+}
+
+// Quick save/load parity test for AI persistence
+void cmd_aiquicktest(int argc, char** argv) {
+    (void)argc; (void)argv;
+
+    gfx_print("Running AI quick test (cache save/load) ...\n");
+
+    // Seed predictor cache
+    extern void command_cache_clear(void);
+    extern bool command_cache_result(const char* command, const char* result);
+    typedef struct { uint32_t total_predictions, cache_hits, cache_misses, cache_size; float hit_rate; } predictor_stats_t;
+    extern void command_predictor_get_stats(predictor_stats_t* stats_out);
+
+    command_cache_clear();
+    command_cache_result("echo test1", "ok1");
+    command_cache_result("echo test2", "ok2");
+    command_cache_result("echo test3", "ok3");
+
+    predictor_stats_t stats_before;
+    command_predictor_get_stats(&stats_before);
+    gfx_print("  Cache size before save: ");
+    gfx_print_decimal(stats_before.cache_size);
+    gfx_print("\n");
+
+    extern int ai_save_state(void);
+    if (ai_save_state() != 0) {
+        gfx_print("  Save failed\n");
+        return;
+    }
+
+    // Clear and reload
+    command_cache_clear();
+    predictor_stats_t stats_cleared;
+    command_predictor_get_stats(&stats_cleared);
+    gfx_print("  Cache size after clear: ");
+    gfx_print_decimal(stats_cleared.cache_size);
+    gfx_print("\n");
+
+    extern int ai_load_state(void);
+    if (ai_load_state() != 0) {
+        gfx_print("  Load failed\n");
+        return;
+    }
+
+    predictor_stats_t stats_after;
+    command_predictor_get_stats(&stats_after);
+    gfx_print("  Cache size after load: ");
+    gfx_print_decimal(stats_after.cache_size);
+    gfx_print("\n");
+
+    if (stats_after.cache_size == stats_before.cache_size) {
+        gfx_print("AI quick test: PASS\n");
+    } else {
+        gfx_print("AI quick test: FAIL (sizes differ)\n");
+    }
 }
 
 // Background task functions for testing quantum AI

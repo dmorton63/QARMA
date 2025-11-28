@@ -11,10 +11,9 @@
 #include "memory/heap.h"
 #include "config.h"
 
-// Paths for AI data files
-#define AI_BASE_PATH "/disk"
-#define QUANTUM_LEARNING_FILE "/disk/qlearn.dat"
-#define COMMAND_CACHE_FILE "/disk/cmdcache.dat"
+// Stable state file paths (prefer host, fallback to RAM disk)
+#define AI_PRIMARY_FILE  "/host/ai_state.bin"
+#define AI_FALLBACK_FILE "/ramdisk/ai_state.bin"
 
 // Statistics
 static struct {
@@ -332,58 +331,179 @@ int ai_load_command_cache(const char* path) {
 
 int ai_save_state(void) {
     gfx_print("Saving AI learning state...\n");
-    
+
+    // Collect sections
+    void* q_data = NULL; uint32_t q_size = 0;
+    void* c_data = NULL; uint32_t c_size = 0;
+    quantum_ai_export_learning_data(&q_data, &q_size);
+    command_predictor_export_cache(&c_data, &c_size);
+
+    // Choose target (saving to /host requires 9P create, not yet supported)
+    const char* path = AI_FALLBACK_FILE;
+    SERIAL_LOG("[AI_PERSIST] Saving to "); SERIAL_LOG((char*)path); SERIAL_LOG("\n");
+
+    vfs_node_t* node = vfs_create(path, VFS_TYPE_FILE);
+    if (!node) {
+        gfx_print("  Error: Could not create state file\n");
+        if (q_data) heap_free(q_data);
+        if (c_data) heap_free(c_data);
+        return -1;
+    }
+
+    size_t offset = 0;
     int result = 0;
-    
-    // Save quantum learning
-    if (ai_save_quantum_learning(QUANTUM_LEARNING_FILE) != 0) {
-        gfx_print("  Warning: Failed to save quantum learning\n");
-        result = -1;
+
+    // Write available sections
+    if (q_data && q_size > 0) {
+        // Write quantum section
+        ai_persistence_header_t hdr_q;
+        hdr_q.magic = AI_PERSISTENCE_MAGIC;
+        hdr_q.version = 1;
+        hdr_q.data_type = AI_DATA_QUANTUM_LEARNING;
+        hdr_q.data_size = q_size;
+        hdr_q.checksum = calculate_crc32((const uint8_t*)q_data, q_size);
+        int w = vfs_write(node, &hdr_q, sizeof(hdr_q), offset);
+        if (w != (int)sizeof(hdr_q)) {
+            gfx_print("  Quantum learning: Error\n");
+            result = -1;
+        } else {
+            offset += sizeof(hdr_q);
+            w = vfs_write(node, q_data, q_size, offset);
+            if (w != (int)q_size) {
+                gfx_print("  Quantum learning: Error\n");
+                result = -1;
+            } else {
+                offset += q_size;
+                g_persistence_stats.bytes_written += sizeof(hdr_q) + q_size;
+                gfx_print("  Quantum learning: OK\n");
+            }
+        }
     } else {
-        gfx_print("  Quantum learning: OK\n");
+        gfx_print("  Quantum learning: None\n");
     }
-    
-    // Save command cache
-    if (ai_save_command_cache(COMMAND_CACHE_FILE) != 0) {
-        gfx_print("  Command cache: Error\n");
-        result = -1;
+
+    if (c_data && c_size > 0) {
+        // Write command cache section
+        ai_persistence_header_t hdr_c;
+        hdr_c.magic = AI_PERSISTENCE_MAGIC;
+        hdr_c.version = 1;
+        hdr_c.data_type = AI_DATA_COMMAND_CACHE;
+        hdr_c.data_size = c_size;
+        hdr_c.checksum = calculate_crc32((const uint8_t*)c_data, c_size);
+        int w = vfs_write(node, &hdr_c, sizeof(hdr_c), offset);
+        if (w != (int)sizeof(hdr_c)) {
+            gfx_print("  Command cache: Error\n");
+            result = -1;
+        } else {
+            offset += sizeof(hdr_c);
+            w = vfs_write(node, c_data, c_size, offset);
+            if (w != (int)c_size) {
+                gfx_print("  Command cache: Error\n");
+                result = -1;
+            } else {
+                offset += c_size;
+                g_persistence_stats.bytes_written += sizeof(hdr_c) + c_size;
+                gfx_print("  Command cache: OK\n");
+            }
+        }
     } else {
-        gfx_print("  Command cache: OK\n");
+        gfx_print("  Command cache: Empty\n");
     }
-    
+
     if (result == 0) {
         gfx_print("AI state saved successfully!\n");
+        g_persistence_stats.saves_successful++;
     }
-    
+    g_persistence_stats.saves_attempted++;
+
+    if (q_data) heap_free(q_data);
+    if (c_data) heap_free(c_data);
     return result;
 }
 
 int ai_load_state(void) {
     gfx_print("Loading AI learning state...\n");
-    
-    int loaded = 0;
-    
-    // Load quantum learning
-    if (ai_load_quantum_learning(QUANTUM_LEARNING_FILE) == 0) {
-        gfx_print("  Quantum learning: Loaded\n");
-        loaded++;
-    } else {
-        gfx_print("  Quantum learning: Not found (starting fresh)\n");
+
+    // Prefer host file; fallback to RAM disk
+    vfs_node_t* node = vfs_open(AI_PRIMARY_FILE);
+    const char* used_path = AI_PRIMARY_FILE;
+    if (!node) {
+        node = vfs_open(AI_FALLBACK_FILE);
+        used_path = AI_FALLBACK_FILE;
     }
-    
-    // Load command cache
-    if (ai_load_command_cache(COMMAND_CACHE_FILE) == 0) {
-        gfx_print("  Command cache: Loaded\n");
-        loaded++;
-    } else {
-        gfx_print("  Command cache: Not found (starting fresh)\n");
+    if (!node) {
+        gfx_print("  No state file found\n");
+        return -1;
     }
-    
-    if (loaded > 0) {
+
+    SERIAL_LOG("[AI_PERSIST] Loading from "); SERIAL_LOG((char*)used_path); SERIAL_LOG("\n");
+
+    size_t offset = 0;
+    int sections_loaded = 0;
+
+    while (1) {
+        ai_persistence_header_t header;
+        int r = vfs_read(node, &header, sizeof(header), offset);
+        if (r != (int)sizeof(header)) {
+            break; // EOF or error ends loop
+        }
+
+        if (header.magic != AI_PERSISTENCE_MAGIC) {
+            SERIAL_LOG("[AI_PERSIST] Invalid magic in state file\n");
+            break;
+        }
+
+        void* data = heap_alloc(header.data_size);
+        if (!data) {
+            SERIAL_LOG("[AI_PERSIST] OOM reading state section\n");
+            break;
+        }
+        r = vfs_read(node, data, header.data_size, offset + sizeof(header));
+        if (r != (int)header.data_size) {
+            SERIAL_LOG("[AI_PERSIST] Short read on state section\n");
+            heap_free(data);
+            break;
+        }
+
+        uint32_t crc = calculate_crc32((uint8_t*)data, header.data_size);
+        if (crc != header.checksum) {
+            SERIAL_LOG("[AI_PERSIST] Checksum mismatch in state section\n");
+            heap_free(data);
+            break;
+        }
+
+        // Dispatch by type
+        int res = 0;
+        switch (header.data_type) {
+            case AI_DATA_QUANTUM_LEARNING:
+                res = quantum_ai_import_learning_data(data, header.data_size);
+                if (res == 0) gfx_print("  Quantum learning: Loaded\n");
+                break;
+            case AI_DATA_COMMAND_CACHE:
+                res = command_predictor_import_cache(data, header.data_size);
+                if (res == 0) gfx_print("  Command cache: Loaded\n");
+                break;
+            default:
+                SERIAL_LOG("[AI_PERSIST] Unknown section type, skipping\n");
+                break;
+        }
+        if (res == 0) {
+            sections_loaded++;
+            g_persistence_stats.bytes_read += sizeof(header) + header.data_size;
+        }
+
+        heap_free(data);
+        offset += sizeof(header) + header.data_size;
+    }
+
+    g_persistence_stats.loads_attempted++;
+    if (sections_loaded > 0) {
+        g_persistence_stats.loads_successful++;
         gfx_print("AI state loaded successfully!\n");
         return 0;
     }
-    
+
+    gfx_print("  No valid sections found (starting fresh)\n");
     return -1;
 }
 
