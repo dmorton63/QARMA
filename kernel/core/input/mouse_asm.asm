@@ -4,6 +4,7 @@ extern mouse_handler
 global irqmouse
 irqmouse:
     cli
+    
     push rax
     push rbx
     push rcx
@@ -21,7 +22,6 @@ irqmouse:
     push r15
     
     call mouse_handler
-    
     pop r15
     pop r14
     pop r13

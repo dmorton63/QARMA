@@ -48,16 +48,9 @@ void pci_scan_and_print(void) {
                         SERIAL_LOG_HEX(" PROG_IF: ",prog_if);
                         SERIAL_LOG("\n");
 
-                        // Initialize the UHCI controller
-                        SERIAL_LOG("PCI: Calling uhci_init_controller\n");
-                        int result = uhci_init_controller(bus, slot, func, io_base);
-                        if (result == 0) {
-                            SERIAL_LOG("PCI: UHCI controller initialized successfully\n");
-                        } else {
-                            SERIAL_LOG("PCI: UHCI controller initialization failed\n");
-                            SERIAL_LOG_HEX("PCI: Error code: ", result);
-                            SERIAL_LOG("\n");
-                        }
+                        // UHCI disabled - using XHCI only for USB 3.0 support
+                        SERIAL_LOG("PCI: UHCI controller found but SKIPPED (using XHCI instead)\n");
+                        // int result = uhci_init_controller(bus, slot, func, io_base);
                     } else if (prog_if == 0x10) {
                         SERIAL_LOG("OHCI controller detected\n");
                         SERIAL_LOG_HEX("BUS: ",bus);

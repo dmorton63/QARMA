@@ -42,13 +42,21 @@ typedef struct __attribute__((packed)) {
 #define HID_REQ_SET_IDLE     0x0A
 #define HID_REQ_SET_PROTOCOL 0x0B
 
-// Mouse Report Structure (Boot Protocol)
+// Mouse Report Structure (Boot Protocol - relative coordinates)
 typedef struct __attribute__((packed)) {
     uint8_t buttons;    // Bit 0: Left, Bit 1: Right, Bit 2: Middle
-    int8_t  x;          // X movement
-    int8_t  y;          // Y movement
+    int8_t  x;          // X movement (relative)
+    int8_t  y;          // Y movement (relative)
     int8_t  wheel;      // Wheel movement (optional)
 } usb_mouse_report_t;
+
+// Tablet Report Structure (Absolute coordinates)
+typedef struct __attribute__((packed)) {
+    uint8_t buttons;    // Bit 0: Left, Bit 1: Right, Bit 2: Middle
+    uint16_t x;         // Absolute X position (0-32767)
+    uint16_t y;         // Absolute Y position (0-32767)
+    int8_t  wheel;      // Wheel movement (optional)
+} usb_tablet_report_t;
 
 // HID Device Structure
 typedef struct {

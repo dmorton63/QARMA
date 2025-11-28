@@ -154,7 +154,8 @@ QARMA_WIN_HANDLE* clock_overlay_init(void) {
 void clock_loop() {
     while (1) {
         clock_tick();
-        sleep_ms(500);
+        extern void task_sleep(uint32_t milliseconds);
+        task_sleep(500);
     }
 }
 

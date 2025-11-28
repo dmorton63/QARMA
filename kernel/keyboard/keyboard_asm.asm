@@ -3,8 +3,8 @@ section .text
 extern keyboard_service_handler
 global irqkeyboard
 irqkeyboard:
-
     cli
+    
     push rax
     push rbx
     push rcx
@@ -23,7 +23,6 @@ irqkeyboard:
 
     mov rdi, rsp         ; Pass stack pointer as first arg (System V AMD64)
     call keyboard_service_handler
-
     pop r15
     pop r14
     pop r13

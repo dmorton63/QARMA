@@ -87,8 +87,8 @@ void shell_run(void) {
     
     while (1) {
         // Just sleep - compositor handles everything
-        extern void sleep_ms(uint32_t ms);
-        sleep_ms(100);
+        extern void task_sleep(uint32_t milliseconds);
+        task_sleep(100);
         
         // DON'T poll keyboard or consume input - compositor handles it
         // DON'T check kb_state->command_ready - it interferes with console

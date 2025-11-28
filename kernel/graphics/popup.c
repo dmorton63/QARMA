@@ -139,7 +139,8 @@ void show_popup(const struct popup_params *params) {
     heap_free(wrapped);
 
     if (params->timeout_ms > 0) {
-        sleep_ms(params->timeout_ms);
+        extern void task_sleep(uint32_t milliseconds);
+        task_sleep(params->timeout_ms);
         restore_region(backdrop);
         return;
     }

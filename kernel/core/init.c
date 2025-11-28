@@ -29,6 +29,7 @@
 #include "core/memory/heap.h"
 #include "drivers/usb/usb_mouse.h"
 #include "keyboard/command.h"
+#include "gui/desktop_toolbar.h"
 #include "gui/frame.h"
 #include "gui/boot_messages.h"
 #include "core/boot_log.h"
@@ -67,7 +68,7 @@ extern key_event_t keyboard_poll_event(void);
 extern char scancode_to_ascii(uint8_t scancode, bool shift, bool caps);
 extern png_image_t* load_splash_image(void);
 extern FramebufferInfo* fb_info;
-extern void sleep_ms(uint32_t ms);
+extern void task_sleep(uint32_t milliseconds);
 extern bool keyboard_get_window_key_event(key_event_t* out);
 // Legacy - disabled
 // extern void login_screen_handle_event(LoginScreen* login, QARMA_INPUT_EVENT* event);
@@ -272,8 +273,11 @@ void qarma_init_gui(void) {
     // Initialize window compositor for draggable windows with title bars
     extern void compositor_init(void);
     extern void console_compositor_init(void);
+    extern void cursor_loader_init(void);
+    
     compositor_init();
-    console_compositor_init();  // Create console window immediately after compositor
+    cursor_loader_init();        // Load cursor graphics (from ISO or defaults)
+    console_compositor_init();   // Create console window immediately after compositor
     
     // Initialize input event system
     qarma_input_events_init();
@@ -502,15 +506,9 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
         splash_clear(desktop_bg);
         SERIAL_LOG("[KERNEL] Screen cleared to desktop background\n");
         
-        // Show compositor console window (graphics mode only)
-        SERIAL_LOG("[KERNEL] Showing console window\n");
-        extern void console_compositor_show(void);
-        console_compositor_show();
-        
-        // Render compositor windows (console)
-        extern void compositor_render_all(void);
-        compositor_render_all();
-        SERIAL_LOG("[KERNEL] Console window rendered and visible\n");
+        // Console starts HIDDEN - will be shown via CMD button or Ctrl+T
+        // Do NOT call console_compositor_show() here - desktop mode starts with toolbar
+        SERIAL_LOG("[KERNEL] Console window initialized (hidden)\n");
     }
     
     // Enable keyboard
@@ -634,7 +632,8 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
             }
         }
         
-        sleep_ms(16);  // ~60fps
+        extern void sleep_ms(uint32_t ms);
+        sleep_ms(16);  // ~60fps (not using task_sleep - not in task context)
     }
     
     SERIAL_LOG("[KERNEL] Login successful, destroying login screen\n");
@@ -656,50 +655,100 @@ void qarma_run_login_screen(void (*on_success)(const char* username)) {
 #endif  // End legacy login screen
 
 void qarma_run_desktop(void) {
+    SERIAL_LOG("\n\n========================================\n");
+    SERIAL_LOG("[KERNEL] QARMA_RUN_DESKTOP CALLED!!!\n");
     SERIAL_LOG("[KERNEL] Entering desktop loop\n");
+    SERIAL_LOG("========================================\n\n");
     
-    // Show console window (compositor already initialized)
-    SERIAL_LOG("[KERNEL] Showing console window\n");
-    extern void console_compositor_show(void);
-    console_compositor_show();
-    
-    // Render initial desktop state
-    extern void compositor_render_all(void);
-    compositor_render_all();
-    
-    SERIAL_LOG("[KERNEL] Desktop initialized with console\n");
-    
-    // Add boot log messages to console window
-    extern void console_compositor_print(const char* text);
+    // Add boot log messages to console window (console is hidden)
+    extern void console_compositor_print_no_render(const char* text);
     char messages[BOOT_LOG_MAX_LINES][BOOT_LOG_LINE_LENGTH];
     uint32_t msg_count = 0;
     boot_log_get_messages(messages, &msg_count);
     
     SERIAL_LOG("[KERNEL] Adding ");
     SERIAL_LOG_DEC("", msg_count);
-    SERIAL_LOG(" boot messages to console\n");
+    SERIAL_LOG(" boot messages to console buffer (hidden)\n");
     
-    console_compositor_print("====== BOOT LOG ======");
+    // Use batch printing - no render, console is hidden anyway
+    console_compositor_print_no_render("====== BOOT LOG ======");
     for (uint32_t i = 0; i < msg_count; i++) {
-        console_compositor_print(messages[i]);
+        console_compositor_print_no_render(messages[i]);
     }
-    console_compositor_print("======================");
-    console_compositor_print("");
-    console_compositor_print("System ready.");
-    console_compositor_print("Keyboard: Ctrl+T = toggle console, Type commands");
-    console_compositor_print("Mouse: Arrow keys = move cursor, Space = click");
-    console_compositor_print("");
+    console_compositor_print_no_render("======================");
+    console_compositor_print_no_render("");
+    console_compositor_print_no_render("System ready.");
+    console_compositor_print_no_render("Click CMD button to open console");
+    console_compositor_print_no_render("");
     
-    SERIAL_LOG("[KERNEL] Boot log added to console, desktop active\n");
+    SERIAL_LOG("[KERNEL] Boot log added to console buffer\n");
+    
+    // Enable interrupts for desktop (timer, keyboard, mouse, USB)
+    // Interrupts were disabled by qarma_init_cpu(), now enable them
+    __asm__ volatile("sti");
+    SERIAL_LOG("[KERNEL] Interrupts enabled for desktop\n");
+    
+    // Enable keyboard and mouse for desktop interaction
+    // Functions declared in keyboard/keyboard.h (already included)
+    keyboard_enable_window_mode(true);
+    keyboard_set_enabled(true);
+    SERIAL_LOG("[KERNEL] Keyboard and mouse enabled\n");
+    
+    // TODO: Toolbar disabled - needs redesign
+    // Create desktop toolbar (Shutdown, Restart, CMD buttons)
+    // SERIAL_LOG("[KERNEL] Creating desktop toolbar\n");
+    // extern desktop_toolbar_t* desktop_toolbar_create(void);
+    // desktop_toolbar_t* toolbar = desktop_toolbar_create();
+    // 
+    // if (!toolbar) {
+    //     SERIAL_LOG("[KERNEL] ERROR: Failed to create desktop toolbar\n");
+    //     return;
+    // }
+    SERIAL_LOG("[KERNEL] Toolbar disabled - skipping creation\n");
+    
+    // Render initial desktop state (gradient background, no toolbar, no windows)
+    SERIAL_LOG("[KERNEL] Rendering initial desktop\n");
+    extern void compositor_render_all(void);
+    compositor_render_all();
+    
+    // TODO: Toolbar disabled - needs redesign
+    // Render toolbar on top
+    // extern void desktop_toolbar_render(desktop_toolbar_t* toolbar);
+    // desktop_toolbar_render(toolbar);
+    
+    // Swap framebuffer to display complete desktop
+    extern void framebuffer_swap(void);
+    framebuffer_swap();
+    
+    SERIAL_LOG("[KERNEL] Desktop initialized (toolbar disabled)\n");
     
     // Don't show_prompt() - it writes directly to framebuffer and covers windows
     // Console window handles its own prompt
     
     bool should_exit = false;
     
-    // Main desktop loop - compositor handles all rendering
+    // Main desktop loop - polls input and re-renders
+    SERIAL_LOG("[KERNEL] Entering desktop main loop\n");
+    
+    int loop_count = 0;
+    
     while (!should_exit) {
-        sleep_ms(16);  // ~60fps
+        // Poll USB devices for input
+        extern void usb_keyboard_poll_xhci(void);
+        extern void usb_mouse_poll_xhci(void);
+        usb_keyboard_poll_xhci();
+        usb_mouse_poll_xhci();
+        
+        // Render desktop (gradient + windows + toolbar + cursor)
+        // Now much faster with debug logging removed
+        compositor_render_all();
+        
+        extern void sleep_ms(uint32_t ms);
+        sleep_ms(16);  // ~60fps (not using task_sleep - not in task context)
+        
+        if (loop_count++ < 3) {
+            SERIAL_LOG("[KERNEL] Desktop loop running\n");
+        }
     }
     
     SERIAL_LOG("[KERNEL] Desktop exit requested - shutting down\n");
@@ -796,4 +845,13 @@ void qarma_init_all(uint32_t magic, multiboot_info_t* mbi) {
     boot_log_get_messages(messages, &msg_count);
     SERIAL_LOG_DEC("", msg_count);
     SERIAL_LOG(" messages\n");
+    
+    // Run desktop with toolbar instead of old shell
+    SERIAL_LOG("\n\n====================================\n");
+    SERIAL_LOG("[KERNEL] ABOUT TO CALL qarma_run_desktop\n");
+    SERIAL_LOG("====================================\n\n");
+    qarma_run_desktop();
+    
+    // Should never reach here
+    SERIAL_LOG("[KERNEL] qarma_run_desktop returned (should loop forever)\n");
 }

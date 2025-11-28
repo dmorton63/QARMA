@@ -48,6 +48,7 @@ void console_compositor_handle_key(uint8_t scancode, char character);
  * Print text to console
  */
 void console_compositor_print(const char* text);
+void console_compositor_print_no_render(const char* text);  // For batch operations
 
 /**
  * Get scroll offset (0 = at bottom, positive = scrolled up)

@@ -495,14 +495,15 @@ void usb_keyboard_poll_xhci(void) {
     if (!g_xhci_keyboard) return;
     
     // Queue initial transfers on first poll after init complete
+    // Use only 2-3 transfers to avoid flooding the system
     static bool transfers_queued = false;
     if (keyboard_initialization_complete && !transfers_queued) {
         extern int xhci_queue_transfer(void *xhci, uint8_t slot, uint8_t endpoint, void *buffer, uint16_t length);
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i < 2; i++) {
             xhci_queue_transfer(g_xhci_keyboard->controller, g_xhci_keyboard->slot, 1,
                               &g_xhci_keyboard->report_buffer, sizeof(usb_keyboard_report_t));
         }
-        SERIAL_LOG("[USB_KEYBOARD] Queued 128 initial transfers after init\n");
+        SERIAL_LOG("[USB_KEYBOARD] Queued 2 initial transfers after init\n");
         SERIAL_LOG("[USB_KEYBOARD] Buffer address: 0x");
         SERIAL_LOG_HEX("", (uint32_t)&g_xhci_keyboard->report_buffer);
         SERIAL_LOG("\n");

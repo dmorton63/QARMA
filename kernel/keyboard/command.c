@@ -30,6 +30,9 @@ void cmd_tasktest(int argc, char** argv);
 // IDE
 extern void ide_launch(void);
 
+// 9P test
+void cmd_9ptest(int argc, char** argv);
+
 // Global state
 shell_mode_t current_mode = MODE_NORMAL;
 
@@ -385,6 +388,7 @@ static const simple_command_t commands[] = {
     {"quantum", cmd_quantum},
     {"tasktest", cmd_tasktest},
     {"ide", cmd_ide},
+    {"9ptest", cmd_9ptest},
     // {"mouse", cmd_mouse},
     {NULL, NULL}
 };
@@ -803,11 +807,52 @@ void cmd_winloop(int argc, char** argv) {
             last_left = mouse_state.left_pressed;
         }
         
-        // Wait for interrupt with interrupts enabled (sti + hlt is atomic)
+        // Wait for interrupt with interrupts enabled (sti+hlt is atomic)
         __asm__ volatile("sti; hlt");
     }
     
     SERIAL_LOG("Exiting window mode");
+}
+
+// 9P filesystem test
+void cmd_9ptest(int argc, char** argv) {
+    (void)argc; (void)argv;
+    
+    extern int virtio_9p_open(const char* path, int mode);
+    extern int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset);
+    extern void virtio_9p_close(int fid);
+    extern bool virtio_9p_is_mounted(void);
+    
+    if (!virtio_9p_is_mounted()) {
+        gfx_print("9P filesystem not mounted\n");
+        return;
+    }
+    
+    gfx_print("Testing 9P filesystem...\n");
+    gfx_print("Opening /host/test.txt\n");
+    
+    // P9_OREAD = 0x00
+    int fid = virtio_9p_open("/test.txt", 0x00);
+    if (fid < 0) {
+        gfx_print("Failed to open file\n");
+        return;
+    }
+    
+    gfx_print("Reading file...\n");
+    char buffer[512];
+    int bytes_read = virtio_9p_read(fid, buffer, sizeof(buffer) - 1, 0);
+    
+    if (bytes_read > 0) {
+        buffer[bytes_read] = 0;
+        gfx_print("File contents:\n");
+        gfx_print(buffer);
+        gfx_print("\n");
+    } else {
+        gfx_print("Failed to read file\n");
+    }
+    
+    virtio_9p_close(fid);
+    gfx_print("Test complete\n");
 }
 
 // Stub functions for compatibility

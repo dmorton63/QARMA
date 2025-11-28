@@ -175,9 +175,22 @@ static void button_render(qarma_control_t* control, uint32_t* buffer,
     }
     
     // Draw text (centered)
-    // TODO: Use proper font rendering when available
-    // For now, just mark that text would be rendered here
-    (void)fg_color;  // Suppress unused warning
+    if (data->text[0] != '\0') {
+        extern void draw_string_to_buffer(uint32_t* buffer, int buf_width, int x, int y, const char* str, uint32_t color);
+        
+        // Calculate text position (centered)
+        // Assume 8x12 font, approximate text width
+        int text_len = 0;
+        for (const char* p = data->text; *p != '\0'; p++) text_len++;
+        
+        int text_width = text_len * 8;  // 8 pixels per character
+        int text_height = 12;
+        
+        int text_x = abs_x + (control->width - text_width) / 2;
+        int text_y = abs_y + (control->height - text_height) / 2;
+        
+        draw_string_to_buffer(buffer, buf_width, text_x, text_y, data->text, fg_color);
+    }
 }
 
 // ============================================================================

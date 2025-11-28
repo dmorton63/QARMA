@@ -149,6 +149,7 @@ typedef struct QARMA_INPUT_EVENT {
     bool cancelled;                 // Cancel default behavior
 } QARMA_INPUT_EVENT;
 
+
 // Event Handler Callback Type
 typedef void (*QARMA_INPUT_EVENT_HANDLER)(QARMA_INPUT_EVENT* event, void* user_data);
 

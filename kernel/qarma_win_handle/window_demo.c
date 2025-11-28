@@ -70,7 +70,7 @@ void window_test_demo(void) {
     extern uint32_t fb_width;
     int screen_w = (fb_width > 0) ? fb_width : 1024;
     
-    compositor_window_t* main_win = compositor_create_window("QARMA Desktop", 0, 0, screen_w, 400);
+    compositor_window_t* main_win = compositor_create_window("QARMA Desktop", 0, 0, 300, 400);
     if (main_win) {
         main_win->on_render_content = render_hello_content;
     }

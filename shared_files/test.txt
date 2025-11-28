@@ -1,0 +1,2 @@
+Hello from VirtIO 9P!
+This file is being read through the 9P protocol.

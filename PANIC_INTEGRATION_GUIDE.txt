@@ -1,0 +1,158 @@
+/**
+ * QARMA Kernel Panic System - Integration Guide
+ * ==============================================
+ * 
+ * OVERVIEW:
+ * The kernel panic system provides a safe way to halt the system when
+ * critical errors occur. It displays a red error screen with the message
+ * and halts the CPU, requiring a reboot.
+ * 
+ * FILES CREATED:
+ * - kernel/core/panic.c              : Implementation
+ * - headers/core/panic.h             : Header with macros
+ * - kernel/core/panic_examples.c     : Usage examples (not compiled by default)
+ * 
+ * USAGE:
+ */
+
+// Include the panic header (already in kernel.h)
+#include "core/panic.h"
+
+// ============================================================================
+// METHOD 1: Direct panic call
+// ============================================================================
+
+void critical_function(void) {
+    if (hardware_failed) {
+        kernel_panic("Hardware initialization failed");
+        // Never returns
+    }
+}
+
+// ============================================================================
+// METHOD 2: Conditional panic macro
+// ============================================================================
+
+void allocate_memory(void) {
+    void* ptr = heap_alloc(1024);
+    
+    // Panic if allocation fails and we can't continue
+    PANIC_IF_NULL(ptr, "Critical memory allocation failed");
+    
+    // Code here only runs if ptr is valid
+}
+
+// ============================================================================
+// METHOD 3: Assertion (debug builds only)
+// ============================================================================
+
+void process_window(compositor_window_t* win, int index) {
+    // Debug assertion - checks in debug builds, no-op in release
+    KERNEL_ASSERT(win != NULL);
+    KERNEL_ASSERT(index >= 0);
+    KERNEL_ASSERT(index < MAX_WINDOWS);
+    
+    // ... rest of function
+}
+
+// ============================================================================
+// METHOD 4: Unreachable code marker
+// ============================================================================
+
+void handle_state(int state) {
+    switch(state) {
+        case STATE_INIT:
+            initialize();
+            break;
+        case STATE_RUN:
+            run();
+            break;
+        default:
+            UNREACHABLE();  // Should never happen
+    }
+}
+
+// ============================================================================
+// EXAMPLE: Integrating into existing code
+// ============================================================================
+
+// In heap.c - panic on heap exhaustion
+void* heap_alloc(size_t size) {
+    // ... existing checks ...
+    
+    if (heap_top + aligned_size > heap_base + STATIC_HEAP_SIZE) {
+        // Instead of just returning NULL, panic on critical heap exhaustion
+        kernel_panic("Kernel heap exhausted - cannot continue");
+    }
+    
+    // ... rest of function
+}
+
+// In interrupt handler - panic on double fault
+void double_fault_handler(void) {
+    kernel_panic("Double fault - CPU exception during exception handling");
+}
+
+// In window compositor - panic on invalid state
+void compositor_destroy_window(compositor_window_t* win) {
+    PANIC_IF_NULL(win, "Attempted to destroy NULL window");
+    
+    // ... rest of function
+}
+
+// In scheduler - panic on stack overflow
+void task_switch_context(task_t *from_task, task_t *to_task) {
+    PANIC_IF_NULL(to_task, "Cannot switch to NULL task");
+    
+    uint64_t stack_ptr = to_task->context.rsp;
+    PANIC_IF(stack_ptr < KERNEL_STACK_BASE, "Task stack overflow detected");
+    
+    // ... rest of function
+}
+
+// ============================================================================
+// WHEN TO USE:
+// ============================================================================
+
+/*
+ * USE kernel_panic() for:
+ * - Hardware failures that prevent system operation
+ * - Memory corruption detection
+ * - Critical resource exhaustion (heap, stack)
+ * - Double faults and unrecoverable exceptions
+ * - Invariant violations that indicate bugs
+ * 
+ * DON'T USE for:
+ * - Expected errors (file not found, invalid input)
+ * - Recoverable conditions
+ * - User-level errors
+ * - Performance issues
+ * 
+ * PANIC BEHAVIOR:
+ * 1. Disables interrupts (prevents further damage)
+ * 2. Logs to serial port for debugging
+ * 3. Displays red error screen with message
+ * 4. Halts CPU in infinite loop
+ * 5. Requires manual reboot
+ * 
+ * PANIC SCREEN SHOWS:
+ * - "*** KERNEL PANIC ***" title
+ * - Error message you provided
+ * - Instructions to reboot
+ * - Distinctive red background for easy identification
+ */
+
+// ============================================================================
+// TESTING:
+// ============================================================================
+
+// You can test the panic system with this command:
+void test_panic_system(void) {
+    kernel_panic("This is a test panic - system will halt");
+}
+
+// Or add a keyboard command:
+// If you press F12 or type "panic" in console:
+//   kernel_panic("Manual panic test triggered");
+
+#endif

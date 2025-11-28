@@ -226,10 +226,16 @@ void interrupts_system_init(void) {
     SERIAL_LOG_HEX("PIC2 mask=0x", mask2);
     register_interrupt_handler(0, divide_by_zero_handler);
     register_interrupt_handler(32, timer_handler);
-    register_interrupt_handler(33, keyboard_service_handler);
-    // register_interrupt_handler(44, mouse_handler); // Disabled to prevent USB/PS2 mouse conflicts
-    GFX_LOG_MIN("Keyboard handler registered for IRQ1 (vector 33).\n");
-    //GFX_LOG_MIN("Mouse handler disabled (USB mouse in use).\n");
+    // register_interrupt_handler(33, keyboard_service_handler); // Disabled - using USB keyboard
+    // register_interrupt_handler(44, mouse_handler); // Disabled - using USB mouse
+    
+    // Mask IRQ1 (PS/2 keyboard) and IRQ12 (PS/2 mouse) in PIC since we're using USB
+    uint8_t current_mask1 = inb(0x21);
+    uint8_t current_mask2 = inb(0xA1);
+    outb(0x21, current_mask1 | 0x02);  // Mask IRQ1 (bit 1)
+    outb(0xA1, current_mask2 | 0x10);  // Mask IRQ12 (bit 4)
+    
+    GFX_LOG_MIN("PS/2 keyboard/mouse interrupts disabled (USB in use).\n");
     gfx_print("GDT and IDT setup complete.\n");
 }
 

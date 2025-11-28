@@ -2,10 +2,21 @@
 #include "timer.h"
 
 // Simple millisecond sleep using system tick counter
+// 
+// NOTE: This is a blocking busy-wait that does NOT cooperate with the scheduler.
+// Use cases:
+//   - Early boot before scheduler is initialized
+//   - USB/hardware initialization timing (1ms delays)
+//   - Hardware polling loops that must not be interrupted
+//
+// For normal application code, use task_sleep() from task_manager.h instead.
+// task_sleep() properly yields to other tasks and enables true multitasking.
 void sleep_ms(uint32_t ms) {
     uint32_t target_ticks = get_ticks() + (ms / MS_PER_TICK);
     while (get_ticks() < target_ticks) {
-        halt();  // HLT wrapper from timer.h
+        // Ensure interrupts are enabled before halting
+        // Without this, HLT would hang forever if interrupts were disabled
+        __asm__ volatile("sti; hlt" ::: "memory");
     }
 }
 

@@ -60,6 +60,11 @@ prepare_dirs:
 	@mkdir -p $(BUILD_DIR)
 	@$(foreach dir,$(shell find $(SRC_DIR) -type d),mkdir -p $(BUILD_DIR)/$(dir);)
 
+# Special rule for event creation file - needs stack realignment for SSE instructions
+$(BUILD_DIR)/kernel/qarma_win_handle/qarma_input_events.o: kernel/qarma_win_handle/qarma_input_events.c | prepare_dirs
+	@echo "Compiling $< (with stack realignment)..."
+	$(CC) $(CFLAGS) $(INCLUDES) -mstackrealign -c $< -o $@
+
 # Compile C files
 $(BUILD_DIR)/%.o: %.c | prepare_dirs
 	@echo "Compiling $<..."
@@ -89,17 +94,22 @@ $(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker6
 $(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg
 	@echo "Creating QARMA OS ISO..."
 	@mkdir -p $(ISO_DIR)/boot/grub
+	@mkdir -p $(ISO_DIR)/assets/cursors
 	@cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/qarma.elf
 	@cp config/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
+	@if [ -d assets/cursors ]; then cp assets/cursors/*.png $(ISO_DIR)/assets/cursors/ 2>/dev/null || true; fi
 	@grub-mkrescue -o $@ $(ISO_DIR) || echo "GRUB not available — ISO skipped"
 
 # Configuration
 QEMU_CPUS ?= 8
+QEMU_MEMORY ?= 16384M
 
 # Run in QEMU (64-bit)
 qemu: $(BUILD_DIR)/qarma.iso
-	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs)..."
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m 4096M -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-mouse,bus=xhci.0 -cpu qemu64
+	@mkdir -p shared_files
+	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs, $(QEMU_MEMORY) RAM)..."
+	@echo "Host shared directory: ./shared_files"
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 -fsdev local,id=shared,path=./shared_files,security_model=none -device virtio-9p-pci,fsdev=shared,mount_tag=hostshare
 
 # Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso

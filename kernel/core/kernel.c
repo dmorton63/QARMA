@@ -101,19 +101,8 @@ int kernel_main(uint32_t magic, multiboot_info_t* mbi) {
     // qarma_run_login_screen(on_login_success);
     __asm__ volatile("mov $0x3F8, %%dx\n" "mov $'O', %%al\n" "out %%al, %%dx\n" ::: "rax", "rdx");
     
-    // Initialize shell first (needed for console window)
-    extern void shell_init(void);
-    
-    // Enable interrupts for desktop
-    __asm__ volatile("sti");
-    SERIAL_LOG("[KERNEL] Interrupts enabled for desktop\n");
-    
-    SERIAL_LOG("[KERNEL] About to call shell_init\n");
-    shell_init();
-    SERIAL_LOG("[KERNEL] shell_init returned\n");
-    
-    // Run desktop (will show boot messages, then compositor windows)
-    qarma_run_desktop();
+    // Run desktop (handles its own event loop, no shell_init needed)
+    //qarma_run_desktop();
     
     SERIAL_LOG("[KERNEL] qarma_run_desktop returned (should never happen)\n");
     

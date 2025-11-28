@@ -198,6 +198,22 @@ void vfs_init(void) {
     simplefs_init();
     gfx_print("[VFS] simplefs_init() completed.\n");
     
+    // Initialize VirtIO 9P driver for host filesystem access
+    extern bool virtio_9p_init(void);
+    extern bool virtio_9p_mount(const char* mount_tag, const char* mount_point);
+    
+    gfx_print("[VFS] Initializing VirtIO 9P driver...\n");
+    if (virtio_9p_init()) {
+        gfx_print("[VFS] Mounting host shared filesystem...\n");
+        if (virtio_9p_mount("hostshare", "/host")) {
+            gfx_print("[VFS] Host filesystem available at /host\n");
+        } else {
+            gfx_print("[VFS] Failed to mount host filesystem\n");
+        }
+    } else {
+        gfx_print("[VFS] No VirtIO 9P device found (host sharing not available)\n");
+    }
+    
     // Mount RAM disk at root
     gfx_print("[VFS] Calling vfs_mount()...\n");
     int mount_result = vfs_mount("ram0", "simplefs", "ramdisk");

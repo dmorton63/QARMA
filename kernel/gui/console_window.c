@@ -11,6 +11,7 @@
 #include "config.h"
 #include "keyboard/command.h"
 #include "controls/qarma_textbox.h"
+#include "qarma_win_handle/window_compositor.h"
 
 #define CONSOLE_BG_COLOR 0xFF000000
 #define CONSOLE_TEXT_COLOR 0xFF00FF00

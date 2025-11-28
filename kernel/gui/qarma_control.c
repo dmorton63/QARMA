@@ -413,8 +413,8 @@ void control_set_bounds(qarma_control_t* control, int32_t x, int32_t y,
     control_invalidate(control);
 }
 
-void control_get_absolute_position(qarma_control_t* control, int32_t* x, int32_t* y) {
-    if (!control || !x || !y) return;
+static void control_get_absolute_position_internal(qarma_control_t* control, int32_t* x, int32_t* y, int depth) {
+    if (!control || !x || !y || depth > 10) return;  // Prevent infinite recursion
     
     *x = control->x;
     *y = control->y;
@@ -422,7 +422,7 @@ void control_get_absolute_position(qarma_control_t* control, int32_t* x, int32_t
     // Add parent control offset if any
     if (control->parent_control) {
         int32_t parent_x, parent_y;
-        control_get_absolute_position(control->parent_control, &parent_x, &parent_y);
+        control_get_absolute_position_internal(control->parent_control, &parent_x, &parent_y, depth + 1);
         *x += parent_x;
         *y += parent_y;
     }
@@ -434,6 +434,10 @@ void control_get_absolute_position(qarma_control_t* control, int32_t* x, int32_t
         *x += frame_x;
         *y += frame_y;
     }
+}
+
+void control_get_absolute_position(qarma_control_t* control, int32_t* x, int32_t* y) {
+    control_get_absolute_position_internal(control, x, y, 0);
 }
 
 void control_set_background(qarma_control_t* control, frame_color_t color) {

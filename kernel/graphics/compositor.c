@@ -75,12 +75,57 @@ void compositor_shutdown(void) {
     g_compositor.initialized = false;
 }
 
+// Draw diagonal rainbow gradient background
+static void compositor_draw_gradient_background(void) {
+    if (!g_compositor.initialized) return;
+    
+    uint32_t width = g_compositor.width;
+    uint32_t height = g_compositor.height;
+    
+    // Rainbow colors: Red -> Orange -> Yellow -> Green -> Cyan -> Blue -> Purple
+    // We'll create a diagonal gradient using the sum of x+y coordinates
+    
+    for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++) {
+            // Diagonal coordinate (0 to width+height)
+            uint32_t diag = x + y;
+            uint32_t max_diag = width + height;
+            
+            // Map diagonal position to hue (0-360 degrees)
+            uint32_t hue = (diag * 360) / max_diag;
+            
+            // Convert HSV to RGB (S=100%, V=80% for softer colors)
+            uint8_t r, g, b;
+            
+            uint32_t h_sector = hue / 60;
+            uint32_t h_remainder = (hue % 60) * 255 / 60;
+            
+            uint8_t v = 204;  // 80% brightness (255 * 0.8)
+            uint8_t p = 0;    // Since S=100%, p=0
+            uint8_t q = (v * (255 - h_remainder)) / 255;
+            uint8_t t = (v * h_remainder) / 255;
+            
+            switch(h_sector) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+                default: r = v; g = 0; b = 0; break;
+            }
+            
+            uint32_t pixel = 0xFF000000 | (r << 16) | (g << 8) | b;
+            g_compositor.back_buffer[y * width + x] = pixel;
+        }
+    }
+}
+
 void compositor_begin_frame(void) {
     if (!g_compositor.initialized) return;
     
-    // Clear back buffer (or we could copy desktop background here)
-    // For now, fill with black
-    memset(g_compositor.back_buffer, 0, g_compositor.buffer_size);
+    // Draw gradient background instead of solid black
+    compositor_draw_gradient_background();
 }
 
 void compositor_render_windows(void) {

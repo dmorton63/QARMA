@@ -28,6 +28,10 @@ extern void qarma_input_event_dispatch(QARMA_INPUT_EVENT* event);
 // Track previous button state for generating DOWN/UP events
 static uint8_t prev_buttons = 0;
 
+// Tablet mode flag - auto-detected based on report data
+static bool is_tablet_mode = false;
+static bool mode_detected = false;
+
 // Debug: Track report count
 static uint32_t report_count = 0;
 static uint32_t last_logged_report = 0;
@@ -271,7 +275,8 @@ void usb_mouse_start_polling(void) {
     polling_started = true;
     
     // Allocate DMA-capable buffer for mouse reports from heap (identity-mapped)
-    usb_mouse_report_t *report_buffer = (usb_mouse_report_t *)heap_alloc(sizeof(usb_mouse_report_t));
+    // Allocate 8 bytes to handle both mouse (4 bytes) and tablet (6 bytes) reports
+    usb_mouse_report_t *report_buffer = (usb_mouse_report_t *)heap_alloc(8);
     if (!report_buffer) {
         SERIAL_LOG("USB Mouse: Failed to allocate DMA buffer\n");
         return;
@@ -328,104 +333,131 @@ void usb_mouse_process_report(usb_mouse_report_t *report) {
         return;
     }
     
-    // Debug: Check actual memory contents vs struct fields
-    static int mem_check = 0;
-    if (++mem_check <= 10) {
-        uint8_t *ptr = (uint8_t*)report;
-        serial_debug("[MOUSE_MEM] Bytes: ");
-        for (int i = 0; i < 4; i++) {
-            if (ptr[i] < 16) serial_debug("0");
-            SERIAL_LOG_HEX("", ptr[i]);
-            serial_debug(" ");
-        }
-        serial_debug("| Fields: buttons=");
-        SERIAL_LOG_HEX("", report->buttons);
-        serial_debug(" x=");
-        SERIAL_LOG_HEX("", report->x);
-        serial_debug(" y=");
-        SERIAL_LOG_HEX("", report->y);
-        serial_debug("\n");
-    }
-    
     report_count++;
     
-    // Log every Nth report for debugging
+    // Auto-detect tablet vs mouse mode on first report with movement
+    uint8_t *raw_bytes = (uint8_t*)report;
+    if (!mode_detected) {
+        // Tablet reports have 16-bit X/Y values (typically 6 bytes total)
+        // Mouse reports have 8-bit signed X/Y values (typically 4 bytes)
+        // Check if bytes 2-5 look like 16-bit coordinates (little-endian)
+        uint16_t potential_x = raw_bytes[1] | (raw_bytes[2] << 8);
+        uint16_t potential_y = raw_bytes[3] | (raw_bytes[4] << 8);
+        
+        // Tablet coordinates are typically 0-32767 range
+        // If we see values > 255, it's likely tablet mode
+        if (potential_x > 255 || potential_y > 255) {
+            is_tablet_mode = true;
+            SERIAL_LOG("[USB_MOUSE] Detected TABLET mode (absolute coordinates)\n");
+        } else {
+            is_tablet_mode = false;
+            SERIAL_LOG("[USB_MOUSE] Detected MOUSE mode (relative coordinates)\n");
+        }
+        mode_detected = true;
+    }
+    
+    // Log every Nth report with full raw data for debugging
     if (report_count - last_logged_report >= MOUSE_LOG_EVERY_N_REPORTS) {
         SERIAL_LOG("[USB_MOUSE] Report #");
         SERIAL_LOG_DEC("", report_count);
+        SERIAL_LOG(is_tablet_mode ? " [TABLET]" : " [MOUSE]");
         SERIAL_LOG(": buttons=0x");
         SERIAL_LOG_HEX("", report->buttons);
-        SERIAL_LOG(" x=");
-        SERIAL_LOG_DEC("", (int8_t)report->x);
-        SERIAL_LOG(" y=");
-        SERIAL_LOG_DEC("", (int8_t)report->y);
-        SERIAL_LOG(" wheel=");
-        SERIAL_LOG_DEC("", (int8_t)report->wheel);
-        SERIAL_LOG("\n");
+        SERIAL_LOG(" raw=[");
+        for (int i = 0; i < 6; i++) {
+            if (raw_bytes[i] < 16) SERIAL_LOG("0");
+            SERIAL_LOG_HEX("", raw_bytes[i]);
+            if (i < 5) SERIAL_LOG(" ");
+        }
+        SERIAL_LOG("]\n");
         last_logged_report = report_count;
     }
     
-    // Update mouse state with new report data
-    // Note: USB HID reports use signed 8-bit values
-    uint8_t *raw_bytes = (uint8_t*)report;
-    int8_t report_x = (int8_t)raw_bytes[1];  // Byte 1 is X
-    int8_t report_y = (int8_t)raw_bytes[2];  // Byte 2 is Y
-    
-    // Apply sensitivity multiplier for better tracking (2.5x default)
-    mouse_state.dx = (report_x * 5) / 2;
-    mouse_state.dy = (report_y * 5) / 2;
-    
-    bool has_movement = (mouse_state.dx != 0 || mouse_state.dy != 0);
-    
-    // Debug: Log actual movement with full buffer dump
-    static int movement_log_count = 0;
-    if (has_movement && ++movement_log_count <= 20) {
-        extern void serial_debug(const char* msg);
-        serial_debug("[MOUSE_DEBUG] report_x=");
-        serial_debug_signed(report_x);
-        serial_debug(" report_y=");
-        serial_debug_signed(report_y);
-        serial_debug(" state.dx=");
-        serial_debug_signed(mouse_state.dx);
-        serial_debug(" state.dy=");
-        serial_debug_signed(mouse_state.dy);
-        serial_debug("\n");
-    }
-    
-    if (has_movement && movement_log_count <= 20) {
-        extern void serial_debug(const char* msg);
-        serial_debug("[MOUSE_MOVE] dx=");
-        serial_debug_signed(mouse_state.dx);
-        serial_debug(" dy=");
-        serial_debug_signed(mouse_state.dy);
-        serial_debug(" raw[");
+    // Process based on detected mode
+    if (is_tablet_mode) {
+        // TABLET MODE: Absolute coordinates
+        // Format: [buttons, x_low, x_high, y_low, y_high, wheel]
+        // Parse manually from raw bytes to avoid struct alignment issues
+        uint16_t tablet_x = raw_bytes[1] | (raw_bytes[2] << 8);
+        uint16_t tablet_y = raw_bytes[3] | (raw_bytes[4] << 8);
         
-        uint8_t* raw = (uint8_t*)report;
-        for (int i = 0; i < 4; i++) {
-            if (raw[i] < 16) serial_debug("0");
-            SERIAL_LOG_HEX("", raw[i]);
-            if (i < 3) serial_debug(" ");
+        // BUGFIX: Ignore spurious (0,0) reports from tablet
+        // QEMU USB tablet sometimes sends (0,0) between valid reports
+        // Only update position if we have valid non-zero coordinates
+        if (tablet_x == 0 && tablet_y == 0) {
+            // Skip this report - keep current position
+            return;
         }
-        serial_debug("]\n");
-    }
-    
-    // Update absolute position (with bounds checking)
-    if (has_movement) {
-        // Clamp deltas to prevent huge jumps (max 50 pixels per update)
-        // This prevents "catch-up" behavior where mouse flies off screen
-        if (mouse_state.dx > 50) mouse_state.dx = 50;
-        if (mouse_state.dx < -50) mouse_state.dx = -50;
-        if (mouse_state.dy > 50) mouse_state.dy = 50;
-        if (mouse_state.dy < -50) mouse_state.dy = -50;
         
-        mouse_state.x += mouse_state.dx;
-        mouse_state.y += mouse_state.dy;
-        
-        // Defensive: ensure framebuffer dimensions are valid
+        // USB tablet coordinates are typically 0-32767
+        // Scale to framebuffer dimensions
         uint32_t max_x = (fb_width > 0) ? fb_width : 1024;
         uint32_t max_y = (fb_height > 0) ? fb_height : 768;
         
-        // Clamp to screen boundaries with logging for debugging
+        // Scale from tablet space (0-32767) to screen space
+        int32_t new_x = ((uint32_t)tablet_x * max_x) / 32768;
+        int32_t new_y = ((uint32_t)tablet_y * max_y) / 32768;
+        
+        // Debug log tablet coordinates
+        static int tablet_log = 0;
+        if (++tablet_log <= 20) {
+            SERIAL_LOG("[TABLET] Raw: x=");
+            SERIAL_LOG_DEC("", tablet_x);
+            SERIAL_LOG(" y=");
+            SERIAL_LOG_DEC("", tablet_y);
+            SERIAL_LOG(" -> Screen: x=");
+            SERIAL_LOG_DEC("", new_x);
+            SERIAL_LOG(" y=");
+            SERIAL_LOG_DEC("", new_y);
+            SERIAL_LOG(" (fb=");
+            SERIAL_LOG_DEC("", max_x);
+            SERIAL_LOG("x");
+            SERIAL_LOG_DEC("", max_y);
+            SERIAL_LOG(")\n");
+        }
+        
+        // Calculate delta for event dispatch
+        mouse_state.dx = new_x - mouse_state.x;
+        mouse_state.dy = new_y - mouse_state.y;
+        
+        // Update absolute position
+        mouse_state.x = new_x;
+        mouse_state.y = new_y;
+    } else {
+        // MOUSE MODE: Relative coordinates
+        int8_t report_x = (int8_t)raw_bytes[1];
+        int8_t report_y = (int8_t)raw_bytes[2];
+        
+        // Apply sensitivity multiplier for better tracking (2.5x default)
+        mouse_state.dx = (report_x * 5) / 2;
+        mouse_state.dy = (report_y * 5) / 2;
+        
+        // Only apply relative movement updates for mouse mode
+        // (Tablet mode already set absolute position above)
+        bool has_movement = (mouse_state.dx != 0 || mouse_state.dy != 0);
+        
+        if (has_movement) {
+            // Clamp delta to prevent mouse flying off screen
+            if (mouse_state.dx > 50) mouse_state.dx = 50;
+            if (mouse_state.dx < -50) mouse_state.dx = -50;
+            if (mouse_state.dy > 50) mouse_state.dy = 50;
+            if (mouse_state.dy < -50) mouse_state.dy = -50;
+            
+            // Scale mouse movement to 60% for better control
+            int32_t scaled_dx = (mouse_state.dx * 6) / 10;
+            int32_t scaled_dy = (mouse_state.dy * 6) / 10;
+            
+            mouse_state.x += scaled_dx;
+            mouse_state.y += scaled_dy;
+        }
+    }
+    
+    // Clamp position to screen boundaries (both modes)
+    bool has_movement = (mouse_state.dx != 0 || mouse_state.dy != 0);
+    if (has_movement || is_tablet_mode) {
+        uint32_t max_x = (fb_width > 0) ? fb_width : 1024;
+        uint32_t max_y = (fb_height > 0) ? fb_height : 768;
+        
         static uint32_t boundary_log_count = 0;
         bool hit_boundary = false;
         
@@ -485,28 +517,18 @@ void usb_mouse_process_report(usb_mouse_report_t *report) {
             }
         }
         
-        // Mouse position debug output disabled - mouse working correctly
-        // extern void gfx_print(const char *str);
-        // extern void gfx_print_decimal(uint32_t val);
-        // static uint32_t pos_update_count = 0;
-        // if (++pos_update_count % 5 == 0) {  // Update display every 5 movements
-        //     gfx_print("Mouse: X=");
-        //     gfx_print_decimal(mouse_state.x);
-        //     gfx_print(" Y=");
-        //     gfx_print_decimal(mouse_state.y);
-        //     gfx_print(" #");
-        //     gfx_print_decimal(report_count);
-        //     gfx_print("     \n");  // Extra spaces to clear previous text
-        // }
-        
-        // Dispatch mouse move event
-        QARMA_INPUT_EVENT move_event = qarma_input_event_create_mouse_move(
-            mouse_state.x, mouse_state.y,
-            mouse_state.dx, mouse_state.dy,
-            NULL  // Target will be determined by hit testing
-        );
-        move_event.data.mouse.buttons = report->buttons;
-        qarma_input_event_dispatch(&move_event);
+        // Throttle mouse move event dispatching to prevent overwhelming the system
+        // Only dispatch every 3rd move event to preserve keyboard responsiveness
+        static uint32_t move_event_throttle = 0;
+        if (++move_event_throttle % 3 == 0) {
+            QARMA_INPUT_EVENT move_event = qarma_input_event_create_mouse_move(
+                mouse_state.x, mouse_state.y,
+                mouse_state.dx, mouse_state.dy,
+                NULL  // Target will be determined by hit testing
+            );
+            move_event.data.mouse.buttons = report->buttons;
+            qarma_input_event_dispatch(&move_event);
+        }
     }
     
     // Update button states
@@ -647,7 +669,7 @@ void usb_mouse_init_xhci(void* controller, uint8_t slot) {
     
     g_xhci_mouse->controller = controller;
     g_xhci_mouse->slot = slot;
-    memset(&g_xhci_mouse->report_buffer, 0, sizeof(usb_mouse_report_t));
+    memset(&g_xhci_mouse->report_buffer, 0, 8);  // Clear 8 bytes for tablet reports
     
     SERIAL_LOG("USB Mouse: XHCI mouse initialized on slot ");
     SERIAL_LOG_HEX("", slot);
@@ -708,23 +730,22 @@ void usb_mouse_poll_xhci(void) {
         last_report_count = report_count;
     }
     
-    // Called periodically from main loop
+    // Called periodically from main loop (already has 16ms delay)
     extern void xhci_poll_events(void *xhci);
     xhci_poll_events(g_xhci_mouse->controller);
     
-    // Standard USB mouse polling rate: 1000 Hz = 1ms interval
-    // This matches gaming mouse specifications (125Hz, 500Hz, or 1000Hz are standard)
-    sleep_us(1000);  // 1ms = 1000 Hz polling rate
+    // No additional sleep needed - main loop already controls polling rate
     
     // Queue initial transfers on first poll after init complete
+    // Use only 2-3 transfers to avoid flooding the system
     static bool transfers_queued = false;
     if (initialization_complete && !transfers_queued) {
         extern int xhci_queue_transfer(void *xhci, uint8_t slot, uint8_t endpoint, void *buffer, uint16_t length);
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i < 2; i++) {
             xhci_queue_transfer(g_xhci_mouse->controller, g_xhci_mouse->slot, 1, 
-                              &g_xhci_mouse->report_buffer, sizeof(usb_mouse_report_t));
+                              &g_xhci_mouse->report_buffer, 8);  // Request 8 bytes for tablet
         }
-        SERIAL_LOG("[USB_MOUSE] Queued 128 initial transfers after init\n");
+        SERIAL_LOG("[USB_MOUSE] Queued 2 initial transfers after init\n");
         SERIAL_LOG("[USB_MOUSE] Buffer address: 0x");
         SERIAL_LOG_HEX("", (uint32_t)&g_xhci_mouse->report_buffer);
         SERIAL_LOG("\n");
@@ -766,7 +787,7 @@ void usb_mouse_process_xhci_data(uint8_t slot) {
     usb_mouse_process_report(&g_xhci_mouse->report_buffer);
     
     // Clear the buffer after processing to prevent reading stale data
-    memset(&g_xhci_mouse->report_buffer, 0, sizeof(usb_mouse_report_t));
+    memset(&g_xhci_mouse->report_buffer, 0, 8);  // Clear 8 bytes for tablet reports
     
     // Razer Mamba specific: Add microsecond delay after processing report
     // This prevents overwhelming the device and ensures stable communication
@@ -789,7 +810,7 @@ void usb_mouse_process_xhci_data(uint8_t slot) {
     // Queue next transfer
     extern int xhci_queue_transfer(void *xhci, uint8_t slot, uint8_t endpoint, void *buffer, uint16_t length);
     int result = xhci_queue_transfer(g_xhci_mouse->controller, slot, 1,
-                       &g_xhci_mouse->report_buffer, sizeof(usb_mouse_report_t));
+                       &g_xhci_mouse->report_buffer, 8);  // Request 8 bytes for tablet reports
     
     if (result != 0) {
         static uint32_t fail_count = 0;

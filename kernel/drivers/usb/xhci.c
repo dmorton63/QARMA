@@ -1249,6 +1249,10 @@ static void xhci_process_work_queue(xhci_controller_t *xhci) {
                 else serial_debug("?\n");
             }
             
+            // USB HID devices (keyboard and mouse) use endpoint 1 (0x81)
+            // Endpoint ID in XHCI context is calculated as: (endpoint_address & 0xF) * 2 + (direction)
+            // For 0x81 (endpoint 1 IN): (1 & 0xF) * 2 + 1 = 3
+            // So endpoint_id 3 is correct for interrupt IN on endpoint 1
             if (slot_id == 1 && endpoint_id == 3) {
                 serial_debug("[XHCI] -> keyboard\n");
                 usb_keyboard_process_xhci_data(slot_id);

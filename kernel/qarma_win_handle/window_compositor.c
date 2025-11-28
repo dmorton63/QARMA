@@ -10,6 +10,8 @@
 #include "core/memory/heap.h"
 #include "core/string.h"
 #include "core/input/mouse.h"
+#include "gui/desktop_toolbar.h"
+#include "config.h"
 
 // External framebuffer info
 extern uint32_t fb_width;
@@ -61,7 +63,8 @@ window_style_t compositor_get_default_style(void) {
         .has_shadow = true,
         .has_close_button = true,
         .has_minimize_button = false,
-        .has_maximize_button = false
+        .has_maximize_button = false,
+        .close_hides = false                    // Default: close destroys
     };
     return style;
 }
@@ -115,6 +118,19 @@ compositor_window_t* compositor_create_window(const char* title, int x, int y, i
 void compositor_destroy_window(compositor_window_t* win) {
     if (!win) return;
     
+    // Clear ALL compositor references to this window before freeing
+    // This prevents dangling pointers that cause crashes
+    
+    // Clear focus if this window was focused
+    if (g_compositor.focused_window == win) {
+        g_compositor.focused_window = NULL;
+    }
+    
+    // CRITICAL: Clear dragging_window if this is the window being dragged
+    if (g_compositor.dragging_window == win) {
+        g_compositor.dragging_window = NULL;
+    }
+    
     // Remove from compositor array
     for (uint32_t i = 0; i < g_compositor.window_count; i++) {
         if (g_compositor.windows[i] == win) {
@@ -123,15 +139,12 @@ void compositor_destroy_window(compositor_window_t* win) {
                 g_compositor.windows[j] = g_compositor.windows[j + 1];
             }
             g_compositor.window_count--;
+            g_compositor.windows[g_compositor.window_count] = NULL;  // Clear old pointer
             break;
         }
     }
     
-    // Clear focus if this window was focused
-    if (g_compositor.focused_window == win) {
-        g_compositor.focused_window = NULL;
-    }
-    
+    // Now safe to free the window memory
     heap_free(win);
 }
 
@@ -269,10 +282,16 @@ void compositor_handle_mouse(mouse_state_t* mouse) {
         // Check for close button click
         compositor_window_t* win = compositor_find_window_at(mouse->x, mouse->y);
         if (win && compositor_point_in_close_button(win, mouse->x, mouse->y)) {
-            gfx_print("Closing window: ");
-            gfx_print(win->base.title ? win->base.title : "(untitled)");
-            gfx_print("\n");
-            compositor_destroy_window(win);
+            if (win->style.close_hides) {
+                // Hide the window instead of destroying it
+                win->base.flags &= ~QARMA_FLAG_VISIBLE;
+            } else {
+                // Destroy the window
+                gfx_print("Closing window: ");
+                gfx_print(win->base.title ? win->base.title : "(untitled)");
+                gfx_print("\n");
+                compositor_destroy_window(win);
+            }
             return;
         }
     }
@@ -363,7 +382,9 @@ void compositor_render_border(compositor_window_t* win) {
 }
 
 void compositor_render_window(compositor_window_t* win) {
-    if (!(win->base.flags & QARMA_FLAG_VISIBLE)) return;
+    if (!(win->base.flags & QARMA_FLAG_VISIBLE)) {
+        return;
+    }
     
     int x = win->base.x;
     int y = win->base.y;
@@ -433,12 +454,32 @@ void compositor_set_cursor_enabled(bool enabled) {
 
 // Save background under cursor
 static void compositor_save_cursor_background(int x, int y) {
-    if (x < 0 || y < 0) return;
+    // Get cursor info to calculate actual render position
+    extern const void* cursor_get(int type);
+    typedef struct {
+        uint32_t* pixels;
+        uint32_t width;
+        uint32_t height;
+        int32_t hotspot_x;
+        int32_t hotspot_y;
+    } cursor_data_t;
+    
+    const cursor_data_t* cursor = (const cursor_data_t*)cursor_get(0);
+    int actual_x = x;
+    int actual_y = y;
+    
+    // Apply hotspot offset to match where cursor is actually drawn
+    if (cursor && cursor->pixels) {
+        actual_x = x - cursor->hotspot_x;
+        actual_y = y - cursor->hotspot_y;
+    }
+    
+    if (actual_x < -CURSOR_BG_WIDTH || actual_y < -CURSOR_BG_HEIGHT) return;
     
     for (int dy = 0; dy < CURSOR_BG_HEIGHT; dy++) {
         for (int dx = 0; dx < CURSOR_BG_WIDTH; dx++) {
-            int px = x + dx;
-            int py = y + dy;
+            int px = actual_x + dx;
+            int py = actual_y + dy;
             if (px >= 0 && px < (int)fb_width && py >= 0 && py < (int)fb_height) {
                 cursor_bg_buffer[dy][dx] = framebuffer_get_pixel(px, py);
             } else {
@@ -451,12 +492,34 @@ static void compositor_save_cursor_background(int x, int y) {
 
 // Restore background under cursor
 static void compositor_restore_cursor_background(int x, int y) {
-    if (x < 0 || y < 0 || !cursor_bg_saved) return;
+    if (!cursor_bg_saved) return;
+    
+    // Get cursor info to calculate actual render position
+    extern const void* cursor_get(int type);
+    typedef struct {
+        uint32_t* pixels;
+        uint32_t width;
+        uint32_t height;
+        int32_t hotspot_x;
+        int32_t hotspot_y;
+    } cursor_data_t;
+    
+    const cursor_data_t* cursor = (const cursor_data_t*)cursor_get(0);
+    int actual_x = x;
+    int actual_y = y;
+    
+    // Apply hotspot offset to match where cursor was actually drawn
+    if (cursor && cursor->pixels) {
+        actual_x = x - cursor->hotspot_x;
+        actual_y = y - cursor->hotspot_y;
+    }
+    
+    if (actual_x < -CURSOR_BG_WIDTH || actual_y < -CURSOR_BG_HEIGHT) return;
     
     for (int dy = 0; dy < CURSOR_BG_HEIGHT; dy++) {
         for (int dx = 0; dx < CURSOR_BG_WIDTH; dx++) {
-            int px = x + dx;
-            int py = y + dy;
+            int px = actual_x + dx;
+            int py = actual_y + dy;
             if (px >= 0 && px < (int)fb_width && py >= 0 && py < (int)fb_height) {
                 framebuffer_draw_pixel(px, py, cursor_bg_buffer[dy][dx]);
             }
@@ -492,76 +555,156 @@ void compositor_render_cursor_only(int x, int y) {
 static void compositor_render_cursor(int x, int y) {
     if (!cursor_enabled) return;
     
-    // Bounds check
-    if (x < 0 || y < 0 || x >= (int)fb_width - 15 || y >= (int)fb_height - 20) {
-        return; // Don't render cursor near edges to avoid overflow
-    }
+    // Try to use loaded cursor data
+    extern const void* cursor_get(int type);
+    typedef struct {
+        uint32_t* pixels;
+        uint32_t width;
+        uint32_t height;
+        int32_t hotspot_x;
+        int32_t hotspot_y;
+    } cursor_data_t;
     
-    // Simple arrow cursor (11x16 pixels)
-    const int cursor_size = 11;
-    rgb_color_t white = {255, 255, 255, 255};
-    rgb_color_t black = {0, 0, 0, 255};
+    const cursor_data_t* cursor = (const cursor_data_t*)cursor_get(0); // CURSOR_ARROW = 0
     
-    // Draw cursor outline (black border)
-    for (int dy = 0; dy < cursor_size + 4; dy++) {
-        int width = (cursor_size + 4 - dy) / 2;
-        if (width < 1) width = 1;
-        for (int dx = 0; dx < width; dx++) {
-            if (x + dx >= 0 && x + dx < (int)fb_width && 
-                y + dy >= 0 && y + dy < (int)fb_height) {
-                framebuffer_draw_pixel(x + dx, y + dy, black);
+    if (cursor && cursor->pixels && cursor->width > 0 && cursor->height > 0) {
+        // Use loaded cursor image
+        int cx = x - cursor->hotspot_x;
+        int cy = y - cursor->hotspot_y;
+        
+        for (uint32_t py = 0; py < cursor->height; py++) {
+            for (uint32_t px = 0; px < cursor->width; px++) {
+                int screen_x = cx + px;
+                int screen_y = cy + py;
+                
+                // Bounds check
+                if (screen_x < 0 || screen_x >= (int)fb_width || 
+                    screen_y < 0 || screen_y >= (int)fb_height) {
+                    continue;
+                }
+                
+                uint32_t pixel = cursor->pixels[py * cursor->width + px];
+                uint8_t alpha = (pixel >> 24) & 0xFF;
+                
+                // Skip fully transparent pixels
+                if (alpha == 0) continue;
+                
+                // Extract RGB
+                uint8_t r = (pixel >> 16) & 0xFF;
+                uint8_t g = (pixel >> 8) & 0xFF;
+                uint8_t b = pixel & 0xFF;
+                
+                // Alpha blend with background
+                if (alpha == 255) {
+                    rgb_color_t color = {r, g, b, 255};
+                    framebuffer_draw_pixel(screen_x, screen_y, color);
+                } else {
+                    // Get background pixel
+                    extern uint32_t* backing_store;
+                    uint32_t bg = backing_store[screen_y * fb_width + screen_x];
+                    uint8_t bg_r = (bg >> 16) & 0xFF;
+                    uint8_t bg_g = (bg >> 8) & 0xFF;
+                    uint8_t bg_b = bg & 0xFF;
+                    
+                    // Blend
+                    uint8_t out_r = (r * alpha + bg_r * (255 - alpha)) / 255;
+                    uint8_t out_g = (g * alpha + bg_g * (255 - alpha)) / 255;
+                    uint8_t out_b = (b * alpha + bg_b * (255 - alpha)) / 255;
+                    
+                    rgb_color_t color = {out_r, out_g, out_b, 255};
+                    framebuffer_draw_pixel(screen_x, screen_y, color);
+                }
             }
         }
-    }
-    
-    // Draw cursor fill (white)
-    for (int dy = 1; dy < cursor_size + 2; dy++) {
-        int width = (cursor_size + 2 - dy) / 2;
-        if (width < 1) break;
-        for (int dx = 1; dx < width - 1; dx++) {
-            if (x + dx >= 0 && x + dx < (int)fb_width && 
-                y + dy >= 0 && y + dy < (int)fb_height) {
-                framebuffer_draw_pixel(x + dx, y + dy, white);
+    } else {
+        // Fallback: simple arrow cursor (11x16 pixels)
+        const int cursor_size = 11;
+        rgb_color_t white = {255, 255, 255, 255};
+        rgb_color_t black = {0, 0, 0, 255};
+        
+        // Bounds check
+        if (x < 0 || y < 0 || x >= (int)fb_width - 15 || y >= (int)fb_height - 20) {
+            return;
+        }
+        
+        // Draw cursor outline (black border)
+        for (int dy = 0; dy < cursor_size + 4; dy++) {
+            int width = (cursor_size + 4 - dy) / 2;
+            if (width < 1) width = 1;
+            for (int dx = 0; dx < width; dx++) {
+                if (x + dx >= 0 && x + dx < (int)fb_width && 
+                    y + dy >= 0 && y + dy < (int)fb_height) {
+                    framebuffer_draw_pixel(x + dx, y + dy, black);
+                }
+            }
+        }
+        
+        // Draw cursor fill (white)
+        for (int dy = 1; dy < cursor_size + 2; dy++) {
+            int width = (cursor_size + 2 - dy) / 2;
+            if (width < 1) break;
+            for (int dx = 1; dx < width - 1; dx++) {
+                if (x + dx >= 0 && x + dx < (int)fb_width && 
+                    y + dy >= 0 && y + dy < (int)fb_height) {
+                    framebuffer_draw_pixel(x + dx, y + dy, white);
+                }
             }
         }
     }
 }
 
 void compositor_render_all(void) {
-    extern void serial_debug(const char* msg);
-    serial_debug("[COMPOSITOR_RENDER] Called\n");
-    
     // Check if compositor is enabled (disabled during boot messages)
     if (!g_compositor_enabled) {
-        serial_debug("[COMPOSITOR_RENDER] Skipped (disabled)\n");
         return;
     }
     
     // Safety check: Prevent potential issues with uninitialized framebuffer
     extern uint32_t* backing_store;
-    if (!backing_store) {
-        serial_debug("[COMPOSITOR_RENDER] ERROR: backing_store is NULL\n");
+    if (!backing_store || fb_width == 0 || fb_height == 0) {
         return;
     }
     
-    if (fb_width == 0 || fb_height == 0) {
-        serial_debug("[COMPOSITOR_RENDER] ERROR: Invalid framebuffer dimensions\n");
-        return;
+    // Invalidate cursor background BEFORE redrawing - the saved background is now stale
+    cursor_bg_saved = false;
+    last_cursor_x = -1;
+    last_cursor_y = -1;
+    
+    // Draw rainbow diagonal gradient background
+    extern uint32_t* backing_store;
+    for (uint32_t y = 0; y < fb_height; y++) {
+        for (uint32_t x = 0; x < fb_width; x++) {
+            // Diagonal coordinate (0 to width+height)
+            uint32_t diag = x + y;
+            uint32_t max_diag = fb_width + fb_height;
+            
+            // Map diagonal position to hue (0-360 degrees)
+            uint32_t hue = (diag * 360) / max_diag;
+            
+            // Convert HSV to RGB (S=100%, V=80% for softer colors)
+            uint8_t r, g, b;
+            uint32_t h_sector = hue / 60;
+            uint32_t h_remainder = (hue % 60) * 255 / 60;
+            
+            uint8_t v = 204;  // 80% brightness (255 * 0.8)
+            uint8_t p = 0;    // Since S=100%, p=0
+            uint8_t q = (v * (255 - h_remainder)) / 255;
+            uint8_t t = (v * h_remainder) / 255;
+            
+            switch(h_sector) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+                default: r = v; g = 0; b = 0; break;
+            }
+            
+            uint32_t pixel = 0xFF000000 | (r << 16) | (g << 8) | b;
+            backing_store[y * fb_width + x] = pixel;
+        }
     }
-    
-    serial_debug("[COMPOSITOR_RENDER] Clearing background\n");
-    
-    // CRITICAL: Clear backing store to desktop background first
-    // This prevents window trails during dragging
-    extern void fb_draw_rect(int x, int y, int width, int height, uint32_t color);
-    rgb_color_t desktop_bg = {176, 196, 222, 255};  // Powder blue
-    uint32_t bg_color = (desktop_bg.alpha << 24) | (desktop_bg.red << 16) | 
-                        (desktop_bg.green << 8) | desktop_bg.blue;
-    fb_draw_rect(0, 0, fb_width, fb_height, bg_color);
-    
-    serial_debug("[COMPOSITOR_RENDER] Background cleared\n");
-    
-    serial_debug("[COMPOSITOR_RENDER] Sorting windows\n");
     
     // Sort windows by z-order (optimized - only sort if needed)
     if (g_z_order_dirty && g_compositor.window_count > 1) {
@@ -581,19 +724,18 @@ void compositor_render_all(void) {
         g_z_order_dirty = false;
     }
     
-    serial_debug("[COMPOSITOR_RENDER] Rendering windows\n");
-    
     // Render from back to front to backing store
     for (uint32_t i = 0; i < g_compositor.window_count; i++) {
         compositor_render_window(g_compositor.windows[i]);
     }
     
-    serial_debug("[COMPOSITOR_RENDER] Windows rendered\n");
-    
-    // Invalidate cursor background since we just redrew everything
-    cursor_bg_saved = false;
-    
-    serial_debug("[COMPOSITOR_RENDER] Rendering cursor\n");
+    // Render desktop toolbar (if it exists)
+    extern desktop_toolbar_t* desktop_toolbar_get_global(void);
+    extern void desktop_toolbar_render(desktop_toolbar_t* toolbar);
+    desktop_toolbar_t* toolbar = desktop_toolbar_get_global();
+    if (toolbar) {
+        desktop_toolbar_render(toolbar);
+    }
     
     // Render cursor on top of everything to backing store
     if (cursor_enabled) {
@@ -605,11 +747,7 @@ void compositor_render_all(void) {
         last_cursor_y = mouse_state.y;
     }
     
-    serial_debug("[COMPOSITOR_RENDER] Swapping buffers\n");
-    
     // DOUBLE BUFFERING: Swap back buffer to visible framebuffer in one operation
     extern void framebuffer_swap(void);
     framebuffer_swap();
-    
-    serial_debug("[COMPOSITOR_RENDER] Complete\n");
 }

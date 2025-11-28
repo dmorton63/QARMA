@@ -1,0 +1,97 @@
+CPU Exception Handler Implementation
+=====================================
+
+OVERVIEW:
+All 32 x86-64 CPU exceptions (0-31) are now handled gracefully with detailed
+error reporting instead of silent reboots.
+
+FEATURES:
+✅ Comprehensive exception handlers for all CPU faults
+✅ Detailed error information logged to serial port
+✅ Red panic screen displayed with exception name
+✅ Special handling for Page Faults (shows CR2, access type, etc.)
+✅ System halts safely requiring manual reboot
+✅ No more mysterious reboots!
+
+FILES CREATED:
+- kernel/core/cpu_exceptions.c     : Exception handlers implementation
+- Modified: kernel/core/interrupts_asm.asm  : Updated ISR stubs with proper error code handling
+
+EXCEPTION COVERAGE:
+0  - Divide by Zero
+1  - Debug  
+2  - Non-Maskable Interrupt
+3  - Breakpoint
+4  - Overflow
+5  - Bound Range Exceeded
+6  - Invalid Opcode
+7  - Device Not Available
+8  - Double Fault ⚠️
+9  - Coprocessor Segment Overrun
+10 - Invalid TSS
+11 - Segment Not Present
+12 - Stack Fault
+13 - General Protection Fault ⚠️
+14 - Page Fault ⚠️
+15 - Reserved
+16 - x87 FPU Error
+17 - Alignment Check
+18 - Machine Check
+19 - SIMD Floating-Point Exception
+20 - Virtualization Exception
+21 - Control Protection Exception
+22-27 - Reserved
+28 - Hypervisor Injection Exception
+29 - VMM Communication Exception
+30 - Security Exception
+31 - Reserved
+
+⚠️ = Most common exceptions
+
+WHAT HAPPENS ON EXCEPTION:
+1. CPU detects fault and jumps to ISR
+2. ISR stub saves registers and extracts fault info
+3. cpu_exception_handler() is called with:
+   - Exception number
+   - Error code
+   - RIP (instruction pointer)
+   - CS (code segment)
+   - RFLAGS (processor flags)
+4. Detailed info logged to serial port
+5. Kernel panic screen displayed (red background)
+6. System halts safely with HLT instruction
+
+SERIAL LOG OUTPUT EXAMPLE:
+==================================================
+          CPU EXCEPTION DETECTED
+==================================================
+Exception: Page Fault
+Number:    14
+Error:     0x6
+RIP:       0xFFFFFFFF80102450
+CS:        0x8
+RFLAGS:    0x202
+CR2 (fault address): 0x0000000000001000
+Page Fault Details:
+  Present:   YES
+  Write:     YES
+  User mode: NO
+  Reserved:  NO
+  Exec:      NO
+==================================================
+
+BENEFITS:
+- Instant visibility into what caused the crash
+- Detailed fault address and access type for debugging
+- No more guessing why the system rebooted
+- Similar to Linux kernel oops messages
+- Similar to Windows BSOD but with better info
+
+TESTING:
+To test, you can intentionally trigger exceptions:
+- Divide by zero: int x = 1/0;
+- NULL pointer: *(int*)0 = 42;
+- Invalid opcode: __asm__("ud2");
+- Page fault: *(int*)0x1000 = 42;
+
+Each will display a detailed panic screen instead of rebooting!

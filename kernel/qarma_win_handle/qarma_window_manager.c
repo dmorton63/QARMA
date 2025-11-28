@@ -6,6 +6,9 @@
 #include "graphics/graphics.h"
 #include "core/input/mouse.h"
 #include "config.h"
+#include "gui/desktop_toolbar.h"
+#include "gui/qarma_control.h"
+#include "core/message_system.h"
 
 // For SERIAL_LOG macro
 extern void serial_debug(const char* msg);
@@ -139,15 +142,12 @@ void qarma_window_manager_handle_mouse_event(QARMA_INPUT_EVENT* event) {
         return;
     }
     
-    static uint32_t event_count = 0;
-    event_count++;
-    if (event_count <= 5 || event_count % 100 == 0) {
-        SERIAL_LOG("[WM_MOUSE] Event #");
-        SERIAL_LOG_DEC("", event_count);
-        SERIAL_LOG(" type=");
-        SERIAL_LOG_HEX("", event->type);
-        SERIAL_LOG("\n");
-    }
+    // TODO: Toolbar disabled - needs redesign
+    // Check if mouse is over toolbar first (toolbar is at bottom of screen)
+    // extern uint32_t fb_height;
+    // if (event->data.mouse.y >= (int32_t)(fb_height - 50)) {
+    //     ... toolbar mouse handling code removed ...
+    // }
     
     // Convert unified event to mouse_state_t for compositor
     mouse_state_t mouse_state;
@@ -181,11 +181,14 @@ void qarma_window_manager_handle_mouse_event(QARMA_INPUT_EVENT* event) {
     if (should_render_all && comp != NULL) {
         extern void compositor_render_all(void);
         compositor_render_all();
-    } else if (event->type == QARMA_INPUT_EVENT_MOUSE_MOVE && comp->dragging_window == NULL) {
-        // Only render cursor separately if not dragging
-        // When dragging, full render is done above which includes cursor
-        extern void compositor_render_cursor_only(int x, int y);
-        compositor_render_cursor_only(mouse_state.x, mouse_state.y);
+    } else if (event->type == QARMA_INPUT_EVENT_MOUSE_MOVE && comp != NULL && comp->dragging_window == NULL) {
+        // Aggressively throttle cursor-only rendering to prevent keyboard lag
+        // Only render every 5th mouse move to ensure keyboard responsiveness
+        static uint32_t cursor_render_skip = 0;
+        if (++cursor_render_skip % 5 == 0) {
+            extern void compositor_render_cursor_only(int x, int y);
+            compositor_render_cursor_only(mouse_state.x, mouse_state.y);
+        }
     }
     
     // Hit test to find target window in QARMA window manager

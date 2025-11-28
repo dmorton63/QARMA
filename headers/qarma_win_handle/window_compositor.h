@@ -9,6 +9,7 @@
 
 #include "qarma_win_handle.h"
 #include "core/input/mouse.h"
+#include "core/handle_manager.h"
 #include "graphics/graphics.h"
 
 // Window decoration constants
@@ -38,6 +39,7 @@ typedef struct {
     bool has_close_button;
     bool has_minimize_button;
     bool has_maximize_button;
+    bool close_hides;               // If true, close button hides instead of destroys
 } window_style_t;
 
 // Extended window handle with compositor data

@@ -148,12 +148,12 @@ void console_compositor_init(void) {
     
     memset(g_console, 0, sizeof(console_compositor_t));
     
-    // Create console window (centered, 70% of screen width/height)
+    // Create console window (centered, 50% of screen width/height)
     extern uint32_t fb_width;
     extern uint32_t fb_height;
     
-    int width = (fb_width * 7) / 10;
-    int height = (fb_height * 7) / 10;
+    int width = fb_width / 2;
+    int height = fb_height / 2;
     int x = (fb_width - width) / 2;
     int y = (fb_height - height) / 2;
     
@@ -172,21 +172,25 @@ void console_compositor_init(void) {
     // Set content renderer
     g_console->window->on_render_content = console_render_content;
     
+    // Make close button hide instead of destroy
+    g_console->window->style.close_hides = true;
+    
     // Add welcome message
     strcpy(g_console->lines[0], "QARMA Console v1.0");
     strcpy(g_console->lines[1], "Type 'help' for available commands");
-    strcpy(g_console->lines[2], "Press 'T' to toggle console, ESC to close");
+    strcpy(g_console->lines[2], "Click CMD button to toggle console, ESC to close");
     strcpy(g_console->lines[3], "");
     g_console->line_count = 4;
     
-    // Start VISIBLE - console is shown on boot by default
-    g_console->window->base.flags |= QARMA_FLAG_VISIBLE;
+    // Start HIDDEN - console is shown via CMD button click
+    // Do NOT set QARMA_FLAG_VISIBLE - console starts hidden
+    g_console->window->base.flags &= ~QARMA_FLAG_VISIBLE;
     
     // Set console callback permanently to capture all gfx_print() output
     extern void gfx_set_console_callback(void (*callback)(const char*));
     gfx_set_console_callback(console_capture_output);
     
-    serial_debug("[CONSOLE] Initialization complete, window VISIBLE\n");
+    serial_debug("[CONSOLE] Initialization complete, window HIDDEN by default\n");
 }
 
 void console_compositor_show(void) {
@@ -473,6 +477,12 @@ void console_compositor_print(const char* text) {
     if (console_compositor_is_visible()) {
         compositor_render_all();
     }
+}
+
+// Print without rendering - for batch operations
+void console_compositor_print_no_render(const char* text) {
+    if (!g_console) return;
+    console_capture_output(text);
 }
 
 // Get scroll position (0 = at bottom, positive = scrolled up into history)

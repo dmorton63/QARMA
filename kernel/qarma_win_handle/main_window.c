@@ -249,8 +249,8 @@ void main_window_handle_event(MainWindow* mw, QARMA_INPUT_EVENT* event) {
             quantum_register_run_examples();
             
             // Wait for user to read output (about 5 seconds)
-            extern void sleep_ms(uint32_t ms);
-            sleep_ms(5000);
+            extern void task_sleep(uint32_t milliseconds);
+            task_sleep(5000);
             
             // Window will redraw on next render cycle
         }

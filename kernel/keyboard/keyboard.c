@@ -109,7 +109,6 @@ bool keyboard_peek_scancode_at(size_t offset, uint8_t *out) {
         *out = scancode_buf[idx];
         has = true;
     }
-    __asm__ volatile("sti");
     return has;
 }
 
