@@ -187,6 +187,7 @@ int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset) {
 void vfs_init(void) {
     extern void gfx_print(const char*);
     gfx_print("[VFS] Starting VFS initialization...\n");
+    SERIAL_LOG("[VFS] init: begin\n");
     
     // Initialize RAM disk
     gfx_print("[VFS] Calling ramdisk_init()...\n");
@@ -203,15 +204,20 @@ void vfs_init(void) {
     extern bool virtio_9p_mount(const char* mount_tag, const char* mount_point);
     
     gfx_print("[VFS] Initializing VirtIO 9P driver...\n");
+    SERIAL_LOG("[VFS] 9P: calling virtio_9p_init()\n");
     if (virtio_9p_init()) {
         gfx_print("[VFS] Mounting host shared filesystem...\n");
+        SERIAL_LOG("[VFS] 9P: init OK, mounting...\n");
         if (virtio_9p_mount("hostshare", "/host")) {
             gfx_print("[VFS] Host filesystem available at /host\n");
+            SERIAL_LOG("[VFS] 9P: mount OK at /host\n");
         } else {
             gfx_print("[VFS] Failed to mount host filesystem\n");
+            SERIAL_LOG("[VFS] 9P: mount FAILED\n");
         }
     } else {
         gfx_print("[VFS] No VirtIO 9P device found (host sharing not available)\n");
+        SERIAL_LOG("[VFS] 9P: init FAILED (device not found)\n");
     }
     
     // Mount RAM disk at root
@@ -227,6 +233,7 @@ void vfs_init(void) {
     }
     
     gfx_print("[VFS] VFS initialization complete.\n");
+    SERIAL_LOG("[VFS] init: end\n");
 }
 
 /**

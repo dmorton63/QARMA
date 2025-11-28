@@ -6,6 +6,7 @@
 #include "pci.h"
 #include "string.h"
 #include "memory/heap.h"
+#include "memory/dma_allocator.h"
 #include "graphics.h"
 #include "config.h"
 #include "io.h"
@@ -85,7 +86,9 @@ static struct {
     uint32_t next_fid;
     uint32_t next_tag;
     virtqueue_t* vq;
+    uint64_t vq_phys;
     uint8_t* msg_buffer;
+    uint64_t msg_phys;
     uint32_t msize;  // Maximum message size
     p9_qid_t root_qid;
 } g_9p_state = {0};
@@ -130,6 +133,7 @@ static uint16_t virtqueue_alloc_desc_chain(virtqueue_t* vq, uint16_t count) {
 // Send request and wait for response
 static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint32_t* resp_len) {
     virtqueue_t* vq = g_9p_state.vq;
+    SERIAL_LOG("[9P] RPC: begin\n");
     
     // Allocate descriptors (one for request, one for response)
     uint16_t head = virtqueue_alloc_desc_chain(vq, 2);
@@ -138,14 +142,22 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
         return false;
     }
     
+    // Compute physical addresses for request/response within the DMA buffer
+    uint64_t req_phys = 0;
+    uint64_t resp_phys = 0;
+    if (g_9p_state.msg_buffer && g_9p_state.msg_phys) {
+        req_phys = g_9p_state.msg_phys + ((uint8_t*)request - g_9p_state.msg_buffer);
+        resp_phys = g_9p_state.msg_phys + ((uint8_t*)response - g_9p_state.msg_buffer);
+    }
+    
     // Setup request descriptor
-    vq->desc[head].addr = (uint64_t)(uintptr_t)request;
+    vq->desc[head].addr = req_phys ? req_phys : (uint64_t)(uintptr_t)request;
     vq->desc[head].len = req_len;
     vq->desc[head].flags = 1; // VIRTQ_DESC_F_NEXT
     
     // Setup response descriptor
     uint16_t resp_desc = vq->desc[head].next;
-    vq->desc[resp_desc].addr = (uint64_t)(uintptr_t)response;
+    vq->desc[resp_desc].addr = resp_phys ? resp_phys : (uint64_t)(uintptr_t)response;
     vq->desc[resp_desc].len = *resp_len;
     vq->desc[resp_desc].flags = 2; // VIRTQ_DESC_F_WRITE
     
@@ -155,11 +167,14 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
     vq->avail.idx++;
     
     // Notify device
+    SERIAL_LOG("[9P] RPC: notify queue 0\n");
     outw(g_9p_state.io_base + VIRTIO_PCI_QUEUE_NOTIFY, 0);
     
     // Wait for response (simple polling - production should use interrupts)
     uint32_t timeout = 1000000;
-    while (vq->used.idx == vq->last_used_idx && timeout-- > 0);
+    while (vq->used.idx == vq->last_used_idx && timeout-- > 0) {
+        // small pause or CPU relax could be inserted here
+    }
     
     if (timeout == 0) {
         SERIAL_LOG("[9P] ERROR: Request timeout\n");
@@ -167,6 +182,7 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
     }
     
     // Get response length
+    SERIAL_LOG("[9P] RPC: response received\n");
     virtq_used_elem_t* used_elem = &vq->used.ring[vq->last_used_idx % VIRTQUEUE_SIZE];
     *resp_len = used_elem->len;
     vq->last_used_idx++;
@@ -176,6 +192,7 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
     vq->free_head = head;
     vq->num_free += 2;
     
+    SERIAL_LOG("[9P] RPC: end\n");
     return true;
 }
 
@@ -213,12 +230,15 @@ bool virtio_9p_init(void) {
                 }
                 
                 // Reset device
+                SERIAL_LOG("[9P] Resetting device status=0\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, 0);
                 
                 // Set ACKNOWLEDGE status
+                SERIAL_LOG("[9P] Setting ACK\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, VIRTIO_STATUS_ACK);
                 
                 // Set DRIVER status
+                SERIAL_LOG("[9P] Setting DRIVER\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, VIRTIO_STATUS_ACK | VIRTIO_STATUS_DRIVER);
                 
                 // Read features
@@ -229,26 +249,62 @@ bool virtio_9p_init(void) {
                 
                 // Write guest features (accept all for now)
                 outl(g_9p_state.io_base + VIRTIO_PCI_GUEST_FEATURES, features);
+                // Set FEATURES_OK and verify
+                uint8_t status = VIRTIO_STATUS_ACK | VIRTIO_STATUS_DRIVER | VIRTIO_STATUS_FEATURES_OK;
+                SERIAL_LOG("[9P] Setting FEATURES_OK\n");
+                outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, status);
+                uint8_t status_read = inb(g_9p_state.io_base + VIRTIO_PCI_STATUS);
+                if ((status_read & VIRTIO_STATUS_FEATURES_OK) == 0) {
+                    SERIAL_LOG("[9P] ERROR: Device did not accept features\n");
+                    return false;
+                }
                 
-                // Allocate virtqueue
-                g_9p_state.vq = (virtqueue_t*)heap_alloc(sizeof(virtqueue_t));
-                if (!g_9p_state.vq) {
+                // Allocate virtqueue (DMA-safe, 2 pages)
+                SERIAL_LOG("[9P] Allocating virtqueue (DMA pool 64KB)\n");
+                void* vq_virt = dma_allocator_alloc(64 * 1024, 4096, 0);
+                g_9p_state.vq = (virtqueue_t*)vq_virt;
+                g_9p_state.vq_phys = dma_allocator_get_phys(vq_virt);
+                if (!g_9p_state.vq || g_9p_state.vq_phys == 0) {
                     SERIAL_LOG("[9P] ERROR: Failed to allocate virtqueue\n");
                     return false;
                 }
+                SERIAL_LOG("[9P] Virtqueue allocated virt=0x");
+                serial_debug_hex((uint32_t)(uintptr_t)g_9p_state.vq);
+                SERIAL_LOG(" phys=0x");
+                serial_debug_hex((uint32_t)(g_9p_state.vq_phys));
+                SERIAL_LOG("\n");
+                memset(g_9p_state.vq, 0, 8192);
                 virtqueue_init(g_9p_state.vq);
                 
                 // Setup virtqueue 0
+                SERIAL_LOG("[9P] Selecting queue 0\n");
                 outw(g_9p_state.io_base + VIRTIO_PCI_QUEUE_SEL, 0);
-                outl(g_9p_state.io_base + VIRTIO_PCI_QUEUE_PFN, (uint32_t)(uintptr_t)g_9p_state.vq >> 12);
+                // Optionally set queue size if available; assume default
+                SERIAL_LOG("[9P] Setting QUEUE_PFN (phys>>12)=0x");
+                serial_debug_hex((uint32_t)(g_9p_state.vq_phys >> 12));
+                SERIAL_LOG("\n");
+                outl(g_9p_state.io_base + VIRTIO_PCI_QUEUE_PFN, (uint32_t)(g_9p_state.vq_phys >> 12));
                 
-                // Allocate message buffer
-                g_9p_state.msg_buffer = (uint8_t*)heap_alloc(8192);
+                // Allocate message buffer (DMA-safe, 2 pages)
+                SERIAL_LOG("[9P] Allocating message buffer (DMA pool 64KB)\n");
+                void* msg_virt = dma_allocator_alloc(64 * 1024, 4096, 0);
+                g_9p_state.msg_buffer = (uint8_t*)msg_virt;
+                g_9p_state.msg_phys = dma_allocator_get_phys(msg_virt);
+                if (!g_9p_state.msg_buffer || g_9p_state.msg_phys == 0) {
+                    SERIAL_LOG("[9P] ERROR: Failed to allocate message buffer\n");
+                    return false;
+                }
+                SERIAL_LOG("[9P] Message buffer allocated virt=0x");
+                serial_debug_hex((uint32_t)(uintptr_t)g_9p_state.msg_buffer);
+                SERIAL_LOG(" phys=0x");
+                serial_debug_hex((uint32_t)(g_9p_state.msg_phys));
+                SERIAL_LOG("\n");
+                memset(g_9p_state.msg_buffer, 0, 8192);
                 g_9p_state.msize = 8192;
                 
                 // Set DRIVER_OK status
-                outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, 
-                     VIRTIO_STATUS_ACK | VIRTIO_STATUS_DRIVER | VIRTIO_STATUS_DRIVER_OK);
+                SERIAL_LOG("[9P] Setting DRIVER_OK\n");
+                outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, status | VIRTIO_STATUS_DRIVER_OK);
                 
                 g_9p_state.initialized = true;
                 g_9p_state.next_fid = P9_ROOT_FID + 1;
@@ -346,7 +402,7 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     serial_debug_hex(g_9p_state.msize);
     SERIAL_LOG("\n");
     
-    // Step 2: TATTACH - attach to root
+    // Step 2: TATTACH - attach to root (9P2000.L requires n_uname)
     SERIAL_LOG("[9P] Sending TATTACH...\n");
     
     p = req;
@@ -358,8 +414,10 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     p += 4;
     *(uint32_t*)p = P9_NOFID; // auth fid
     p += 4;
-    p += write_string(p, ""); // uname
+    p += write_string(p, "root"); // uname
     p += write_string(p, mount_tag); // aname (mount tag)
+    *(uint32_t*)p = 0xFFFFFFFF; // n_uname = -1 (no mapping)
+    p += 4;
     
     req_size = p - req;
     *(uint32_t*)req = req_size;
