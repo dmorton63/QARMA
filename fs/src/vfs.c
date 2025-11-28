@@ -8,11 +8,31 @@ extern int virtio_9p_open(const char* path, int mode);
 extern int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset);
 extern int virtio_9p_write(int fid, const void* buffer, uint32_t count, uint64_t offset);
 extern void virtio_9p_close(int fid);
+extern bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool is_dir));
 
 typedef struct {
     uint32_t magic; // '9PFD'
     int fid;
 } vfs_9p_file_t;
+#ifdef CONFIG_9P_DEBUG
+#define VFS9P_LOG(msg) SERIAL_LOG(msg)
+#else
+#define VFS9P_LOG(msg) ((void)0)
+#endif
+
+static vfs_node_t* g_vfs9p_parent = NULL;
+static void vfs9p_add_child_cb(const char* name, bool is_dir) {
+    if (!g_vfs9p_parent || !name) return;
+    vfs_node_t* node = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+    if (!node) return;
+    memset(node, 0, sizeof(vfs_node_t));
+    strncpy(node->name, name, 63);
+    node->type = is_dir ? VFS_TYPE_DIR : VFS_TYPE_FILE;
+    node->parent = g_vfs9p_parent;
+    // push front
+    node->next = g_vfs9p_parent->children;
+    g_vfs9p_parent->children = node;
+}
 
 #define VFS_9P_MAGIC 0x39504644
 
@@ -176,8 +196,31 @@ vfs_node_t* vfs_open(const char* path) {
                 memset(dir, 0, sizeof(vfs_node_t));
                 strncpy(dir->name, "host", 63);
                 dir->type = VFS_TYPE_DIR;
+                // Populate children via 9P readdir
+                g_vfs9p_parent = dir;
+                dir->children = NULL;
+                (void)virtio_9p_readdir("/", vfs9p_add_child_cb);
+                g_vfs9p_parent = NULL;
                 return dir;
             }
+            // Try to treat as directory first: build a node via readdir
+            vfs_node_t* dir = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+            if (dir) {
+                memset(dir, 0, sizeof(vfs_node_t));
+                dir->type = VFS_TYPE_DIR;
+                // name from last component
+                const char* lastc = rel; for (const char* p = rel; *p; ++p) if (*p=='/') lastc = p+1;
+                strncpy(dir->name, lastc, 63);
+                g_vfs9p_parent = dir;
+                dir->children = NULL;
+                bool ok = virtio_9p_readdir(rel, vfs9p_add_child_cb);
+                g_vfs9p_parent = NULL;
+                if (ok) {
+                    return dir;
+                }
+                free(dir);
+            }
+            // Fall back to opening as file
             int fid = virtio_9p_open(rel, 0x00);
             if (fid >= 0) {
                 vfs_node_t* file = (vfs_node_t*)malloc(sizeof(vfs_node_t));
@@ -200,10 +243,10 @@ vfs_node_t* vfs_open(const char* path) {
                 meta->magic = VFS_9P_MAGIC;
                 meta->fid = fid;
                 file->fs_data = meta;
-                gfx_print("[VFS] 9P passthrough open OK\n");
+                VFS9P_LOG("[VFS] 9P passthrough open OK\n");
                 return file;
             } else {
-                gfx_print("[VFS] 9P passthrough open FAILED\n");
+                VFS9P_LOG("[VFS] 9P passthrough open FAILED\n");
                 return NULL;
             }
         }
@@ -272,20 +315,20 @@ void vfs_init(void) {
     extern bool virtio_9p_mount(const char* mount_tag, const char* mount_point);
     
     gfx_print("[VFS] Initializing VirtIO 9P driver...\n");
-    SERIAL_LOG("[VFS] 9P: calling virtio_9p_init()\n");
+    VFS9P_LOG("[VFS] 9P: calling virtio_9p_init()\n");
     if (virtio_9p_init()) {
         gfx_print("[VFS] Mounting host shared filesystem...\n");
-        SERIAL_LOG("[VFS] 9P: init OK, mounting...\n");
+        VFS9P_LOG("[VFS] 9P: init OK, mounting...\n");
         if (virtio_9p_mount("hostshare", "/host")) {
             gfx_print("[VFS] Host filesystem available at /host\n");
-            SERIAL_LOG("[VFS] 9P: mount OK at /host\n");
+            VFS9P_LOG("[VFS] 9P: mount OK at /host\n");
         } else {
             gfx_print("[VFS] Failed to mount host filesystem\n");
-            SERIAL_LOG("[VFS] 9P: mount FAILED\n");
+            VFS9P_LOG("[VFS] 9P: mount FAILED\n");
         }
     } else {
         gfx_print("[VFS] No VirtIO 9P device found (host sharing not available)\n");
-        SERIAL_LOG("[VFS] 9P: init FAILED (device not found)\n");
+        VFS9P_LOG("[VFS] 9P: init FAILED (device not found)\n");
     }
     
     // Mount RAM disk at root

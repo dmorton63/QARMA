@@ -11,6 +11,13 @@
 #include "config.h"
 #include "io.h"
 
+// Gate 9P debug noise behind CONFIG_9P_DEBUG
+#ifndef CONFIG_9P_DEBUG
+    #undef SERIAL_LOG
+    #define SERIAL_LOG(msg) ((void)0)
+    #define serial_debug_hex(x) ((void)0)
+#endif
+
 // VirtIO legacy I/O port offsets
 #define VIRTIO_PCI_HOST_FEATURES    0
 #define VIRTIO_PCI_GUEST_FEATURES   4
@@ -92,6 +99,8 @@ static struct {
     uint32_t msg_buffer_size;
     uint32_t msize;  // Maximum message size
     p9_qid_t root_qid;
+    bool proto_dotl;   // true if 9P2000.L negotiated
+    bool proto_unix;   // true if 9P2000.u negotiated
 } g_9p_state = {0};
 
 // Virtqueue initialization
@@ -377,6 +386,7 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     p += 2;
     *(uint32_t*)p = g_9p_state.msize;
     p += 4;
+    // Use 9P2000.L which QEMU defaults to
     p += write_string(p, "9P2000.L");
     
     uint32_t req_size = p - req;
@@ -401,13 +411,15 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     
     char version[32];
     read_string(resp + 11, version, sizeof(version));
+    g_9p_state.proto_dotl = (strcmp(version, "9P2000.L") == 0);
+    g_9p_state.proto_unix = (strcmp(version, "9P2000.u") == 0);
     SERIAL_LOG("[9P] Version negotiated: ");
     SERIAL_LOG(version);
     SERIAL_LOG(" msize=");
     serial_debug_hex(g_9p_state.msize);
     SERIAL_LOG("\n");
     
-    // Step 2: TATTACH - attach to root (9P2000.L requires n_uname)
+    // Step 2: TATTACH - attach to root
     SERIAL_LOG("[9P] Sending TATTACH...\n");
     
     p = req;
@@ -415,14 +427,14 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     *p++ = P9_TATTACH;
     *(uint16_t*)p = g_9p_state.next_tag++;
     p += 2;
-    *(uint32_t*)p = P9_ROOT_FID;
-    p += 4;
-    *(uint32_t*)p = P9_NOFID; // auth fid
-    p += 4;
+    *(uint32_t*)p = P9_ROOT_FID; p += 4;
+    *(uint32_t*)p = P9_NOFID;   p += 4; // auth fid
     p += write_string(p, "root"); // uname
     p += write_string(p, mount_tag); // aname (mount tag)
-    *(uint32_t*)p = 0xFFFFFFFF; // n_uname = -1 (no mapping)
-    p += 4;
+    if (g_9p_state.proto_dotl) {
+        *(uint32_t*)p = 0xFFFFFFFF; // n_uname = -1 (no mapping)
+        p += 4;
+    }
     
     req_size = p - req;
     *(uint32_t*)req = req_size;
@@ -711,18 +723,127 @@ void virtio_9p_close(int fid) {
 
 bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool is_dir)) {
     if (!g_9p_state.mounted) return false;
-    
+
     SERIAL_LOG("[9P] Reading directory: ");
     SERIAL_LOG(path);
     SERIAL_LOG("\n");
-    
-    // TODO: Implement directory listing
-    // 1. TWALK to directory
-    // 2. TOPEN in read mode
-    // 3. Multiple TREAD calls to get directory entries
-    // 4. Parse stat structures and call callback
-    
-    return true;
+
+    // Allocate new FID for the directory
+    uint32_t fid = g_9p_state.next_fid++;
+    uint8_t* req = g_9p_state.msg_buffer;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
+    uint8_t* p;
+    uint32_t resp_size;
+
+    // Prepare relative path (skip leading '/')
+    const char* path_start = path ? path : "";
+    if (*path_start == '/') path_start++;
+
+    // Parse components
+    char components[P9_MAXWELEM][64];
+    int num_components = 0;
+    const char* start = path_start;
+    while (*start && num_components < P9_MAXWELEM) {
+        const char* end = start;
+        while (*end && *end != '/') end++;
+        int len = end - start;
+        if (len > 0 && len < 64) {
+            memcpy(components[num_components], start, len);
+            components[num_components][len] = 0;
+            num_components++;
+        }
+        if (*end == '/') start = end + 1; else break;
+    }
+
+    // TWALK to directory
+    p = req;
+    p += 4; // size
+    *p++ = P9_TWALK;
+    *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
+    *(uint32_t*)p = P9_ROOT_FID; p += 4;
+    *(uint32_t*)p = fid; p += 4;
+    *(uint16_t*)p = (uint16_t)num_components; p += 2;
+    for (int i = 0; i < num_components; i++) {
+        p += write_string(p, components[i]);
+    }
+    uint32_t req_size = p - req; *(uint32_t*)req = req_size;
+    resp_size = g_9p_state.msize;
+    if (!virtio_9p_rpc(req, req_size, resp, &resp_size) || resp[4] != P9_RWALK) {
+        SERIAL_LOG("[9P] ERROR: RWALK failed for readdir\n");
+        return false;
+    }
+
+    // TOPEN directory (read-only)
+    p = req; p += 4; *p++ = P9_TOPEN;
+    *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
+    *(uint32_t*)p = fid; p += 4;
+    *(uint32_t*)p = P9_OREAD; p += 4;
+    req_size = p - req; *(uint32_t*)req = req_size;
+    resp_size = g_9p_state.msize;
+    if (!virtio_9p_rpc(req, req_size, resp, &resp_size) || resp[4] != P9_ROPEN) {
+        SERIAL_LOG("[9P] ERROR: ROPEN failed for readdir\n");
+        // Clunk the fid just in case
+        p = req; p += 4; *p++ = P9_TCLUNK;
+        *(uint16_t*)p = g_9p_state.next_tag++; p += 2; *(uint32_t*)p = fid; p += 4;
+        req_size = p - req; *(uint32_t*)req = req_size; resp_size = g_9p_state.msize;
+        virtio_9p_rpc(req, req_size, resp, &resp_size);
+        return false;
+    }
+
+    // TREAD directory entries
+    uint64_t offset = 0;
+    uint32_t count = g_9p_state.msize - 24; // conservative
+    bool any = false;
+    while (1) {
+        p = req; p += 4; *p++ = P9_TREAD;
+        *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
+        *(uint32_t*)p = fid; p += 4;
+        *(uint64_t*)p = offset; p += 8;
+        *(uint32_t*)p = count; p += 4;
+        req_size = p - req; *(uint32_t*)req = req_size;
+        resp_size = g_9p_state.msize;
+        if (!virtio_9p_rpc(req, req_size, resp, &resp_size) || resp[4] != P9_RREAD) {
+            break;
+        }
+        uint32_t data_count = *(uint32_t*)(resp + 7);
+        if (data_count == 0) break; // EOF
+        any = true;
+
+        // Parse sequence of stat structures from resp+11
+        uint32_t pos = 11;
+        while (pos + 2 <= 11 + data_count) {
+            uint8_t* base = resp + pos;
+            uint16_t sz = *(uint16_t*)base; // size of following stat data
+            uint32_t total = 2 + sz;
+            if (pos + total > 11 + data_count) break;
+
+            // qid.type at offset 8 from base
+            uint8_t qtype = *(uint8_t*)(base + 8);
+            // name string at offset 41 (assuming 9P2000.L with 64-bit length)
+            uint16_t namelen = *(uint16_t*)(base + 41);
+            if (41 + 2 + namelen <= sz) {
+                const char* nameptr = (const char*)(base + 43);
+                char namebuf[128];
+                uint16_t copylen = namelen < sizeof(namebuf) - 1 ? namelen : (sizeof(namebuf) - 1);
+                memcpy(namebuf, nameptr, copylen);
+                namebuf[copylen] = 0;
+                if (callback) callback(namebuf, (qtype & 0x80) != 0);
+            }
+
+            pos += total;
+        }
+        offset += data_count;
+        // Avoid long loops for now
+        break;
+    }
+
+    // TCLUNK fid
+    p = req; p += 4; *p++ = P9_TCLUNK;
+    *(uint16_t*)p = g_9p_state.next_tag++; p += 2; *(uint32_t*)p = fid; p += 4;
+    req_size = p - req; *(uint32_t*)req = req_size; resp_size = g_9p_state.msize;
+    virtio_9p_rpc(req, req_size, resp, &resp_size);
+
+    return any || true;
 }
 
 bool virtio_9p_is_mounted(void) {
