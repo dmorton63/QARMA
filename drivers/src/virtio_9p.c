@@ -386,8 +386,8 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     p += 2;
     *(uint32_t*)p = g_9p_state.msize;
     p += 4;
-    // Use 9P2000.L which QEMU defaults to
-    p += write_string(p, "9P2000.L");
+    // Negotiate 9P2000.u to allow directory reads via TREAD
+    p += write_string(p, "9P2000.u");
     
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
@@ -431,10 +431,9 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     *(uint32_t*)p = P9_NOFID;   p += 4; // auth fid
     p += write_string(p, "root"); // uname
     p += write_string(p, mount_tag); // aname (mount tag)
-    if (g_9p_state.proto_dotl) {
-        *(uint32_t*)p = 0xFFFFFFFF; // n_uname = -1 (no mapping)
-        p += 4;
-    }
+    // For compatibility with QEMU, include n_uname for both 9P2000.L and 9P2000.u
+    *(uint32_t*)p = 0xFFFFFFFF; // n_uname = -1 (no mapping)
+    p += 4;
     
     req_size = p - req;
     *(uint32_t*)req = req_size;
@@ -794,7 +793,8 @@ bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool
     uint64_t offset = 0;
     uint32_t count = g_9p_state.msize - 24; // conservative
     bool any = false;
-    while (1) {
+    int loop_guard = 0;
+    while (loop_guard++ < 128) {
         p = req; p += 4; *p++ = P9_TREAD;
         *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
         *(uint32_t*)p = fid; p += 4;
@@ -833,8 +833,6 @@ bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool
             pos += total;
         }
         offset += data_count;
-        // Avoid long loops for now
-        break;
     }
 
     // TCLUNK fid
