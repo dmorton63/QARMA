@@ -322,6 +322,31 @@ void vfs_init(void) {
         if (virtio_9p_mount("hostshare", "/host")) {
             gfx_print("[VFS] Host filesystem available at /host\n");
             VFS9P_LOG("[VFS] 9P: mount OK at /host\n");
+            // Ensure '/host' appears under root immediately
+            // Check if 'host' already exists
+            vfs_node_t* child = vfs_root.children;
+            vfs_node_t* host_node = NULL;
+            while (child) {
+                if (strcmp(child->name, "host") == 0) { host_node = child; break; }
+                child = child->next;
+            }
+            if (!host_node) {
+                host_node = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+                if (host_node) {
+                    memset(host_node, 0, sizeof(vfs_node_t));
+                    strncpy(host_node->name, "host", 63);
+                    host_node->type = VFS_TYPE_DIR;
+                    host_node->parent = &vfs_root;
+                    // insert at head
+                    host_node->next = vfs_root.children;
+                    vfs_root.children = host_node;
+                    // Populate initial listing via 9P
+                    g_vfs9p_parent = host_node;
+                    host_node->children = NULL;
+                    (void)virtio_9p_readdir("/", vfs9p_add_child_cb);
+                    g_vfs9p_parent = NULL;
+                }
+            }
         } else {
             gfx_print("[VFS] Failed to mount host filesystem\n");
             VFS9P_LOG("[VFS] 9P: mount FAILED\n");
