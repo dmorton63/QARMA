@@ -2,6 +2,20 @@
 #include "string.h"
 #include "config.h"
 
+// VirtIO 9P hooks
+extern bool virtio_9p_is_mounted(void);
+extern int virtio_9p_open(const char* path, int mode);
+extern int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset);
+extern int virtio_9p_write(int fid, const void* buffer, uint32_t count, uint64_t offset);
+extern void virtio_9p_close(int fid);
+
+typedef struct {
+    uint32_t magic; // '9PFD'
+    int fid;
+} vfs_9p_file_t;
+
+#define VFS_9P_MAGIC 0x39504644
+
 // Forward declaration for simplefs
 extern void simplefs_init(void);
 extern void ramdisk_init(void);
@@ -150,6 +164,51 @@ vfs_node_t* vfs_open(const char* path) {
     if (path) gfx_print(path);
     gfx_print("\n");
     
+    // Special case: host 9P mount passthrough
+    if (path && virtio_9p_is_mounted()) {
+        if (strncmp(path, "/host/", 6) == 0) {
+            const char* rel = path + 5; // points to "/..." start
+            if (*rel == '/') rel++;
+            if (*rel == '\0') {
+                // Opening the mount directory itself
+                vfs_node_t* dir = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+                if (!dir) return NULL;
+                memset(dir, 0, sizeof(vfs_node_t));
+                strncpy(dir->name, "host", 63);
+                dir->type = VFS_TYPE_DIR;
+                return dir;
+            }
+            int fid = virtio_9p_open(rel, 0x00);
+            if (fid >= 0) {
+                vfs_node_t* file = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+                if (!file) {
+                    virtio_9p_close(fid);
+                    return NULL;
+                }
+                memset(file, 0, sizeof(vfs_node_t));
+                // Set name from last path component
+                const char* last = rel;
+                for (const char* p = rel; *p; ++p) if (*p == '/') last = p + 1;
+                strncpy(file->name, last, 63);
+                file->type = VFS_TYPE_FILE;
+                vfs_9p_file_t* meta = (vfs_9p_file_t*)malloc(sizeof(vfs_9p_file_t));
+                if (!meta) {
+                    virtio_9p_close(fid);
+                    free(file);
+                    return NULL;
+                }
+                meta->magic = VFS_9P_MAGIC;
+                meta->fid = fid;
+                file->fs_data = meta;
+                gfx_print("[VFS] 9P passthrough open OK\n");
+                return file;
+            } else {
+                gfx_print("[VFS] 9P passthrough open FAILED\n");
+                return NULL;
+            }
+        }
+    }
+
     vfs_node_t* node = vfs_find_node(path);
     if (node) {
         gfx_print("[VFS] File found successfully\n");
@@ -164,6 +223,15 @@ vfs_node_t* vfs_open(const char* path) {
 int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset) {
     if (!node || !buf || node->type != VFS_TYPE_FILE) {
         return -1;
+    }
+
+    // 9P passthrough
+    if (node->fs_data) {
+        vfs_9p_file_t* meta = (vfs_9p_file_t*)node->fs_data;
+        if (meta->magic == VFS_9P_MAGIC) {
+            int r = virtio_9p_read(meta->fid, buf, (uint32_t)size, (uint64_t)offset);
+            return r;
+        }
     }
     
     // If we have a filesystem driver, use it
@@ -330,6 +398,15 @@ int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset) {
         return -1;
     }
     
+    // 9P passthrough
+    if (node->fs_data) {
+        vfs_9p_file_t* meta = (vfs_9p_file_t*)node->fs_data;
+        if (meta->magic == VFS_9P_MAGIC) {
+            int w = virtio_9p_write(meta->fid, buf, (uint32_t)size, (uint64_t)offset);
+            return w;
+        }
+    }
+
     // If we have a filesystem driver, use it
     if (node->fs && node->blockdev) {
         // For now, both simplefs and fat16 use the same underlying storage format

@@ -89,6 +89,7 @@ static struct {
     uint64_t vq_phys;
     uint8_t* msg_buffer;
     uint64_t msg_phys;
+    uint32_t msg_buffer_size;
     uint32_t msize;  // Maximum message size
     p9_qid_t root_qid;
 } g_9p_state = {0};
@@ -285,9 +286,12 @@ bool virtio_9p_init(void) {
                 SERIAL_LOG("\n");
                 outl(g_9p_state.io_base + VIRTIO_PCI_QUEUE_PFN, (uint32_t)(g_9p_state.vq_phys >> 12));
                 
-                // Allocate message buffer (DMA-safe, 2 pages)
+                // Allocate message buffer (DMA-safe). Reserve 2 * msize (req+resp)
+                // Default desired msize = 32KB (fits in a 64KB pool block)
+                uint32_t desired_msize = 32 * 1024;
+                uint32_t msg_total = desired_msize * 2;
                 SERIAL_LOG("[9P] Allocating message buffer (DMA pool 64KB)\n");
-                void* msg_virt = dma_allocator_alloc(64 * 1024, 4096, 0);
+                void* msg_virt = dma_allocator_alloc(msg_total, 4096, 0);
                 g_9p_state.msg_buffer = (uint8_t*)msg_virt;
                 g_9p_state.msg_phys = dma_allocator_get_phys(msg_virt);
                 if (!g_9p_state.msg_buffer || g_9p_state.msg_phys == 0) {
@@ -299,8 +303,9 @@ bool virtio_9p_init(void) {
                 SERIAL_LOG(" phys=0x");
                 serial_debug_hex((uint32_t)(g_9p_state.msg_phys));
                 SERIAL_LOG("\n");
-                memset(g_9p_state.msg_buffer, 0, 8192);
-                g_9p_state.msize = 8192;
+                g_9p_state.msg_buffer_size = msg_total;
+                memset(g_9p_state.msg_buffer, 0, g_9p_state.msg_buffer_size);
+                g_9p_state.msize = desired_msize;
                 
                 // Set DRIVER_OK status
                 SERIAL_LOG("[9P] Setting DRIVER_OK\n");
@@ -360,7 +365,7 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     SERIAL_LOG("'\n");
     
     uint8_t* req = g_9p_state.msg_buffer;
-    uint8_t* resp = g_9p_state.msg_buffer + 4096;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
     
     // Step 1: TVERSION - negotiate protocol version
     SERIAL_LOG("[9P] Sending TVERSION...\n");
@@ -377,7 +382,7 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    uint32_t resp_size = 4096;
+    uint32_t resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TVERSION failed\n");
         return false;
@@ -422,7 +427,7 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
     req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    resp_size = 4096;
+    resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TATTACH failed\n");
         return false;
@@ -466,7 +471,7 @@ int virtio_9p_open(const char* path, int mode) {
     uint32_t fid = g_9p_state.next_fid++;
     
     uint8_t* req = g_9p_state.msg_buffer;
-    uint8_t* resp = g_9p_state.msg_buffer + 4096;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
     uint8_t* p;
     uint32_t resp_size;
     
@@ -517,7 +522,7 @@ int virtio_9p_open(const char* path, int mode) {
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    resp_size = 4096;
+    resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TWALK failed\n");
         return -1;
@@ -546,7 +551,7 @@ int virtio_9p_open(const char* path, int mode) {
     req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    resp_size = 4096;
+    resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TOPEN failed\n");
         return -1;
@@ -577,7 +582,7 @@ int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset) {
     SERIAL_LOG("\n");
     
     uint8_t* req = g_9p_state.msg_buffer;
-    uint8_t* resp = g_9p_state.msg_buffer + 4096;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
     
     // Limit read size to fit in message buffer
     if (count > g_9p_state.msize - 24) {
@@ -599,7 +604,7 @@ int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset) {
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    uint32_t resp_size = 4096;
+    uint32_t resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TREAD failed\n");
         return -1;
@@ -632,7 +637,7 @@ int virtio_9p_write(int fid, const void* buffer, uint32_t count, uint64_t offset
     SERIAL_LOG("\n");
     
     uint8_t* req = g_9p_state.msg_buffer;
-    uint8_t* resp = g_9p_state.msg_buffer + 4096;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
     
     // Limit write size
     if (count > g_9p_state.msize - 32) {
@@ -656,7 +661,7 @@ int virtio_9p_write(int fid, const void* buffer, uint32_t count, uint64_t offset
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    uint32_t resp_size = 4096;
+    uint32_t resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TWRITE failed\n");
         return -1;
@@ -685,7 +690,7 @@ void virtio_9p_close(int fid) {
     SERIAL_LOG("\n");
     
     uint8_t* req = g_9p_state.msg_buffer;
-    uint8_t* resp = g_9p_state.msg_buffer + 4096;
+    uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
     
     uint8_t* p = req;
     p += 4;
@@ -698,7 +703,7 @@ void virtio_9p_close(int fid) {
     uint32_t req_size = p - req;
     *(uint32_t*)req = req_size;
     
-    uint32_t resp_size = 4096;
+    uint32_t resp_size = g_9p_state.msize;
     virtio_9p_rpc(req, req_size, resp, &resp_size);
     
     SERIAL_LOG("[9P] File closed\n");
