@@ -71,6 +71,20 @@ void cmd_help(int argc, char** argv) {
     gfx_print("  aiload  - Load AI learning data from disk\n");
     gfx_print("  aistats - Show AI and quantum statistics\n");
     gfx_print("  reboot  - Restart the system\n");
+
+    // Filesystem commands
+    gfx_print("\nFilesystem commands:\n");
+    gfx_print("  ls [path]   - List directory contents (sorted)\n");
+    gfx_print("  dir [path]  - Alias for ls\n");
+    gfx_print("  cd <dir>    - Change directory\n");
+    gfx_print("  pwd         - Print working directory\n");
+    gfx_print("  cat <file>  - Display file contents\n");
+    gfx_print("  disk        - Show disk information\n");
+    gfx_print("  mkdir <dir> - Create directory (not implemented)\n");
+    gfx_print("  rmdir <dir> - Remove directory (not implemented)\n");
+    gfx_print("  rm <file>   - Remove file (not implemented)\n");
+    gfx_print("  cp <s> <d>  - Copy file (not implemented)\n");
+    gfx_print("  mv <s> <d>  - Move/Rename file (not implemented)\n");
 }
 
 void cmd_echo(int argc, char** argv) {

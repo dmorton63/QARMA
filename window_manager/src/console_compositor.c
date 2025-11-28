@@ -26,6 +26,26 @@ typedef struct {
 
 static console_compositor_t* g_console = NULL;
 
+// Draw a single-line string clipped to the window's content area
+static void draw_string_clipped(int x, int y, int x_max, const char* text,
+                                rgb_color_t fg, rgb_color_t bg) {
+    if (!text) return;
+    if (x_max <= x) return;
+    int max_chars = (x_max - x) / 8; // 8px per glyph
+    if (max_chars <= 0) return;
+
+    // Clip to max_chars to avoid drawing past the border
+    int len = 0;
+    while (text[len] && len < max_chars) len++;
+    if (len <= 0) return;
+
+    char buf[256];
+    if (len >= (int)sizeof(buf)) len = (int)sizeof(buf) - 1;
+    memcpy(buf, text, (size_t)len);
+    buf[len] = '\0';
+    gfx_draw_string((uint32_t)x, (uint32_t)y, buf, fg, bg, NULL);
+}
+
 // Callback for gfx_print redirection
 static void console_capture_output(const char* text) {
     if (!g_console || !text) return;
@@ -102,10 +122,12 @@ void console_render_content(QARMA_WIN_HANDLE* win, int x, int y, int w, int h) {
         if (start_line < 0) start_line = 0;
     }
     
-    // Render output lines
+    // Render output lines (clip to content width)
     int text_y = y + 5;
+    int content_x0 = x + 5;
+    int content_x1 = x + w - 5; // leave right padding for border
     for (int i = start_line; i < g_console->line_count && text_y < y + h - 25; i++) {
-        gfx_draw_string(x + 5, text_y, g_console->lines[i], text_color, bg, NULL);
+        draw_string_clipped(content_x0, text_y, content_x1, g_console->lines[i], text_color, bg);
         text_y += line_height;
     }
     
@@ -114,13 +136,18 @@ void console_render_content(QARMA_WIN_HANDLE* win, int x, int y, int w, int h) {
     gfx_draw_string(x + 5, input_y, "> ", prompt_color, bg, NULL);
     
     if (g_console->input_pos > 0) {
-        gfx_draw_string(x + 20, input_y, g_console->input_buffer, text_color, bg, NULL);
+        draw_string_clipped(x + 20, input_y, x + w - 5, g_console->input_buffer, text_color, bg);
     }
     
     // Draw cursor (blinking)
     extern uint32_t get_ticks(void);
     if ((get_ticks() / 30) % 2 == 0) {
-        int cursor_x = x + 20 + (g_console->input_pos * 8);
+        // Clamp cursor to input area width
+        int max_chars = (x + w - 5 - (x + 20)) / 8;
+        if (max_chars < 0) max_chars = 0;
+        int visible_chars = g_console->input_pos;
+        if (visible_chars > max_chars) visible_chars = max_chars;
+        int cursor_x = x + 20 + (visible_chars * 8);
         rgb_color_t cursor_color = {0, 255, 0, 255};
         gfx_draw_filled_rectangle(cursor_x, input_y, 8, 12, cursor_color);
     }

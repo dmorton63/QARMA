@@ -789,6 +789,17 @@ bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool
         return false;
     }
 
+    // Verify the opened target is actually a directory using qid.type
+    p9_qid_t* oq = (p9_qid_t*)(resp + 7);
+    if ((oq->type & 0x80) == 0) {
+        // Not a directory — close and report failure so callers can treat as file
+        p = req; p += 4; *p++ = P9_TCLUNK;
+        *(uint16_t*)p = g_9p_state.next_tag++; p += 2; *(uint32_t*)p = fid; p += 4;
+        req_size = p - req; *(uint32_t*)req = req_size; resp_size = g_9p_state.msize;
+        virtio_9p_rpc(req, req_size, resp, &resp_size);
+        return false;
+    }
+
     // TREAD directory entries
     uint64_t offset = 0;
     uint32_t count = g_9p_state.msize - 24; // conservative
@@ -841,7 +852,7 @@ bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool
     req_size = p - req; *(uint32_t*)req = req_size; resp_size = g_9p_state.msize;
     virtio_9p_rpc(req, req_size, resp, &resp_size);
 
-    return any || true;
+    return any;
 }
 
 bool virtio_9p_is_mounted(void) {

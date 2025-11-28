@@ -15,27 +15,67 @@ extern void gfx_print_hex(uint32_t value);
 // Current working directory
 static char g_current_dir[256] = "/";
 
+// Build absolute path from current directory and input (if relative)
+static void build_abs_path(const char* input, char* out, size_t outsz) {
+    if (!input || !*input) {
+        // No input provided, use current directory
+        strncpy(out, g_current_dir, outsz - 1);
+        out[outsz - 1] = '\0';
+        return;
+    }
+    if (input[0] == '/') {
+        // Already absolute
+        strncpy(out, input, outsz - 1);
+        out[outsz - 1] = '\0';
+        return;
+    }
+    // Relative to current directory
+    if (strcmp(g_current_dir, "/") == 0) {
+        out[0] = '/';
+        strncpy(out + 1, input, outsz - 2);
+        out[outsz - 1] = '\0';
+    } else {
+        strncpy(out, g_current_dir, outsz - 1);
+        out[outsz - 1] = '\0';
+        size_t len = strlen(out);
+        if (len < outsz - 1) {
+            out[len] = '/';
+            len++;
+        }
+        if (len < outsz) {
+            strncpy(out + len, input, outsz - len - 1);
+            out[outsz - 1] = '\0';
+        }
+    }
+}
+
 // List files and directories
 void cmd_ls(int argc, char** argv) {
-    const char* path = (argc > 1) ? argv[1] : g_current_dir;
+    char abs_path[256];
+    if (argc > 1) {
+        build_abs_path(argv[1], abs_path, sizeof(abs_path));
+    } else {
+        strncpy(abs_path, g_current_dir, sizeof(abs_path) - 1);
+        abs_path[sizeof(abs_path) - 1] = '\0';
+    }
     
-    vfs_node_t* node = vfs_open(path);
+    vfs_node_t* node = vfs_open(abs_path);
     if (!node) {
         gfx_print("ls: ");
-        gfx_print(path);
+        gfx_print(abs_path);
         gfx_print(": No such directory\n");
         return;
     }
     
     if (node->type != VFS_TYPE_DIR) {
         gfx_print("ls: ");
-        gfx_print(path);
+        gfx_print(abs_path);
         gfx_print(": Not a directory\n");
         return;
     }
     
     gfx_print("Contents of ");
-    gfx_print(path);
+    gfx_print(abs_path);
     gfx_print(":\n");
     
     vfs_node_t* child = node->children;
@@ -44,14 +84,42 @@ void cmd_ls(int argc, char** argv) {
         return;
     }
     
-    while (child) {
+    // Count children
+    int count = 0;
+    for (vfs_node_t* it = child; it; it = it->next) {
+        count++;
+    }
+
+    // Collect into an array for sorting
+    vfs_node_t* entries[count];
+    int idx = 0;
+    for (vfs_node_t* it = child; it; it = it->next) {
+        entries[idx++] = it;
+    }
+
+    // Simple insertion sort by name (alphabetical)
+    for (int i = 1; i < count; i++) {
+        vfs_node_t* key = entries[i];
+        int j = i - 1;
+        while (j >= 0 && strcmp(entries[j]->name, key->name) > 0) {
+            entries[j + 1] = entries[j];
+            j--;
+        }
+        entries[j + 1] = key;
+    }
+
+    // Print dot entries first
+    gfx_print("  .\n");
+    gfx_print("  ..\n");
+
+    // Then print sorted entries
+    for (int i = 0; i < count; i++) {
         gfx_print("  ");
-        gfx_print(child->name);
-        if (child->type == VFS_TYPE_DIR) {
+        gfx_print(entries[i]->name);
+        if (entries[i]->type == VFS_TYPE_DIR) {
             gfx_print("/");
         }
         gfx_print("\n");
-        child = child->next;
     }
 }
 
@@ -181,13 +249,14 @@ void cmd_cat(int argc, char** argv) {
         return;
     }
     
-    const char* filename = argv[1];
+    char abs_path[256];
+    build_abs_path(argv[1], abs_path, sizeof(abs_path));
     
     gfx_print("Attempting to read: ");
-    gfx_print(filename);
+    gfx_print(abs_path);
     gfx_print("\n");
     
-    vfs_node_t* node = vfs_open(filename);
+    vfs_node_t* node = vfs_open(abs_path);
     if (!node) {
         gfx_print("Error: File not found\n");
         return;
