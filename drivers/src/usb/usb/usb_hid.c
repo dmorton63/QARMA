@@ -1,8 +1,8 @@
-#include "usb_hid.h"
-#include "usb_mouse.h"
-#include "core/memory/heap.h"
-#include "core/stdtools.h"
-// #include "graphics/serial_console.h"
+#include "usb/usb/usb_hid.h"
+#include "usb/usb/usb_mouse.h"
+#include "memory/heap.h"
+#include "stdtools.h"
+// #include "serial_console.h"
 #include "config.h"
 
 int usb_hid_init(void) {

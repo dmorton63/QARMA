@@ -10,7 +10,7 @@
 #define QUANTUM_KERNEL_H
 
 #include "kernel_types.h"
-#include "core/kernel.h"
+#include "kernel.h"
 
 // Quantum process states using superposition principle
 typedef enum {

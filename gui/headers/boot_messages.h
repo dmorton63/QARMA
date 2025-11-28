@@ -7,9 +7,9 @@
 #define QARMA_BOOT_MESSAGES_H
 
 #include "kernel_types.h"
-#include "gui/frame.h"
-#include "gui/qarma_control.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "frame.h"
+#include "qarma_control.h"
+#include "qarma_input_events.h"
 
 #define MAX_BOOT_MESSAGES 100
 #define MAX_MESSAGE_LENGTH 120

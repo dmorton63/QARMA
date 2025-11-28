@@ -5,10 +5,10 @@
  * Arrow keys move cursor, WASD for fine control, Space/Enter for clicks.
  */
 
-#include "mock_mouse.h"
-#include "mouse.h"
-#include "../io.h"
-#include "graphics/graphics.h"
+#include "input/mock_mouse.h"
+#include "input/mouse.h"
+#include "io.h"
+#include "graphics.h"
 #include "config.h"
 
 extern uint32_t fb_width;

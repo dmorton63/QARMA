@@ -9,7 +9,7 @@
 #define AI_SUBSYSTEM_H
 
 #include "kernel_types.h"
-#include "core/kernel.h"
+#include "kernel.h"
 
 // AI agent types
 typedef enum {

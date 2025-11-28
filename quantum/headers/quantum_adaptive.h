@@ -8,7 +8,7 @@
 #define QUANTUM_ADAPTIVE_H
 
 #include "kernel_types.h"
-#include "quantum/quantum_register.h"
+#include "quantum_register.h"
 
 // Adaptive execution policies
 typedef enum {

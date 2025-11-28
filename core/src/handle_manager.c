@@ -4,9 +4,9 @@
  * Provides universal handle allocation with type safety and generation tracking.
  */
 
-#include "core/handle_manager.h"
-#include "core/memory.h"
-#include "core/string.h"
+#include "handle_manager.h"
+#include "memory.h"
+#include "string.h"
 #include "config.h"
 
 // ============================================================================

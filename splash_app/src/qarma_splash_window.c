@@ -1,9 +1,9 @@
 #include "qarma_splash_window.h"
-#include "graphics/framebuffer.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
-#include "graphics/png_decoder.h"
+#include "framebuffer.h"
+#include "qarma_window_manager.h"
+#include "memory.h"
+#include "memory/heap.h"
+#include "png_decoder.h"
 
 // Extended splash glyph
 typedef struct QARMA_SPLASH_HANDLE {

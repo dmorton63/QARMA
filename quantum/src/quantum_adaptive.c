@@ -2,9 +2,9 @@
  * QARMA - Quantum Adaptive Execution Implementation
  */
 
-#include "quantum/quantum_adaptive.h"
-#include "quantum/quantum_ai_observer.h"
-#include "core/memory/heap.h"
+#include "quantum_adaptive.h"
+#include "quantum_ai_observer.h"
+#include "memory/heap.h"
 #include "config.h"
 
 // Default thresholds

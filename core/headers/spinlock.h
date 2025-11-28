@@ -1,7 +1,7 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
 
-#include "../core/stdtools.h"
+#include "stdtools.h"
 
 typedef struct {
     volatile uint32_t locked;

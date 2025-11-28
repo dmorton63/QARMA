@@ -1,6 +1,6 @@
-#include "close_button.h"
-#include "../renderer.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "controls/controls/close_button.h"
+#include "renderer.h"
+#include "qarma_input_events.h"
 
 static bool close_button_handle_event_impl(CloseButton* cb, QARMA_INPUT_EVENT* event);
 

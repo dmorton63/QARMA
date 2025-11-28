@@ -1,7 +1,7 @@
 #ifndef UHCI_H
 #define UHCI_H
 
-#include "core/kernel.h"
+#include "kernel.h"
 #include "usb.h"
 
 // UHCI Register Offsets

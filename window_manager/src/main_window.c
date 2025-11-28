@@ -1,14 +1,14 @@
 #include "main_window.h"
-#include "core/memory.h"
-#include "graphics/framebuffer.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "qarma_win_handle/qarma_win_factory.h"
-#include "core/memory/heap.h"
-#include "gui/controls/close_button.h"
-// #include "gui/controls/label.h"  // Legacy - disabled
-// #include "gui/status_bar.h"  // Legacy - disabled
-#include "gui/console_window.h"  // New architecture
-#include "quantum/quantum_register_example.h"
+#include "memory.h"
+#include "framebuffer.h"
+#include "qarma_window_manager.h"
+#include "qarma_win_factory.h"
+#include "memory/heap.h"
+#include "controls/controls/close_button.h"
+// #include "controls/label.h"  // Legacy - disabled
+// #include "status_bar.h"  // Legacy - disabled
+#include "console_window.h"  // New architecture
+#include "quantum_register_example.h"
 #include "config.h"
 
 // Console window (new architecture)

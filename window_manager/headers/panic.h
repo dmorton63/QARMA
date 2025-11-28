@@ -1,5 +1,5 @@
 #pragma once
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 void panic(const char* msg);

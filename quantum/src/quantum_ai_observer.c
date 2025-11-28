@@ -4,10 +4,10 @@
  * AI system that learns optimal collapse strategies.
  */
 
-#include "quantum/quantum_ai_observer.h"
-#include "quantum/quantum_register.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
+#include "quantum_ai_observer.h"
+#include "quantum_register.h"
+#include "memory.h"
+#include "memory/heap.h"
 #include "config.h"
 
 // Global observer instance

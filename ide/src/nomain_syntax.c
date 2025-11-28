@@ -3,7 +3,7 @@
  */
 
 #include "nomain_syntax.h"
-#include "core/memory.h"
+#include "memory.h"
 
 // Character type helpers (since we can't use ctype.h)
 static inline int isdigit(char c) { return c >= '0' && c <= '9'; }

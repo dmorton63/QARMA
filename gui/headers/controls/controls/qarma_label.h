@@ -7,7 +7,7 @@
 #ifndef QARMA_LABEL_H
 #define QARMA_LABEL_H
 
-#include "gui/qarma_control.h"
+#include "qarma_control.h"
 
 // ============================================================================
 // Label Alignment

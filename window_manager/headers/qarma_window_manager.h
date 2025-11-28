@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 #include "qarma_win_handle.h"
 //#include "qarma_schedtypedefs.h"
 typedef struct QARMA_WINDOW_MANAGER QARMA_WINDOW_MANAGER;

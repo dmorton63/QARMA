@@ -1,5 +1,5 @@
 #pragma once
-#include "core/blockdev.h"
+#include "blockdev.h"
 #include "vfs.h"
 
 // Simple filesystem driver (for RAM disk demonstration)

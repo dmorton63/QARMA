@@ -2,9 +2,9 @@
 #define FRAMEBUFFER_H
 
 #include <stdbool.h>
-#include "core/stdtools.h"
+#include "stdtools.h"
 #include "graphics.h"
-#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle.h"
 
 #define IN_BOUNDS(x, max) ((x) >= 0 && (x) < (int)(max))
 

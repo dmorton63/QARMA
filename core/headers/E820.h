@@ -1,7 +1,7 @@
 #ifndef E820_H  
 #define E820_H
 
-#include "../../stdtools.h"
+#include "stdtools.h"
 
 
 #define E820_USABLE   1

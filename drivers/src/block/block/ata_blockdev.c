@@ -4,10 +4,10 @@
  * Integrates ATA driver with the block device subsystem
  */
 
-#include "drivers/ata.h"
-#include "core/blockdev.h"
-#include "fs/vfs.h"
-#include "fs/fat16.h"
+#include "ata.h"
+#include "blockdev.h"
+#include "vfs.h"
+#include "fat16.h"
 #include "config.h"
 
 #define ATA_BLOCK_SIZE 512

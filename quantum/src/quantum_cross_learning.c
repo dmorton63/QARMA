@@ -4,9 +4,9 @@
  * Implements message passing and knowledge sharing between qubits.
  */
 
-#include "quantum/quantum_cross_learning.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
+#include "quantum_cross_learning.h"
+#include "memory/heap.h"
+#include "string.h"
 #include "config.h"
 
 // Global message queue (circular buffer)

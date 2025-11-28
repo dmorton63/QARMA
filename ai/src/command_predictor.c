@@ -4,8 +4,8 @@
  */
 
 #include "command_predictor.h"
-#include "core/string.h"  // For string operations
-#include "core/timer.h"   // For timestamps
+#include "string.h"  // For string operations
+#include "timer.h"   // For timestamps
 #include "config.h"       // For SERIAL_LOG macros
 
 // Command cache storage

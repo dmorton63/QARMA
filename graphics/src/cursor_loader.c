@@ -2,10 +2,10 @@
  * QARMA - Cursor/Icon Asset Loader Implementation
  */
 
-#include "graphics/cursor_loader.h"
-#include "graphics/png_decoder.h"
+#include "cursor_loader.h"
+#include "png_decoder.h"
 #include "memory/heap.h"
-#include "core/string.h"
+#include "string.h"
 #include "config.h"
 
 static cursor_data_t g_cursors[CURSOR_MAX] = {0};

@@ -1,7 +1,7 @@
 #pragma once
-#include "core/stdtools.h"
-#include "graphics/framebuffer.h"
-#include "qarma_win_handle/qarma_win_handle.h"
+#include "stdtools.h"
+#include "framebuffer.h"
+#include "qarma_win_handle.h"
 
 #define COLOR_CLOCK_TEXT 0x00FF00  // Bright green
 #define COLOR_CLOCK_BG 0x000000    // Black background

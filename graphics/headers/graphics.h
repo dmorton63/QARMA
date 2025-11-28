@@ -6,7 +6,7 @@
 #ifndef QUANTUM_GRAPHICS_H
 #define QUANTUM_GRAPHICS_H
 
-#include "core/kernel.h"
+#include "kernel.h"
 
 // Display mode types
 typedef enum {

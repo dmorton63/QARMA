@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/stdtools.h"
-#include "core/scheduler/subsystem_registry.h"
-#include "../graphics.h"
-#include "../font_data.h"
+#include "stdtools.h"
+#include "scheduler/subsystem_registry.h"
+#include "graphics.h"
+#include "font_data.h"
 
 typedef struct {
     uint32_t total_frames_rendered;

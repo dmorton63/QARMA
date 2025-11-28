@@ -1,5 +1,5 @@
-#include "core/system_control.h"
-#include "core/io.h"
+#include "system_control.h"
+#include "io.h"
 #include "config.h"
 
 // Shutdown the system via ACPI or fallback methods

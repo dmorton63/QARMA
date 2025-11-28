@@ -1,7 +1,7 @@
 #ifndef CLOSE_BUTTON_H
 #define CLOSE_BUTTON_H
 
-#include "../control_base.h"
+#include "control_base.h"
 
 // Close button - small X button for window title bars
 typedef struct {

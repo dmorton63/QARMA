@@ -8,9 +8,9 @@
 #pragma once
 
 #include "qarma_win_handle.h"
-#include "core/input/mouse.h"
-#include "core/handle_manager.h"
-#include "graphics/graphics.h"
+#include "input/mouse.h"
+#include "handle_manager.h"
+#include "graphics.h"
 
 // Window decoration constants
 #define WINDOW_TITLE_BAR_HEIGHT    24

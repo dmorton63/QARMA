@@ -8,9 +8,9 @@
 #define NOMAIN_IDE_WINDOW_H
 
 #include "nomain_ide.h"
-#include "qarma_win_handle/qarma_win_handle.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "qarma_win_handle.h"
+#include "qarma_window_manager.h"
+#include "qarma_input_events.h"
 
 /**
  * Why use QARMA's window system:

@@ -2,13 +2,13 @@
  * QARMA - VirtIO 9P File System Driver Implementation
  */
 
-#include "drivers/virtio_9p.h"
-#include "core/pci.h"
-#include "core/string.h"
+#include "virtio_9p.h"
+#include "pci.h"
+#include "string.h"
 #include "memory/heap.h"
-#include "graphics/graphics.h"
+#include "graphics.h"
 #include "config.h"
-#include "core/io.h"
+#include "io.h"
 
 // VirtIO legacy I/O port offsets
 #define VIRTIO_PCI_HOST_FEATURES    0

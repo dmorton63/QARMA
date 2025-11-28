@@ -5,18 +5,18 @@
  * entanglement, and quantum error correction.
  */
 
-#include "quantum/quantum_kernel.h"
-#include "quantum/quantum_register.h"
-#include "quantum/quantum_ai_observer.h"
-#include "quantum/quantum_scheduler.h"
+#include "quantum_kernel.h"
+#include "quantum_register.h"
+#include "quantum_ai_observer.h"
+#include "quantum_scheduler.h"
 //#include "core/kernel.h"
-#include "core/core_manager.h"
-#include "graphics/graphics.h"
+#include "core_manager.h"
+#include "graphics.h"
 #include "config.h"
-#include "core/clock_overlay.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
-#include "qarma_win_handle/qarma_window_manager.h"
+#include "clock_overlay.h"
+#include "memory.h"
+#include "memory/heap.h"
+#include "qarma_window_manager.h"
 
 
 // Global quantum system state

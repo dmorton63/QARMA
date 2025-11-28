@@ -6,7 +6,7 @@
  * not the entire kernel.
  */
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // Forward declarations of real handlers
 extern void timer_handler(void* regs);

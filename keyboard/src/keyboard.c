@@ -1,11 +1,11 @@
 #include "keyboard.h"
 #include "keyboard_types.h"
-#include "shell/shell.h"
+#include "shell.h"
 #include "command.h"
-#include "graphics/graphics.h"
-#include "core/io.h"
-#include "graphics/irq_logger.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "graphics.h"
+#include "io.h"
+#include "irq_logger.h"
+#include "qarma_input_events.h"
 
 // Global flag for detecting any keypress
 volatile bool key_pressed = false;

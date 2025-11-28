@@ -1,8 +1,8 @@
 #ifndef IRQ_LOGGER_H
 #define IRQ_LOGGER_H
 
-#include "core/stdtools.h"
-#include "core/boot_log.h"
+#include "stdtools.h"
+#include "boot_log.h"
 
 #define IRQLOG_SLOTS 128
 #define IRQLOG_LINE_LEN BOOT_LOG_LINE_LENGTH

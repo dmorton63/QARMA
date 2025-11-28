@@ -4,8 +4,8 @@
  */
 
 #include "kernel_types.h"
-#include "core/kernel.h"
-#include "graphics/graphics.h"
+#include "kernel.h"
+#include "graphics.h"
 
 // ────────────────
 // GDT Structures

@@ -1,8 +1,8 @@
 #include "qarma_win_factory.h"
 //#include "../window_types/qarma_splash_app.h"  // For splash-specific init
 #include "qarma_window_manager.h"
-#include "splash_app/qarma_splash_window.h"
-#include "graphics/graphics.h"
+#include "qarma_splash_window.h"
+#include "graphics.h"
 #include "config.h"
 
 QARMA_WIN_HANDLE* qarma_win_create(QARMA_WIN_TYPE type, const char* title, uint32_t flags) {

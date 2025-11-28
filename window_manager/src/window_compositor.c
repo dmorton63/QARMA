@@ -5,12 +5,12 @@
  */
 
 #include "window_compositor.h"
-#include "graphics/graphics.h"
-#include "graphics/framebuffer.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
-#include "core/input/mouse.h"
-#include "gui/desktop_toolbar.h"
+#include "graphics.h"
+#include "framebuffer.h"
+#include "memory/heap.h"
+#include "string.h"
+#include "input/mouse.h"
+#include "desktop_toolbar.h"
 #include "config.h"
 
 // External framebuffer info

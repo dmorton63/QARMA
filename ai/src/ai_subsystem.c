@@ -3,9 +3,9 @@
  */
 
 #include "ai_subsystem.h"
-#include "core/kernel.h"
-#include "core/core_manager.h"
-#include "graphics/graphics.h"
+#include "kernel.h"
+#include "core_manager.h"
+#include "graphics.h"
 
 static ai_subsystem_stats_t g_ai_stats = {0};
 

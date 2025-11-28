@@ -1,12 +1,12 @@
 #include "popup.h"
-#include "core/input/input.h"
-#include "core/text_functions/text.h"
+#include "input/input.h"
+#include "text_functions/text.h"
 #include "config.h"
 #include <string.h>
-#include "core/memory.h"
-#include "core/memory/heap.h"
-#include "keyboard/keyboard.h"
-#include "core/io.h"
+#include "memory.h"
+#include "memory/heap.h"
+#include "keyboard.h"
+#include "io.h"
 
 
 #define MAX_POPUP_WIDTH 300

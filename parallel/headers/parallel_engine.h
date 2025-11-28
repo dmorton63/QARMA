@@ -9,7 +9,7 @@
 #define PARALLEL_ENGINE_H
 
 #include "kernel_types.h"
-#include "core/kernel.h"
+#include "kernel.h"
 
 // CPU core information
 typedef struct cpu_core {

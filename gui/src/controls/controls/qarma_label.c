@@ -2,9 +2,9 @@
  * QARMA - Hardened Label Control Implementation
  */
 
-#include "gui/controls/qarma_label.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
+#include "controls/controls/qarma_label.h"
+#include "memory/heap.h"
+#include "string.h"
 #include "config.h"
 
 // ============================================================================

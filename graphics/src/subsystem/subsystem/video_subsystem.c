@@ -1,7 +1,7 @@
-#include "video_subsystem.h"
-#include "core/stdtools.h"
-#include "../framebuffer.h"
-#include "../graphics.h"
+#include "subsystem/subsystem/video_subsystem.h"
+#include "stdtools.h"
+#include "framebuffer.h"
+#include "graphics.h"
 #include "config.h"
 
 // Forward declaration for gfx_print

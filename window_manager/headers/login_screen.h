@@ -7,11 +7,11 @@
 #ifndef LOGIN_SCREEN_H
 #define LOGIN_SCREEN_H
 
-#include "gui/frame.h"
-#include "gui/qarma_control.h"
-#include "gui/controls/qarma_textbox.h"
-#include "gui/controls/qarma_button.h"
-#include "gui/controls/qarma_label.h"
+#include "frame.h"
+#include "qarma_control.h"
+#include "controls/controls/qarma_textbox.h"
+#include "controls/controls/qarma_button.h"
+#include "controls/controls/qarma_label.h"
 #include "qarma_input_events.h"
 #include "kernel_types.h"
 

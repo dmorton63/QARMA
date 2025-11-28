@@ -6,7 +6,7 @@
 #ifndef QUANTUM_FONT_DATA_H
 #define QUANTUM_FONT_DATA_H
 
-#include "core/kernel.h"
+#include "kernel.h"
 
 // Font constants
 #define FONT_WIDTH 8

@@ -6,8 +6,8 @@
 
 #include "multiboot.h"
 #include "config.h"
-#include "graphics/graphics.h"
-#include "core/init.h"
+#include "graphics.h"
+#include "init.h"
 
 // Global verbosity level  
 verbosity_level_t g_verbosity = VERBOSITY_VERBOSE;

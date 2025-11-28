@@ -4,9 +4,9 @@
  * Commands for file and directory operations
  */
 
-#include "keyboard/command.h"
-#include "fs/vfs.h"
-#include "core/string.h"
+#include "command.h"
+#include "vfs.h"
+#include "string.h"
 #include "config.h"
 
 extern void gfx_print(const char* str);

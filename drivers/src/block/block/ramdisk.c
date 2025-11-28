@@ -1,7 +1,7 @@
-#include "core/blockdev.h"
-#include "core/string.h"
-#include "core/stdtools.h"
-#include "fs/vfs.h"
+#include "blockdev.h"
+#include "string.h"
+#include "stdtools.h"
+#include "vfs.h"
 
 #define RAMDISK_SIZE (128 * 1024) // 128 KiB
 #define RAMDISK_BLOCK_SIZE 512

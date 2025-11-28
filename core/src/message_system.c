@@ -4,10 +4,10 @@
  * Handle-based message routing with priority queues.
  */
 
-#include "core/message_system.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
-#include "core/timer.h"
+#include "message_system.h"
+#include "memory/heap.h"
+#include "string.h"
+#include "timer.h"
 #include "config.h"
 
 // ============================================================================

@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "graphics/framebuffer.h"
+#include "framebuffer.h"
 
 // External VGA font data (8x8 bitmap font)
 extern const uint8_t vga_font[128][8];

@@ -1,8 +1,8 @@
 #ifndef COMPOSITOR_H
 #define COMPOSITOR_H
 
-#include "core/stdtools.h"
-#include "graphics/framebuffer.h"
+#include "stdtools.h"
+#include "framebuffer.h"
 
 // Compositor for double-buffered rendering with page flipping
 typedef struct {

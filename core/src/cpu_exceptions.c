@@ -5,8 +5,8 @@
  * and graceful system halt instead of silent reboots.
  */
 
-#include "core/panic.h"
-#include "core/io.h"
+#include "panic.h"
+#include "io.h"
 #include "config.h"
 
 // Exception names for display

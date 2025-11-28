@@ -1,6 +1,6 @@
 #include "kernel_types.h"
-#include "core/kernel.h"
-#include "graphics/graphics.h"
+#include "kernel.h"
+#include "graphics.h"
 
 // ────────────────
 // IDT Structures (64-bit)

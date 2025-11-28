@@ -1,4 +1,4 @@
-#include "core/math.h"
+#include "math.h"
 
 // Simple sine approximation using Taylor series (limited range)
 float sinf(float x) {

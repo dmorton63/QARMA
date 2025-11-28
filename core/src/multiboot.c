@@ -6,15 +6,15 @@
  */
 
 #include "multiboot.h"
-#include "graphics/graphics.h"
-#include "graphics/framebuffer.h"
+#include "graphics.h"
+#include "framebuffer.h"
 #include "kernel.h"
-#include "core/boot_log.h"
+#include "boot_log.h"
 #include "config.h"
 #include "string.h"
 #include "io.h"
 #include "memory.h"
-#include "core/memory/pmm/pmm.h"
+#include "memory/pmm/pmm.h"
 
 
 static multiboot_info_t* g_multiboot_info = NULL;

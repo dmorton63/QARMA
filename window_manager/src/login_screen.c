@@ -4,10 +4,10 @@
 
 #include "login_screen.h"
 #include "memory/heap.h"
-#include "core/string.h"
-#include "core/kernel.h"
-#include "core/handle_manager.h"
-#include "graphics/graphics.h"
+#include "string.h"
+#include "kernel.h"
+#include "handle_manager.h"
+#include "graphics.h"
 #include "config.h"
 
 #define LOGIN_WINDOW_WIDTH 400

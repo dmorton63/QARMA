@@ -4,11 +4,11 @@
  * Handles saving and loading AI learning data to FAT16 disk.
  */
 
-#include "ai/ai_persistence.h"
-#include "fs/vfs.h"
-#include "graphics/graphics.h"
-#include "core/string.h"
-#include "core/memory/heap.h"
+#include "ai_persistence.h"
+#include "vfs.h"
+#include "graphics.h"
+#include "string.h"
+#include "memory/heap.h"
 #include "config.h"
 
 // Paths for AI data files

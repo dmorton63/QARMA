@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../control_base.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "control_base.h"
+#include "qarma_input_events.h"
 
 // ============================================================================
 // Scrollbar - Horizontal and Vertical scroll controls with draggable thumb

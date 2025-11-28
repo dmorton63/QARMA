@@ -3,9 +3,9 @@
  * Comprehensive file management and VFS integration layer
  */
 
-#include "file_subsystem.h"
-#include "core/string.h"
-#include "core/memory.h"
+#include "file_subsystem/file_subsystem/file_subsystem.h"
+#include "string.h"
+#include "memory.h"
 #include "config.h"
 
 // Forward declarations

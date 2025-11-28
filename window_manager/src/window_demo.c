@@ -6,8 +6,8 @@
 
 #include "window_compositor.h"
 #include "console_compositor.h"
-#include "graphics/graphics.h"
-#include "core/input/mouse.h"
+#include "graphics.h"
+#include "input/mouse.h"
 
 // Sample window content renderers
 void render_hello_content(QARMA_WIN_HANDLE* win, int x, int y, int w, int h) {

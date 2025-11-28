@@ -1,7 +1,7 @@
 #pragma once
-#include "core/stdtools.h"
-#include "core/blockdev.h"
-#include "core/memory.h"
+#include "stdtools.h"
+#include "blockdev.h"
+#include "memory.h"
 
 // VFS node types
 #define VFS_TYPE_FILE  1

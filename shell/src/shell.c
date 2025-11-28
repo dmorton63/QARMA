@@ -1,12 +1,12 @@
 #include "shell.h"
-#include "graphics/graphics.h"
-#include "graphics/framebuffer.h"
-#include "keyboard/command.h"
-#include "core/string.h"
-#include "keyboard/keyboard.h"
-#include "core/input/mouse.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "qarma_win_handle/qarma_win_handle.h"
+#include "graphics.h"
+#include "framebuffer.h"
+#include "command.h"
+#include "string.h"
+#include "keyboard.h"
+#include "input/mouse.h"
+#include "qarma_window_manager.h"
+#include "qarma_win_handle.h"
 
 shell_state_t g_shell_state = { .current_path = "/", .initialized = false };
 

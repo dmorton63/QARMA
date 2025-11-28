@@ -8,9 +8,9 @@
 #ifndef QARMA_CONTROL_H
 #define QARMA_CONTROL_H
 
-#include "core/handle_manager.h"
-#include "core/message_system.h"
-#include "gui/frame.h"
+#include "handle_manager.h"
+#include "message_system.h"
+#include "frame.h"
 
 // ============================================================================
 // Forward Declarations

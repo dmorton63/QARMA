@@ -1,7 +1,7 @@
 #ifndef USB_H
 #define USB_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // USB Standard Request Codes
 #define USB_REQ_GET_STATUS        0x00

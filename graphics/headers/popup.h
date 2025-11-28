@@ -1,8 +1,8 @@
 #pragma once
-#include "core/stdtools.h"
+#include "stdtools.h"
 #include "framebuffer.h"
 #include "font_data.h"
-#include "core/sleep.h"
+#include "sleep.h"
 
 typedef struct {
     int x, y, width, height;

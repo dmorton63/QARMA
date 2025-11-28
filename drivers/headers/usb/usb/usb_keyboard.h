@@ -3,7 +3,7 @@
 
 #include "usb.h"
 #include "usb_hid.h"
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // USB Keyboard Boot Protocol Report Format
 // https://www.usb.org/sites/default/files/hid1_11.pdf Appendix B

@@ -9,8 +9,8 @@
 
 #include "frame.h"
 #include "qarma_control.h"
-#include "controls/qarma_textbox.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "controls/controls/qarma_textbox.h"
+#include "qarma_input_events.h"
 #include "kernel_types.h"
 
 #define CONSOLE_MAX_LINES 50

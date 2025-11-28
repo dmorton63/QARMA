@@ -1,5 +1,5 @@
 #include "vfs.h"
-#include "core/string.h"
+#include "string.h"
 #include "config.h"
 
 // Forward declaration for simplefs

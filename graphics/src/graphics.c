@@ -5,8 +5,8 @@
 
 #include "graphics.h"
 #include "font_data.h"
-#include "core/multiboot.h"
-#include "core/io.h"
+#include "multiboot.h"
+#include "io.h"
 #include "config.h"
 
 // External debug functions

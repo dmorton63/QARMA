@@ -8,7 +8,7 @@
 #define GUI_MENU_H
 
 #include "kernel_types.h"
-#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle.h"
 
 #define MAX_MENU_ITEMS 32
 #define MAX_MENUS 16

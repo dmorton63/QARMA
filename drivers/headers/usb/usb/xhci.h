@@ -1,8 +1,8 @@
 #ifndef XHCI_H
 #define XHCI_H
 
-#include "core/stdtools.h"
-#include "core/spinlock.h"
+#include "stdtools.h"
+#include "spinlock.h"
 #include "usb.h"
 
 // USB HID device timing (microseconds) - Razer Mamba and similar mice

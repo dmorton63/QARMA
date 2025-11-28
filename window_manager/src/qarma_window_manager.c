@@ -3,12 +3,12 @@
 #include "window_compositor.h"
 #include "console_compositor.h"
 #include "panic.h"
-#include "graphics/graphics.h"
-#include "core/input/mouse.h"
+#include "graphics.h"
+#include "input/mouse.h"
 #include "config.h"
-#include "gui/desktop_toolbar.h"
-#include "gui/qarma_control.h"
-#include "core/message_system.h"
+#include "desktop_toolbar.h"
+#include "qarma_control.h"
+#include "message_system.h"
 
 // For SERIAL_LOG macro
 extern void serial_debug(const char* msg);

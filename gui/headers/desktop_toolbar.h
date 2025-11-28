@@ -2,7 +2,7 @@
 #define DESKTOP_TOOLBAR_H
 
 #include "kernel_types.h"
-#include "gui/frame.h"
+#include "frame.h"
 
 typedef struct {
     qarma_frame_t* frame;

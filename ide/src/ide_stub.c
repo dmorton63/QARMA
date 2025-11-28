@@ -4,18 +4,18 @@
  * Basic test implementation to verify window creation
  */
 
-#include "ide/nomain_ide.h"
-#include "graphics/graphics.h"
-#include "qarma_win_handle/qarma_win_handle.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "qarma_win_handle/qarma_win_factory.h"
-#include "qarma_win_handle/qarma_input_events.h"
-#include "core/memory.h"
+#include "nomain_ide.h"
+#include "graphics.h"
+#include "qarma_win_handle.h"
+#include "qarma_window_manager.h"
+#include "qarma_win_factory.h"
+#include "qarma_input_events.h"
+#include "memory.h"
 #include "config.h"
-#include "keyboard/keyboard.h"
+#include "keyboard.h"
 #include "nomain_syntax.h"
-#include "fs/file_subsystem/file_subsystem.h"
-#include "fs/vfs.h"
+#include "file_subsystem/file_subsystem/file_subsystem.h"
+#include "vfs.h"
 
 // IDE state
 static char editor_buffer[4096];  // Increased buffer size

@@ -1,5 +1,5 @@
 #include "qarma_input_events.h"
-#include "core/kernel.h"
+#include "kernel.h"
 #include "../memory.h"
 #include "config.h"
 

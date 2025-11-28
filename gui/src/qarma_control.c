@@ -4,9 +4,9 @@
  * Message-driven control system with handle-based addressing.
  */
 
-#include "gui/qarma_control.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
+#include "qarma_control.h"
+#include "memory/heap.h"
+#include "string.h"
 #include "config.h"
 
 // ============================================================================

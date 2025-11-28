@@ -3,7 +3,7 @@
 
 #include "usb.h"
 #include "usb_hid.h"
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 enum {
     USB_MOUSE_OK = 0,

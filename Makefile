@@ -20,25 +20,27 @@ CFLAGS = -std=c99 -ffreestanding -Wall -Wextra -O0 -g \
          -MMD -MP \
          -DDEBUG_SERIAL -D__x86_64__
 ASFLAGS	= -f elf64 -g -F dwarf -Wall
-LDFLAGS = -T kernel/linker64.ld -nostdlib -m elf_x86_64 \
+LDFLAGS = -T kernel/src/linker64.ld -nostdlib -m elf_x86_64 \
           --gc-sections -Map=build/kernel.map \
           -z max-page-size=4096
 
 # Directories
-SRC_DIR     = kernel
 BOOT_DIR    = boot
 BUILD_DIR   = build
 ISO_DIR     = $(BUILD_DIR)/iso
-QUANTUM_DIR = kernel/quantum
-#QUANTUM_OBJ = $(BUILD_DIR)/$(QUANTUM_DIR)/quantum.o
 
-# Auto-discover sources
-C_SRC       := $(shell find $(SRC_DIR) -name "*.c")
-ASM_SRC     := $(shell find $(SRC_DIR) -name "*.asm")
-BOOT_SRC    := $(shell find $(BOOT_DIR) -name "*.asm")
+# Component directories (new structure)
+COMPONENTS  = kernel core drivers fs graphics gui window_manager keyboard \
+              network shell ai quantum security splash_app parallel ide
 
-# Unified headers directory
-INCLUDES    := -Iheaders $(foreach dir,$(shell find headers -type d),-I$(dir))
+# Auto-discover sources from all component src/ directories
+C_SRC       := $(foreach comp,$(COMPONENTS),$(shell find $(comp)/src -name "*.c" 2>/dev/null))
+ASM_SRC     := $(foreach comp,$(COMPONENTS),$(shell find $(comp)/src -name "*.asm" 2>/dev/null))
+BOOT_SRC    := $(shell find $(BOOT_DIR) -name "*.asm" 2>/dev/null)
+
+# Include paths - add headers/ directory from each component
+INCLUDES    := $(foreach comp,$(COMPONENTS),-I$(comp)/headers) \
+               -Ikernel/headers
 
 # Object files
 C_OBJS      := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRC))
@@ -58,10 +60,10 @@ $(BUILD_DIR):
 prepare_dirs:
 	@echo "Preparing build directories..."
 	@mkdir -p $(BUILD_DIR)
-	@$(foreach dir,$(shell find $(SRC_DIR) -type d),mkdir -p $(BUILD_DIR)/$(dir);)
+	@$(foreach comp,$(COMPONENTS),$(foreach dir,$(shell find $(comp)/src -type d 2>/dev/null),mkdir -p $(BUILD_DIR)/$(dir);))
 
 # Special rule for event creation file - needs stack realignment for SSE instructions
-$(BUILD_DIR)/kernel/qarma_win_handle/qarma_input_events.o: kernel/qarma_win_handle/qarma_input_events.c | prepare_dirs
+$(BUILD_DIR)/window_manager/src/qarma_input_events.o: window_manager/src/qarma_input_events.c | prepare_dirs
 	@echo "Compiling $< (with stack realignment)..."
 	$(CC) $(CFLAGS) $(INCLUDES) -mstackrealign -c $< -o $@
 
@@ -80,14 +82,10 @@ $(BUILD_DIR)/%.bin: %.asm | prepare_dirs
 	@echo "Building boot binary $<..."
 	$(AS) -f bin $< -o $@
 
-$(QUANTUM_OBJ):
-	@echo "[quantum] Building quantum.o..."
-	@$(MAKE) -C $(QUANTUM_DIR)q
-
 # Link kernel
-$(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) $(QUANTUM_OBJ) $(SRC_DIR)/linker64.ld
+$(BUILD_DIR)/kernel.bin: $(C_OBJS) $(ASM_OBJS) kernel/src/linker64.ld
 	@echo "Linking kernel..."
-	$(LD) $(LDFLAGS) $(ASM_OBJS) $(C_OBJS) $(QUANTUM_OBJ) -o $(BUILD_DIR)/kernel.elf
+	$(LD) $(LDFLAGS) $(ASM_OBJS) $(C_OBJS) -o $(BUILD_DIR)/kernel.elf
 	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
 
 # Create ISO image
@@ -121,7 +119,6 @@ debug: $(BUILD_DIR)/qarma.iso
 clean:
 	@echo "Cleaning build..."
 	@rm -rf $(BUILD_DIR)
-	@$(MAKE) -C $(QUANTUM_DIR) clean
 
 # Install dependencies
 install-deps:

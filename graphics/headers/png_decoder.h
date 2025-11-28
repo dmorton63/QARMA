@@ -1,7 +1,7 @@
 #ifndef PNG_DECODER_H
 #define PNG_DECODER_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 #include "graphics.h"
 
 typedef struct {

@@ -10,8 +10,8 @@
 
 // #include <stdint.h>
 // #include <stdbool.h>
-#include "core/stdtools.h"
-#include "core/handle_manager.h"
+#include "stdtools.h"
+#include "handle_manager.h"
 
 // ============================================================================
 // Message Type Definitions

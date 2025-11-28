@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 #include "framebuffer.h"
-#include "core/boot_log.h" // canonical BOOT_LOG_LINE_LENGTH
+#include "boot_log.h" // canonical BOOT_LOG_LINE_LENGTH
 #define MAX_MESSAGES 32
 #define MAX_CMD_HISTORY 64
 #define LINE_HEIGHT 8

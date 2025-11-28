@@ -10,7 +10,7 @@
 #define E1000_DRIVER_H
 
 #include "kernel_types.h"
-#include "network/network_subsystem.h"
+#include "network_subsystem.h"
 
 // E1000 PCI Device IDs
 #define E1000_VENDOR_ID     0x8086

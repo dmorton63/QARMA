@@ -1,8 +1,8 @@
 #ifndef LOG_TIMESTAMP_H
 #define LOG_TIMESTAMP_H
 
-#include "core/stdtools.h"
-#include "core/timer.h"
+#include "stdtools.h"
+#include "timer.h"
 #include "config.h"  // For SERIAL_LOG macros
 
 // Timer frequency (set in interrupts.c)

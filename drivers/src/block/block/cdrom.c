@@ -1,6 +1,6 @@
-#include "core/blockdev.h"
-#include "core/io.h"
-#include "core/string.h"
+#include "blockdev.h"
+#include "io.h"
+#include "string.h"
 #include "config.h"
 
 // ATA/ATAPI I/O ports for primary and secondary bus

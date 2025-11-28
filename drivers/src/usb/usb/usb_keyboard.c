@@ -1,12 +1,12 @@
-#include "usb_keyboard.h"
-#include "usb_hid.h"
-#include "usb.h"
-#include "usb_vendor_ids.h"
-#include "keyboard/keyboard.h"
-#include "core/memory/heap.h"
-#include "core/sleep.h"
+#include "usb/usb/usb_keyboard.h"
+#include "usb/usb/usb_hid.h"
+#include "usb/usb/usb.h"
+#include "usb/usb/usb_vendor_ids.h"
+#include "keyboard.h"
+#include "memory/heap.h"
+#include "sleep.h"
 #include "config.h"
-#include "graphics/graphics.h"
+#include "graphics.h"
 
 // Global USB keyboard device
 static usb_hid_device_t *g_usb_keyboard = NULL;

@@ -1,7 +1,7 @@
 #ifndef QARMA_SPLASH_WINDOW_H
 #define QARMA_SPLASH_WINDOW_H
 
-#include "qarma_win_handle/qarma_win_handle.h"
+#include "qarma_win_handle.h"
 typedef struct QARMA_SPLASH_HANDLE QARMA_SPLASH_HANDLE;
 // typedef struct {
 //     QARMA_WIN_HANDLE base;

@@ -1,7 +1,7 @@
 #ifndef ISO9660_H
 #define ISO9660_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // ISO9660 Volume Descriptor types
 #define ISO_VD_BOOT_RECORD      0

@@ -7,7 +7,7 @@
 #ifndef QARMA_TEXTBOX_H
 #define QARMA_TEXTBOX_H
 
-#include "gui/qarma_control.h"
+#include "qarma_control.h"
 
 // ============================================================================
 // TextBox Structure

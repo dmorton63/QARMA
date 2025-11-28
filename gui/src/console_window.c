@@ -5,13 +5,13 @@
 #include "console_window.h"
 #include "renderer.h"
 #include "memory/heap.h"
-#include "core/string.h"
-#include "core/kernel.h"
-#include "core/handle_manager.h"
+#include "string.h"
+#include "kernel.h"
+#include "handle_manager.h"
 #include "config.h"
-#include "keyboard/command.h"
-#include "controls/qarma_textbox.h"
-#include "qarma_win_handle/window_compositor.h"
+#include "command.h"
+#include "controls/controls/qarma_textbox.h"
+#include "window_compositor.h"
 
 #define CONSOLE_BG_COLOR 0xFF000000
 #define CONSOLE_TEXT_COLOR 0xFF00FF00

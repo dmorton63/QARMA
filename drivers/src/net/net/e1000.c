@@ -3,11 +3,11 @@
  * @brief Intel E1000 Gigabit Ethernet driver implementation
  */
 
-#include "e1000.h"
-#include "core/pci.h"
-#include "core/io.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
+#include "net/net/e1000.h"
+#include "pci.h"
+#include "io.h"
+#include "memory/heap.h"
+#include "string.h"
 
 // Define offsetof if not available
 #ifndef offsetof

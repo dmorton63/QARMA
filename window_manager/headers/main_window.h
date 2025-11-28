@@ -1,9 +1,9 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#include "qarma_win_handle/qarma_win_handle.h"
-#include "qarma_win_handle/qarma_input_events.h"
-#include "gui/gui.h"
+#include "qarma_win_handle.h"
+#include "qarma_input_events.h"
+#include "gui.h"
 
 // Main desktop window - full screen with close button
 typedef struct {

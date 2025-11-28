@@ -7,9 +7,9 @@
  * NOTE: This file is for reference only and is not actively used in the kernel.
  */
 
-#include "core/panic.h"
-#include "core/memory/heap.h"
-#include "core/stdtools.h"
+#include "panic.h"
+#include "memory/heap.h"
+#include "stdtools.h"
 
 // Dummy definitions for examples
 #define MAX_WINDOWS 32

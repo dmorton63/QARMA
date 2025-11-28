@@ -7,7 +7,7 @@
 #ifndef QARMA_BUTTON_H
 #define QARMA_BUTTON_H
 
-#include "gui/qarma_control.h"
+#include "qarma_control.h"
 
 // ============================================================================
 // Button Structure

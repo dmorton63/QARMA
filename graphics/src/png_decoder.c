@@ -1,8 +1,8 @@
 #include "png_decoder.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
-#include "core/memory/memory_pool.h"
-#include "core/string.h"
+#include "memory.h"
+#include "memory/heap.h"
+#include "memory/memory_pool.h"
+#include "string.h"
 #include "splash_data.h"
 #include "config.h"
 

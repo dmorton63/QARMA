@@ -1,7 +1,7 @@
 #ifndef XHCI_COMMON_H
 #define XHCI_COMMON_H
 
-#include "../../core/stdtools.h"
+#include "stdtools.h"
 
 
 // Configuration Definitions

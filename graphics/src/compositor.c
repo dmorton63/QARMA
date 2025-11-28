@@ -1,7 +1,7 @@
-#include "graphics/compositor.h"
-#include "graphics/framebuffer.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "core/memory/heap.h"
+#include "compositor.h"
+#include "framebuffer.h"
+#include "../../window_manager/headers/qarma_window_manager.h"
+#include "memory/heap.h"
 #include "config.h"
 #include "string.h"
 

@@ -4,9 +4,9 @@
  */
 
 #include "network_subsystem.h"
-#include "core/scheduler/subsystem_registry.h"
-#include "core/core_manager.h"
-#include "core/string.h"
+#include "scheduler/subsystem_registry.h"
+#include "core_manager.h"
+#include "string.h"
 
 #define MAX_NETWORK_DEVICES 8
 

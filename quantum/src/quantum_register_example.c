@@ -5,14 +5,14 @@
  * for parallel execution with different collapse strategies.
  */
 
-#include "quantum/quantum_register.h"
-#include "quantum/quantum_ai_observer.h"
-#include "quantum/quantum_adaptive.h"
-#include "quantum/quantum_scheduler.h"
-#include "quantum/quantum_cross_learning.h"
-#include "core/memory/heap.h"
-#include "graphics/graphics.h"
-#include "core/memory.h"
+#include "quantum_register.h"
+#include "quantum_ai_observer.h"
+#include "quantum_adaptive.h"
+#include "quantum_scheduler.h"
+#include "quantum_cross_learning.h"
+#include "memory/heap.h"
+#include "graphics.h"
+#include "memory.h"
 #include "config.h"
 
 // ============================================================================

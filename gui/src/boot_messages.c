@@ -3,14 +3,14 @@
  */
 
 #include "boot_messages.h"
-#include "gui/controls/qarma_button.h"
-#include "gui/controls/qarma_label.h"
-#include "gui/controls/qarma_textbox.h"
+#include "controls/controls/qarma_button.h"
+#include "controls/controls/qarma_label.h"
+#include "controls/controls/qarma_textbox.h"
 #include "memory/heap.h"
-#include "core/string.h"
-#include "core/kernel.h"
-#include "core/handle_manager.h"
-#include "graphics/graphics.h"
+#include "string.h"
+#include "kernel.h"
+#include "handle_manager.h"
+#include "graphics.h"
 #include "config.h"
 
 // Layout constants

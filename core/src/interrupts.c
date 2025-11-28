@@ -4,18 +4,18 @@
  */
 
 #include "interrupts.h"
-#include "core/kernel.h"
-#include "graphics/graphics.h"
-//#include "keyboard/keyboard_types.h"
-#include "core/io.h"
+#include "kernel.h"
+#include "graphics.h"
+//#include "keyboard_types.h"
+#include "io.h"
 #include "config.h"
 #include "kernel.h"
 #include "kernel_types.h"
-#include "keyboard/keyboard_types.h"
-#include "core/clock_overlay.h"
-#include "core/timer.h"
-#include "core/input/mouse.h"
-#include "scheduler/task_manager.h"
+#include "keyboard_types.h"
+#include "clock_overlay.h"
+#include "timer.h"
+#include "../headers/input/mouse.h"
+#include "../headers/scheduler/task_manager.h"
 // ────────────────
 // External Symbols
 // ────────────────

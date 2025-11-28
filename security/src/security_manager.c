@@ -3,9 +3,9 @@
  */
 
 #include "security_manager.h"
-#include "core/kernel.h"
-#include "core/core_manager.h"
-#include "graphics/graphics.h"
+#include "kernel.h"
+#include "core_manager.h"
+#include "graphics.h"
 
 static security_stats_t g_security_stats = {0};
 

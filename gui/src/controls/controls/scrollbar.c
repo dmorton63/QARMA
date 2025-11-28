@@ -1,6 +1,6 @@
-#include "scrollbar.h"
-#include "../renderer.h"
-#include "qarma_win_handle/qarma_input_events.h"
+#include "controls/controls/scrollbar.h"
+#include "renderer.h"
+#include "qarma_input_events.h"
 
 #define SCROLLBAR_WIDTH 16
 #define SCROLLBAR_MIN_THUMB_SIZE 20

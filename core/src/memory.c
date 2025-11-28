@@ -2,14 +2,14 @@
  * QARMA - Basic Memory Management and String Functions
  */
 
-#include "core/kernel.h"
-#include "graphics/graphics.h" 
-#include "core/multiboot.h"
-#include "core/memory.h"
+#include "kernel.h"
+#include "graphics.h" 
+#include "multiboot.h"
+#include "memory.h"
 #include "config.h"
-#include "core/memory/pmm/pmm.h"
-#include "core/memory/vmm/vmm.h"
-#include "core/memory/heap.h"
+#include "memory/pmm/pmm.h"
+#include "memory/vmm/vmm.h"
+#include "memory/heap.h"
 
 Block* freeList = NULL;
 

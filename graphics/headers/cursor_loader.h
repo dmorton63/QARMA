@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // Cursor types
 typedef enum {

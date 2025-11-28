@@ -7,7 +7,7 @@
 #ifndef NOMAIN_SYNTAX_H
 #define NOMAIN_SYNTAX_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // Token types
 typedef enum {

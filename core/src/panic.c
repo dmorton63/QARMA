@@ -4,9 +4,9 @@
  * Displays critical error messages and halts the system safely.
  */
 
-#include "core/kernel.h"
-#include "graphics/graphics.h"
-#include "graphics/framebuffer.h"
+#include "kernel.h"
+#include "graphics.h"
+#include "framebuffer.h"
 #include "config.h"
 
 // Panic state flag to prevent recursive panics

@@ -9,8 +9,8 @@
 
 #include "frame.h"
 #include "qarma_control.h"
-#include "controls/qarma_button.h"
-#include "controls/qarma_label.h"
+#include "controls/controls/qarma_button.h"
+#include "controls/controls/qarma_label.h"
 #include "kernel_types.h"
 
 #define STATUS_BAR_HEIGHT 32

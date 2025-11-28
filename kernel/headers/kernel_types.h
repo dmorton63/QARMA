@@ -1,7 +1,7 @@
 #ifndef KERNEL_TYPES_H
 #define KERNEL_TYPES_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 
 // Null pointer

@@ -1,9 +1,9 @@
-#include "../stdtools.h"
-#include "mouse.h"
+#include "stdtools.h"
+#include "input/mouse.h"
 #include "config.h"
-#include "drivers/usb/usb_mouse.h"
-#include "graphics/framebuffer.h"
-#include "core/io.h"
+#include "usb/usb/usb_mouse.h"
+#include "framebuffer.h"
+#include "io.h"
 
 // PS/2 Controller Commands
 #define PS2_CMD_PORT    0x64

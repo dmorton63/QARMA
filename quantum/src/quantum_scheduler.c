@@ -2,8 +2,8 @@
  * QARMA - Quantum Predictive Scheduler Implementation
  */
 
-#include "quantum/quantum_scheduler.h"
-#include "core/memory/heap.h"
+#include "quantum_scheduler.h"
+#include "memory/heap.h"
 #include "config.h"
 
 // Global scheduler state

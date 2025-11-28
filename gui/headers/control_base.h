@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // Forward declarations
 struct ControlBase;

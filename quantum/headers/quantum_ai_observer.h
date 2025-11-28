@@ -9,7 +9,7 @@
 #define QUANTUM_AI_OBSERVER_H
 
 #include "kernel_types.h"
-#include "quantum/quantum_register.h"
+#include "quantum_register.h"
 
 // Workload characteristics that affect strategy choice
 typedef struct {

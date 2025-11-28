@@ -1,10 +1,10 @@
-#include "usb_msc.h"
-#include "uhci.h"
-#include "usb.h"
-#include "usb_hid.h"
-#include "usb_mouse.h"
-#include "core/memory/heap.h"
-#include "graphics/graphics.h"
+#include "usb/usb/usb_msc.h"
+#include "usb/usb/uhci.h"
+#include "usb/usb/usb.h"
+#include "usb/usb/usb_hid.h"
+#include "usb/usb/usb_mouse.h"
+#include "memory/heap.h"
+#include "graphics.h"
 #include "config.h"
 #include <string.h>
 

@@ -1,5 +1,5 @@
 #include "qarma_win_handle.h"
-#include "gui/control_base.h"
+#include "control_base.h"
 
 static uint32_t next_window_id = 1;
 

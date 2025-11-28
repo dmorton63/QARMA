@@ -5,10 +5,10 @@
  */
 
 #include "window_compositor.h"
-#include "graphics/graphics.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
-#include "keyboard/command.h"
+#include "graphics.h"
+#include "memory/heap.h"
+#include "string.h"
+#include "command.h"
 
 #define CONSOLE_MAX_LINES 100
 #define CONSOLE_LINE_LENGTH 80

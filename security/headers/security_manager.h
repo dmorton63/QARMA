@@ -8,7 +8,7 @@
 #define SECURITY_MANAGER_H
 
 #include "kernel_types.h"
-#include "core/kernel.h"
+#include "kernel.h"
 
 // Security levels
 typedef enum {

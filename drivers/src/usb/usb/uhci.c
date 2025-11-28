@@ -1,12 +1,12 @@
-#include "uhci.h"
-#include "usb.h"
-#include "core/memory/heap.h"
-#include "core/timer.h"
-#include "core/memory/vmm/vmm.h"
-#include "core/memory/pmm/pmm.h"
-#include "graphics/graphics.h"
+#include "usb/usb/uhci.h"
+#include "usb/usb/usb.h"
+#include "memory/heap.h"
+#include "timer.h"
+#include "memory/vmm/vmm.h"
+#include "memory/pmm/pmm.h"
+#include "graphics.h"
 #include "config.h"
-#include "core/pci.h"
+#include "pci.h"
 
 /* Debug helper: when enabled, force an immediate diagnostic dump after
  * enqueueing descriptors so emulator captures contain controller-visible

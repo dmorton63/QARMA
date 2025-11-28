@@ -1,11 +1,11 @@
-#include "usb.h"
-#include "usb_hid.h"
-#include "usb_mouse.h"
-#include "usb_msc.h"
-#include "uhci.h"
-#include "core/memory/heap.h"
+#include "usb/usb/usb.h"
+#include "usb/usb/usb_hid.h"
+#include "usb/usb/usb_mouse.h"
+#include "usb/usb/usb_msc.h"
+#include "usb/usb/uhci.h"
+#include "memory/heap.h"
 #include "config.h"
-#include "graphics/graphics.h"
+#include "graphics.h"
 
 // Global USB device list
 static usb_device_t *usb_device_list = NULL;

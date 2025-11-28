@@ -6,10 +6,10 @@
  */
 
 #include "parallel_engine.h"
-#include "core/kernel.h"
-#include "graphics/graphics.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
+#include "kernel.h"
+#include "graphics.h"
+#include "memory.h"
+#include "memory/heap.h"
 
 // Global parallel engine state
 static cpu_core_t* g_cpu_cores = NULL;

@@ -9,7 +9,7 @@
 #define QUANTUM_SCHEDULER_H
 
 #include "kernel_types.h"
-#include "quantum/quantum_register.h"
+#include "quantum_register.h"
 
 // Scheduling strategies
 typedef enum {

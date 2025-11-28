@@ -7,7 +7,7 @@
 #ifndef CONSOLE_COMPOSITOR_H
 #define CONSOLE_COMPOSITOR_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 /**
  * Initialize the console compositor window

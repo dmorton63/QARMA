@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/stdtools.h"
-#include "../memory.h"
+#include "stdtools.h"
+#include "memory.h"
 #define QARMA_MAX_PROCESSES 32
 #define QARMA_TICK_RATE 60
 #define QARMA_MAX_MODULES 32

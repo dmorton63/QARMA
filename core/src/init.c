@@ -4,44 +4,44 @@
  * Handles all system initialization tasks, reducing kernel.c footprint.
  */
 
-#include "core/init.h"
+#include "init.h"
 #include "multiboot.h"
 #include "string.h"
 #include "config.h"
-#include "keyboard/keyboard.h"
-#include "shell/shell.h"
-#include "graphics/graphics.h"
-#include "graphics/subsystem/video_subsystem.h"
-#include "core/scheduler/subsystem_registry.h"
-#include "graphics/framebuffer.h"
+#include "keyboard.h"
+#include "shell.h"
+#include "graphics.h"
+#include "subsystem/subsystem/video_subsystem.h"
+#include "scheduler/subsystem_registry.h"
+#include "framebuffer.h"
 #include "kernel.h"
-#include "qarma_win_handle/qarma_window_manager.h"
-#include "qarma_win_handle/qarma_input_events.h"
-#include "core/memory.h"
-#include "core/memory/memory_pool.h"
-#include "core/memory/dma_allocator.h"
-#include "core/input/mouse.h"
-#include "core/pci.h"
-#include "fs/file_subsystem/file_subsystem.h"
-#include "fs/vfs.h"
-#include "fs/iso9660.h"
-#include "graphics/png_decoder.h"
-#include "core/memory/heap.h"
-#include "drivers/usb/usb_mouse.h"
-#include "keyboard/command.h"
-#include "gui/desktop_toolbar.h"
-#include "gui/frame.h"
-#include "gui/boot_messages.h"
-#include "core/boot_log.h"
+#include "qarma_window_manager.h"
+#include "qarma_input_events.h"
+#include "memory.h"
+#include "memory/memory_pool.h"
+#include "memory/dma_allocator.h"
+#include "input/mouse.h"
+#include "pci.h"
+#include "file_subsystem/file_subsystem/file_subsystem.h"
+#include "vfs.h"
+#include "iso9660.h"
+#include "png_decoder.h"
+#include "memory/heap.h"
+#include "usb/usb/usb_mouse.h"
+#include "command.h"
+#include "desktop_toolbar.h"
+#include "frame.h"
+#include "boot_messages.h"
+#include "boot_log.h"
 
 // Global desktop frame
 qarma_frame_t* g_desktop_frame = NULL;
-// #include "qarma_win_handle/login_screen.h"  // Legacy - disabled
+// #include "login_screen.h"  // Legacy - disabled
 
 // Debug flag: Set to 1 to enable mouse event logging, 0 to disable
 #define DEBUG_MOUSE_EVENTS 1
-#include "qarma_win_handle/main_window.h"
-#include "gui/boot_messages.h"  // New architecture
+#include "main_window.h"
+#include "boot_messages.h"  // New architecture
 
 // External function declarations
 extern void gdt_init(void);

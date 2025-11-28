@@ -1,8 +1,8 @@
 #pragma once
-#include "core/stdtools.h"
-#include "core/scheduler/subsystem_registry.h"
-#include "../vfs.h"
-#include "core/blockdev.h"
+#include "stdtools.h"
+#include "scheduler/subsystem_registry.h"
+#include "vfs.h"
+#include "blockdev.h"
 
 // File types for subsystem registration
 typedef enum {

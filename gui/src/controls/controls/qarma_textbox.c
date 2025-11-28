@@ -2,9 +2,9 @@
  * QARMA - Hardened TextBox Control Implementation
  */
 
-#include "gui/controls/qarma_textbox.h"
-#include "core/memory/heap.h"
-#include "core/string.h"
+#include "controls/controls/qarma_textbox.h"
+#include "memory/heap.h"
+#include "string.h"
 #include "config.h"
 
 // ============================================================================

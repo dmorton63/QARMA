@@ -1,5 +1,5 @@
 #include "boot_log.h"
-#include "graphics/graphics.h"
+#include "graphics.h"
 #include "string.h"
 #include "config.h"
 

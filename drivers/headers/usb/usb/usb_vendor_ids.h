@@ -1,7 +1,7 @@
 #ifndef USB_VENDOR_IDS_H
 #define USB_VENDOR_IDS_H
 
-#include "core/stdtools.h"
+#include "stdtools.h"
 
 // ===== USB Vendor IDs =====
 

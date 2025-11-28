@@ -8,8 +8,8 @@
 #include "kernel.h"
 #include "memory.h"
 #include "memory/heap.h"
-#include "graphics/graphics.h"
-#include "parallel/parallel_engine.h"
+#include "graphics.h"
+#include "parallel_engine.h"
 
 // Forward declarations from core_manager.h
 typedef struct core_request core_request_t;

@@ -4,10 +4,10 @@
  * Provides menu bar, dropdown menus, and menu items
  */
 
-#include "gui/controls/menu.h"
-#include "core/memory.h"
-#include "core/string.h"
-#include "graphics/graphics.h"
+#include "controls/controls/menu.h"
+#include "memory.h"
+#include "string.h"
+#include "graphics.h"
 #include "config.h"
 
 // Menu bar dimensions

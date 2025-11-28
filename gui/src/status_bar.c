@@ -5,9 +5,9 @@
 #include "status_bar.h"
 #include "renderer.h"
 #include "memory/heap.h"
-#include "core/string.h"
-#include "core/kernel.h"
-#include "core/handle_manager.h"
+#include "string.h"
+#include "kernel.h"
+#include "handle_manager.h"
 #include "config.h"
 
 #define STATUS_BAR_BG_COLOR    0xFF2D2D30

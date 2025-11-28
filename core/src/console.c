@@ -3,7 +3,7 @@
  * Basic VGA text mode console for kernel output
  */
 
-#include "core/kernel.h"
+#include "kernel.h"
 #include "io.h"
 
 #define SERIAL_PORT_A 0x3F8

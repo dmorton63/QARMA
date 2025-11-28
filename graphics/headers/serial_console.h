@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/graphics.h"
+#include "graphics.h"
 
 static bool serial_is_transmit_ready(void);
 void serial_console_init(void);

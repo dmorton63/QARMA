@@ -4,12 +4,12 @@
  * Implementation of quantum-inspired parallel execution framework.
  */
 
-#include "quantum/quantum_register.h"
-#include "core/memory.h"
-#include "core/memory/heap.h"
-#include "core/core_manager.h"
-#include "parallel/parallel_engine.h"
-#include "graphics/graphics.h"
+#include "quantum_register.h"
+#include "memory.h"
+#include "memory/heap.h"
+#include "core_manager.h"
+#include "parallel_engine.h"
+#include "graphics.h"
 #include "config.h"
 
 // Memory comparison (avoid including string.h due to type conflicts)

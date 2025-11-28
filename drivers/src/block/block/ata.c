@@ -2,9 +2,9 @@
  * QARMA - ATA/IDE Hard Disk Driver Implementation
  */
 
-#include "drivers/ata.h"
-#include "core/io.h"
-#include "core/string.h"
+#include "ata.h"
+#include "io.h"
+#include "string.h"
 #include "config.h"
 
 
