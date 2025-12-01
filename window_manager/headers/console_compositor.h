@@ -70,4 +70,10 @@ int console_compositor_get_line_count(void);
  */
 int console_compositor_get_visible_lines(void);
 
+/**
+ * Dump the current console buffer to a VFS path.
+ * Returns number of lines written on success, negative on failure.
+ */
+int console_compositor_dump_to_file(const char* path);
+
 #endif // CONSOLE_COMPOSITOR_H

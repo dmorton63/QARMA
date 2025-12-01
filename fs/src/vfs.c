@@ -262,6 +262,43 @@ vfs_node_t* vfs_open(const char* path) {
     return node;
 }
 
+// Open with write intent for 9P; creates vfs node with 9P fid if available
+vfs_node_t* vfs_open_for_write(const char* path) {
+    // Special case: host 9P mount passthrough
+    if (path && virtio_9p_is_mounted()) {
+        if (strncmp(path, "/host/", 6) == 0) {
+            const char* rel = path + 5; // points to "/..." start
+            if (*rel == '/') rel++;
+            // Open as file with write mode (may create depending on server policy)
+            int fid = virtio_9p_open(rel, 0x01 /* write */);
+            if (fid >= 0) {
+                vfs_node_t* file = (vfs_node_t*)malloc(sizeof(vfs_node_t));
+                if (!file) {
+                    virtio_9p_close(fid);
+                    return NULL;
+                }
+                memset(file, 0, sizeof(vfs_node_t));
+                // Set name from last path component
+                const char* last = rel;
+                for (const char* p = rel; *p; ++p) if (*p == '/') last = p + 1;
+                strncpy(file->name, last, 63);
+                file->type = VFS_TYPE_FILE;
+                vfs_9p_file_t* meta = (vfs_9p_file_t*)malloc(sizeof(vfs_9p_file_t));
+                if (!meta) {
+                    virtio_9p_close(fid);
+                    free(file);
+                    return NULL;
+                }
+                meta->magic = VFS_9P_MAGIC;
+                meta->fid = fid;
+                file->fs_data = meta;
+                return file;
+            }
+        }
+    }
+    // Fallback to normal open
+    return vfs_open(path);
+}
 
 int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset) {
     if (!node || !buf || node->type != VFS_TYPE_FILE) {

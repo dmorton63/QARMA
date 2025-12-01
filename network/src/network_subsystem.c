@@ -4,6 +4,7 @@
  */
 
 #include "network_subsystem.h"
+#include "port_manager.h"
 #include "scheduler/subsystem_registry.h"
 #include "core_manager.h"
 #include "string.h"
@@ -65,8 +66,44 @@ void network_subsystem_init(void) {
     ipv4_init();
     icmp_init();
     udp_init();
+    // Initialize port manager after protocols and load rules
+    port_manager_init();
+    extern int port_manager_load(void);
+    port_manager_load();
+    // Default-allow inbound UDP port 9000 for echo demo
+    port_allow(PM_PROTO_UDP, 9000, PM_DIR_INBOUND);
+    // Log current inbound port summary to host net.log for visibility
+    port_dump_inbound_to_netlog();
     tcp_init();
+
+    // NIC initialization is triggered by shell 'ifup' to avoid early panic
     
+    // In safe mode, register a minimal stub device so ifconfig can show a device
+    extern void gfx_print(const char*);
+    extern void gfx_print_hex(uint32_t);
+    // Use a real net_device_t for the stub to avoid layout mismatches
+    static net_device_t stub;
+    memset(&stub, 0, sizeof(stub));
+    strcpy(stub.name, "eth0");
+    stub.state = NET_DEV_DOWN;
+    stub.mtu = 1500;
+    // Keep stub defaults aligned with isolated bridge setup
+    stub.ip_address.addr[0] = 192;
+    stub.ip_address.addr[1] = 168;
+    stub.ip_address.addr[2] = 100;
+    stub.ip_address.addr[3] = 2;
+    stub.netmask.addr[0] = 255;
+    stub.netmask.addr[1] = 255;
+    stub.netmask.addr[2] = 255;
+    stub.netmask.addr[3] = 0;
+    stub.gateway.addr[0] = 192;
+    stub.gateway.addr[1] = 168;
+    stub.gateway.addr[2] = 100;
+    stub.gateway.addr[3] = 1;
+    // Leave function pointers null to indicate it's a stub
+    // Register the stub device; first real device will replace it if present
+    network_register_device(&stub);
+
     // Register with subsystem registry
     extern bool subsystem_register(subsystem_t *subsystem, char* name, uint16_t id);
     subsystem_register(&network_subsystem, "network", SUBSYSTEM_NETWORK);
@@ -79,10 +116,15 @@ int network_register_device(net_device_t* device) {
     if (!device || device_count >= MAX_NETWORK_DEVICES) {
         return -1;
     }
-    
-    network_devices[device_count] = device;
-    device_count++;
-    net_stats.devices_registered++;
+    // If the first device is a stub (no send_packet) and the new one is real, replace it
+    if (device_count > 0 && network_devices[0] && !network_devices[0]->send_packet && device->send_packet) {
+        network_devices[0] = device;
+        // Do not increment count; we replaced the stub
+    } else {
+        network_devices[device_count] = device;
+        device_count++;
+        net_stats.devices_registered++;
+    }
     
     extern void gfx_print(const char*);
     gfx_print("Network device registered: ");
@@ -90,7 +132,7 @@ int network_register_device(net_device_t* device) {
     gfx_print("\n");
     
     return 0;
-}
+    }
 
 int network_unregister_device(net_device_t* device) {
     if (!device) {
@@ -360,10 +402,54 @@ net_device_t* network_get_device(uint32_t index) {
 }
 
 net_device_t* network_get_default_device(void) {
-    // Return first registered device
-    if (device_count > 0) {
-        return network_devices[0];
+    // Debug-throttled scan logging to help diagnose selection issues
+    static uint32_t dbg_calls = 0;
+    extern void gfx_print(const char*);
+    extern void gfx_print_hex(uint32_t);
+    if (dbg_calls < 16) {
+        gfx_print("[net] default scan call "); gfx_print_hex(dbg_calls); gfx_print(" count="); gfx_print_hex(device_count); gfx_print("\n");
+        for (uint32_t i = 0; i < device_count; i++) {
+            net_device_t* d = network_devices[i];
+            if (!d) { gfx_print("  idx:" ); gfx_print_hex(i); gfx_print(" NULL\n"); continue; }
+            gfx_print("  idx:"); gfx_print_hex(i); gfx_print(" name="); gfx_print(d->name);
+            gfx_print(" state=");
+            switch (d->state) {
+                case NET_DEV_DOWN: gfx_print("DOWN"); break;
+                case NET_DEV_UP: gfx_print("UP"); break;
+                case NET_DEV_RUNNING: gfx_print("RUNNING"); break;
+                case NET_DEV_ERROR: gfx_print("ERROR"); break;
+                default: gfx_print("?"); break;
+            }
+            gfx_print(" send="); gfx_print(d->send_packet ? "Y" : "N");
+            gfx_print(" rx="); gfx_print_hex((uint32_t)d->rx_packets);
+            gfx_print(" tx="); gfx_print_hex((uint32_t)d->tx_packets);
+            gfx_print("\n");
+        }
     }
+
+    // Prefer a RUNNING device with a valid send path
+    for (uint32_t i = 0; i < device_count; i++) {
+        net_device_t* d = network_devices[i];
+        if (d && d->state == NET_DEV_RUNNING && d->send_packet) {
+            if (dbg_calls < 16) { gfx_print("[net] default select RUNNING: "); gfx_print(d->name); gfx_print("\n"); }
+            dbg_calls++; return d;
+        }
+    }
+    // Next, any device with a send function (even if not RUNNING yet)
+    for (uint32_t i = 0; i < device_count; i++) {
+        net_device_t* d = network_devices[i];
+        if (d && d->send_packet) {
+            if (dbg_calls < 16) { gfx_print("[net] default select SEND_ONLY: "); gfx_print(d->name); gfx_print("\n"); }
+            dbg_calls++; return d;
+        }
+    }
+    // Fallback: first registered
+    if (device_count > 0) {
+        if (dbg_calls < 16) { gfx_print("[net] default select FIRST: "); gfx_print(network_devices[0]->name); gfx_print("\n"); }
+        dbg_calls++; return network_devices[0];
+    }
+    if (dbg_calls < 16) { gfx_print("[net] default select NONE\n"); }
+    dbg_calls++;
     return NULL;
 }
 

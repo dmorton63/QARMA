@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "config.h"
 #include "graphics.h"
 #include "framebuffer.h"
 #include "command.h"
@@ -49,13 +50,31 @@ void process_command(const char* command) {
     execute_command(command);
 }
 
+static void shell_tiny_vformat(char* out, size_t outsz, const char* fmt, va_list ap) {
+    size_t pos = 0; const char* p = fmt ? fmt : "";
+    while (*p && pos + 1 < outsz) {
+        if (*p != '%') { out[pos++] = *p++; continue; }
+        p++;
+        if (*p == '%') { out[pos++] = '%'; p++; continue; }
+        if (*p == 's') { const char* s = va_arg(ap, const char*); if (!s) s = "(null)"; while (*s && pos + 1 < outsz) out[pos++] = *s++; p++; }
+        else if (*p == 'c') { int c = va_arg(ap, int); out[pos++] = (char)c; p++; }
+        else if (*p == 'u' || *p == 'd') { int is_signed = (*p == 'd'); long v = is_signed ? va_arg(ap, int) : (long)va_arg(ap, unsigned int); if (is_signed && v < 0) { if (pos + 1 < outsz) out[pos++] = '-'; v = -v; } char buf[32]; int bp=0; unsigned long uv=(unsigned long)v; if (uv==0) buf[bp++]='0'; while (uv && bp < (int)sizeof(buf)) { buf[bp++] = (char)('0'+(uv%10)); uv/=10; } for (int i=bp-1;i>=0 && pos + 1 < outsz;--i) out[pos++]=buf[i]; p++; }
+        else if (*p == 'x' || *p=='X') { unsigned int v = va_arg(ap, unsigned int); const char* hex = (*p=='X')?"0123456789ABCDEF":"0123456789abcdef"; char buf[8]; int bp=0; if (v==0) buf[bp++]='0'; while (v && bp < (int)sizeof(buf)) { buf[bp++]=hex[v&0xF]; v>>=4; } for (int i=bp-1;i>=0 && pos + 1 < outsz;--i) out[pos++]=buf[i]; p++; }
+        else { out[pos++]='%'; if (*p && pos + 1 < outsz) out[pos++]=*p; if (*p) p++; }
+    }
+    out[pos] = '\0';
+}
+
 void screen_printf(const char* format, ...) {
-    // Simple implementation - log to serial for now
-    SERIAL_LOG("[SHELL] screen_printf: ");
-    SERIAL_LOG(format);
-    SERIAL_LOG("\n");
-    // TODO: Send to console window instead
-    // gfx_print(format);
+    char buf[512];
+    va_list ap;
+    va_start(ap, format);
+    shell_tiny_vformat(buf, sizeof(buf), format, ap);
+    va_end(ap);
+    // Print to screen
+    gfx_print(buf);
+    // And mirror to serial
+    serial_logf("[SHELL] %s\n", buf);
 }
 
 // Printf-style function for commands

@@ -39,4 +39,8 @@ bool arp_lookup(ipv4_addr_t* ip, mac_addr_t* mac_out);
 void arp_add_entry(ipv4_addr_t* ip, mac_addr_t* mac);
 void arp_print_cache(void);
 
+// Pending ARP support: record and retry outstanding resolutions
+void arp_retry_pending(net_device_t* dev);
+void arp_note_resolved(ipv4_addr_t* ip);
+
 #endif // ARP_H

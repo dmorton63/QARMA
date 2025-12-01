@@ -6,6 +6,8 @@
 #define DEBUG_BOOTLOG
 #define DEBUG_GRAPHICS
 #define DEBUG_MEMORY
+// Enable verbose 9P (VirtFS) logging to serial for bring-up
+#define CONFIG_9P_DEBUG
 typedef enum {
     VERBOSITY_SILENT,
     VERBOSITY_MINIMAL,
@@ -18,11 +20,17 @@ extern verbosity_level_t g_verbosity;
 // without including graphics headers here.
 void message_box_log(const char* msg);
 void message_box_logf(const char* fmt, ...);
+// Forward declare formatted serial logger
+void serial_logf(const char* fmt, ...);
 
 
 #ifdef DEBUG_SERIAL
     #define SERIAL_LOG(msg) do { \
         if (g_verbosity >= VERBOSITY_VERBOSE) { serial_debug(msg); } \
+    } while (0)
+
+    #define SERIAL_LOGF(...) do { \
+        if (g_verbosity >= VERBOSITY_VERBOSE) { serial_logf(__VA_ARGS__); } \
     } while (0)
 
     #define SERIAL_LOG_MIN(msg) do { \
@@ -46,6 +54,7 @@ void message_box_logf(const char* fmt, ...);
     } while (0)
 #else
     #define SERIAL_LOG(msg) ((void)(msg))
+    #define SERIAL_LOGF(...) ((void)0)
     #define SERIAL_LOG_MIN(msg) ((void)(msg))
     #define SERIAL_LOG_HEX(prefix, val) ((void)(prefix), (void)(val))
     #define SERIAL_LOG_DEC(prefix, val) ((void)(prefix), (void)(val))
@@ -102,5 +111,9 @@ void message_box_logf(const char* fmt, ...);
     #define GFX_LOG_HEX(prefix, val) ((void)(prefix), (void)(val))
     #define GFX_LOG_DEC(prefix, val) ((void)(prefix), (void)(val))
 #endif
+
+// Developer-only commands and diagnostics
+// Uncomment to enable developer commands in the shell
+// #define CONFIG_DEV_COMMANDS
 
 #endif /* CONFIG_H */

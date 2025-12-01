@@ -3,6 +3,7 @@
 #include "arp.h"
 #include "graphics.h"
 #include "string.h"
+#include "netlog.h"
 
 static uint16_t ip_packet_id = 1;
 
@@ -35,6 +36,12 @@ int ipv4_send(net_device_t* dev, ipv4_addr_t* dest_ip, uint8_t protocol,
     
     if (!dev || !dest_ip || !payload) {
         serial_debug("[IPv4: null ptr]\\n");
+        netlog_write("ipv4_send: null pointer\n");
+        return -1;
+    }
+    if (dev->state != NET_DEV_RUNNING) {
+        netlog_write("ipv4_send: device not RUNNING\n");
+        // Still attempt ARP/send? For now abort.
         return -1;
     }
     
@@ -43,12 +50,13 @@ int ipv4_send(net_device_t* dev, ipv4_addr_t* dest_ip, uint8_t protocol,
     // Look up destination MAC via ARP
     mac_addr_t dest_mac;
     if (!arp_lookup(dest_ip, &dest_mac)) {
-        // Need to send ARP request first
         gfx_print("IPv4: MAC address not in ARP cache, sending request\n");
+        netlog_write("ipv4_send: ARP miss; request sent\n");
         arp_send_request(dev, dest_ip);
-        return -1;  // Packet will need to be retried after ARP resolves
+        return -1;  // caller must retry
     }
     
+    serial_debug("[IPv4: ARP OK]\\n");
     serial_debug("[IPv4: build packet]\\n");
     
     // Build IP packet - use static buffer to avoid stack overflow
@@ -79,6 +87,11 @@ int ipv4_send(net_device_t* dev, ipv4_addr_t* dest_ip, uint8_t protocol,
     // Send via Ethernet
     int result = ethernet_send_frame(dev, &dest_mac, ETHERTYPE_IPV4, packet, 
                                      sizeof(ipv4_header_t) + payload_len);
+    if (result == 0) {
+        netlog_write("ipv4_send: frame queued\n");
+    } else {
+        netlog_write("ipv4_send: frame send failed\n");
+    }
     
     serial_debug("[IPv4: done]\\n");
     

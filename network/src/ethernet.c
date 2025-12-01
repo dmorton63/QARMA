@@ -51,9 +51,28 @@ int ethernet_send_frame(net_device_t* dev, mac_addr_t* dest_mac, uint16_t ethert
     serial_debug("[ETH: send]\n");
     gfx_print("[ETH: send]");
     
+    // ARP instrumentation: log frame details
+    if (ethertype == ETHERTYPE_ARP) {
+        extern void netlog_write(const char*);
+        extern void netlog_write_hex(const char*, uint32_t);
+        netlog_write("[arp-tx] len="); netlog_write_hex("", payload_len); netlog_write(" dest=");
+        for (int i=0;i<6;i++){ netlog_write_hex("", dest_mac->addr[i]); }
+        netlog_write(" src=");
+        for (int i=0;i<6;i++){ netlog_write_hex("", dev->mac_address.addr[i]); }
+        netlog_write(" op=");
+        if (payload_len >= 8) { // opcode at offset 6 inside ARP struct (after hw/proto types and lens)
+            uint16_t op = (payload[6]<<8)|payload[7];
+            netlog_write_hex("", op);
+        }
+        netlog_write("\n");
+    }
     // Send via device driver
     if (dev->send_packet) {
         int result = dev->send_packet(dev, &packet);
+        if (ethertype == ETHERTYPE_ARP) {
+            extern void netlog_write(const char*); extern void netlog_write_hex(const char*, uint32_t);
+            netlog_write("[arp-tx] queued result="); netlog_write_hex("", result); netlog_write("\n");
+        }
         serial_debug("[ETH: done]\n");
         gfx_print("[ETH: done]");
         return result;
@@ -66,6 +85,8 @@ int ethernet_send_frame(net_device_t* dev, mac_addr_t* dest_mac, uint16_t ethert
 
 void ethernet_receive_frame(net_device_t* dev, const uint8_t* frame_data, uint32_t frame_len) {
     extern void serial_debug(const char*);
+    extern void netlog_write(const char*);
+    extern void netlog_write_hex(const char*, uint32_t);
     
     serial_debug("[ETH_RX: start]\\n");
     
@@ -82,6 +103,12 @@ void ethernet_receive_frame(net_device_t* dev, const uint8_t* frame_data, uint32
     const uint8_t* payload = frame_data + sizeof(eth_header_t);
     uint32_t payload_len = frame_len - sizeof(eth_header_t);
     
+    // Log a concise RX summary for diagnostics
+    netlog_write("[eth-rx] len="); netlog_write_hex("", frame_len); netlog_write(" type="); netlog_write_hex("", ethertype); netlog_write(" dst=");
+    for (int i=0;i<6;i++){ netlog_write_hex("", ((const uint8_t*)&eth->dest)[i]); }
+    netlog_write(" src=");
+    for (int i=0;i<6;i++){ netlog_write_hex("", ((const uint8_t*)&eth->src)[i]); }
+    netlog_write("\n");
     serial_debug("[ETH_RX: dispatch]\\n");
     
     // Dispatch to protocol handlers

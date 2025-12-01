@@ -200,7 +200,9 @@ void command_cache_print_stats(void) {
     gfx_print_hex(stats.cache_size);
     gfx_print("\nHit rate: ");
     gfx_print_hex((uint32_t)stats.hit_rate);
-    gfx_print("%\n");
+    // Print trailing percent symbol accurately without placeholder leakage
+    gfx_print("%");
+    gfx_print("\n");
     gfx_print("====================================\n\n");
 }
 

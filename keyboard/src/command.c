@@ -9,7 +9,97 @@
 #include "input/mouse.h"
 #include "sleep.h"
 #include "scheduler/task_manager.h"
+// VFS for admin/dev diagnostics and AI state paths
+#include "vfs.h"
+#include "udp.h"
+#include "network_subsystem.h"
+#include "port_manager.h"
+#include "tcp.h"
+#include "netlog.h"
+#include "log_timestamp.h"
+// Console dump API
+#include "console_compositor.h"
+// E1000 loopback helpers
+#include "net/net/e1000.h"
 //#include "usb/usb_mouse.h"
+
+// --- Serial tee support for command output ---
+// When enabled, mirror gfx_* prints to SERIAL_LOG so output is captured in QEMU serial.
+static bool g_serial_tee = false;
+static bool g_serial_tee_ts = false;
+extern bool g_log_use_datetime;
+
+// Keep real function pointers so we can macro-wrap the gfx_* calls locally
+extern void gfx_print(const char*);
+extern void gfx_print_decimal(uint32_t);
+extern void gfx_print_hex(uint32_t);
+static void (*gfx_print_real)(const char*) = gfx_print;
+static void (*gfx_print_decimal_real)(uint32_t) = gfx_print_decimal;
+static void (*gfx_print_hex_real)(uint32_t) = gfx_print_hex;
+extern void serial_debug_hex(uint32_t);
+
+// Provide a safe itoa for decimal mirroring
+static void cmd_itoa_u32(uint32_t v, char* buf, int base) {
+    static const char* digits = "0123456789ABCDEF";
+    char tmp[32]; int i = 0;
+    if (base < 2 || base > 16) { buf[0] = '0'; buf[1] = '\0'; return; }
+    if (v == 0) { buf[0] = '0'; buf[1] = '\0'; return; }
+    while (v > 0) { tmp[i++] = digits[v % (uint32_t)base]; v /= (uint32_t)base; }
+    int j = 0; while (i > 0) { buf[j++] = tmp[--i]; } buf[j] = '\0';
+}
+
+// Detect if a string is just a printf-style placeholder (optionally prefixed by
+// a single '>' or ':' and optionally suffixed by a single '\n'). Examples:
+// "%s", ">%d", ":%x\n". Used to avoid mirroring accidental raw format tokens.
+static bool is_placeholder_only(const char* s) {
+    if (!s) return false;
+    while (*s == ' ' || *s == '\t' || *s == '\r') s++;
+    if (!*s) return false;
+    const char* p = s;
+    if (*p == '>' || *p == ':') {
+        p++;
+        while (*p == ' ' || *p == '\t') p++; // allow space after prefix like "> %s"
+    }
+    if (*p != '%') return false;
+    p++;
+    char c = *p;
+    if (!(c == 's' || c == 'd' || c == 'u' || c == 'x' || c == 'X' || c == 'c')) return false;
+    p++;
+    if (*p == '\n') p++;
+    while (*p == ' ' || *p == '\t' || *p == '\r') p++;
+    return *p == '\0';
+}
+
+#define GFX_PRINT_TEE(str) do { \
+    const char* __s = (str); \
+    gfx_print_real(__s); \
+    if (g_serial_tee) { \
+        if (g_serial_tee_ts) { PRINT_TIMESTAMP(); } \
+        /* Filter out accidental raw format tokens that sometimes leak */ \
+        if (is_placeholder_only(__s)) { \
+            /* skip */ \
+        } else { \
+            SERIAL_LOG((char*)(__s)); \
+        } \
+    } \
+} while(0)
+
+#undef gfx_print
+#define gfx_print(str) GFX_PRINT_TEE(str)
+
+#undef gfx_print_decimal
+#define gfx_print_decimal(val) do { \
+    uint32_t __v = (uint32_t)(val); \
+    gfx_print_decimal_real(__v); \
+    if (g_serial_tee) { char __buf[16]; cmd_itoa_u32(__v, __buf, 10); SERIAL_LOG(__buf); } \
+} while(0)
+
+#undef gfx_print_hex
+#define gfx_print_hex(val) do { \
+    uint32_t __v = (uint32_t)(val); \
+    gfx_print_hex_real(__v); \
+    if (g_serial_tee) { serial_debug_hex(__v); } \
+} while(0)
 
 // Filesystem commands (implemented in fs_commands.c)
 extern void cmd_ls(int argc, char** argv);
@@ -60,9 +150,14 @@ void cmd_help(int argc, char** argv) {
     gfx_print("  icmp    - Send ICMP echo requests\n");
     gfx_print("  ifconfig - Show network interface information\n");
     gfx_print("  netstat - Show network statistics\n");
-    gfx_print("  ifup    - Bring network interface up\n");
+    gfx_print("  ifup [stage1|full|safe] - Bring NIC up\n");
     gfx_print("  ifdown  - Bring network interface down\n");
     gfx_print("  ping    - Send ICMP echo request to host\n");
+    gfx_print("  e1000_diag - Dump E1000 registers and rings\n");
+    gfx_print("  e1000_loopback off|mac|phy|status - Toggle NIC loopback\n");
+    gfx_print("  txtest  - Send a TX broadcast test frame\n");
+    gfx_print("  lbtest  - One-shot MAC loopback test and diag\n");
+    gfx_print("  phy_dump- Dump PHY autoneg/link registers\\n");
     gfx_print("  pipeline- Test execution pipeline system\n");
     gfx_print("  window  - Create a test window\n");
     gfx_print("  winloop - Run window/mouse update loop\n");
@@ -71,6 +166,10 @@ void cmd_help(int argc, char** argv) {
     gfx_print("  aiload  - Load AI learning data from disk\n");
     gfx_print("  aistats - Show AI and quantum statistics\n");
     gfx_print("  reboot  - Restart the system\n");
+    gfx_print("  serialtee on|off|status - Mirror output to serial\n");
+    gfx_print("           ts on|off|status - Toggle timestamp prefix\n");
+    gfx_print("           date on|off|status - Use RTC date/time instead of ticks\n");
+    gfx_print("  saveconsole [path] - Save console to /host/console_dump.txt by default\n");
 
     // Filesystem commands
     gfx_print("\nFilesystem commands:\n");
@@ -278,38 +377,7 @@ void cmd_mempool(int argc, char** argv) {
     memory_pool_print_all_stats();
 }
 
-void cmd_vmm(int argc, char** argv) {
-    (void)argc; (void)argv;
-    
-    extern uint32_t vmm_alloc_region(uint32_t size);
-    extern void vmm_free_region(uint32_t virtual_addr, uint32_t size);
-    
-    gfx_print("=== Testing Virtual Memory Manager ===\n");
-    
-    // Test small allocation
-    gfx_print("Allocating 4KB region...\n");
-    uint32_t region1 = vmm_alloc_region(4096);
-    if (region1) {
-        gfx_print("Success! Virtual address: ");
-        gfx_print_hex(region1);
-        gfx_print("\n");
-        
-        // Try to write to it
-        uint32_t* ptr = (uint32_t*)region1;
-        *ptr = 0xDEADBEEF;
-        
-        gfx_print("Wrote 0xDEADBEEF, read back: ");
-        gfx_print_hex(*ptr);
-        gfx_print("\n");
-        
-        vmm_free_region(region1, 4096);
-        gfx_print("Region freed\n");
-    } else {
-        gfx_print("Failed to allocate region\n");
-    }
-    
-    gfx_print("\nVMM test complete\n");
-}
+// Removed: cmd_vmm demo. Use memory pool and allocator-specific diagnostics instead.
 
 void cmd_splash(int argc, char** argv) {
     (void)argc; (void)argv;
@@ -359,6 +427,29 @@ typedef struct {
     void (*func)(int argc, char** argv);
 } simple_command_t;
 
+// Forward declarations for commands defined later in this file
+void cmd_aiquicktest(int argc, char** argv);
+#ifdef CONFIG_DEV_COMMANDS
+void cmd_dev_diag(int argc, char** argv);
+#endif
+void cmd_admin(int argc, char** argv);
+void cmd_udp_echo(int argc, char** argv);
+void cmd_port(int argc, char** argv);
+void cmd_tcp_connect(int argc, char** argv);
+void cmd_http_get(int argc, char** argv);
+void cmd_netpoll(int argc, char** argv);
+void cmd_arping(int argc, char** argv);
+void cmd_serialtee(int argc, char** argv);
+void cmd_saveconsole(int argc, char** argv);
+void cmd_e1000_diag(int argc, char** argv);
+void cmd_e1000_loopback(int argc, char** argv);
+void cmd_txtest(int argc, char** argv);
+void cmd_lbtest(int argc, char** argv);
+void cmd_phy_dump(int argc, char** argv);
+
+// Admin gating for dev commands
+static bool g_admin_mode = false;
+
 static const simple_command_t commands[] = {
     {"help", cmd_help},
     {"echo", cmd_echo},
@@ -371,7 +462,6 @@ static const simple_command_t commands[] = {
     {"kbd", cmd_kbd},
     {"mouse_status", cmd_mouse_status},
     {"mempool", cmd_mempool},
-    {"vmm", cmd_vmm},
     {"pci", cmd_pci},
     {"cores", cmd_cores},
     {"splash", cmd_splash},
@@ -380,9 +470,24 @@ static const simple_command_t commands[] = {
     {"ifdown", cmd_ifdown},
     {"ping", cmd_ping},
     {"arp", cmd_arp},
+    {"arping", cmd_arping},
+    {"udp_echo", cmd_udp_echo},
+    {"port", cmd_port},
+    {"tcp_connect", cmd_tcp_connect},
+    {"http_get", cmd_http_get},
+    {"netpoll", cmd_netpoll},
     {"pipeline", cmd_pipeline},
     {"window", cmd_window},
     {"winloop", cmd_winloop},
+    {"serialtee", cmd_serialtee},
+    {"hostwrite", cmd_hostwrite},
+    {"saveconsole", cmd_saveconsole},
+    {"e1000_diag", cmd_e1000_diag},
+    {"e1000_loopback", cmd_e1000_loopback},
+    {"txtest", cmd_txtest},
+    {"lbtest", cmd_lbtest},
+    {"phy_dump", cmd_phy_dump},
+    {"netlog", cmd_netlog},
     // Filesystem commands
     {"ls", cmd_ls},
     {"dir", cmd_dir},
@@ -395,6 +500,7 @@ static const simple_command_t commands[] = {
     {"cp", cmd_cp},
     {"mv", cmd_mv},
     {"disk", cmd_disk},
+    {"admin", cmd_admin},
     // AI commands
     {"aisave", cmd_aisave},
     {"aiload", cmd_aiload},
@@ -404,6 +510,9 @@ static const simple_command_t commands[] = {
     {"tasktest", cmd_tasktest},
     {"ide", cmd_ide},
     {"9ptest", cmd_9ptest},
+#ifdef CONFIG_DEV_COMMANDS
+    {"dev_diag", cmd_dev_diag},
+#endif
     // {"mouse", cmd_mouse},
     {NULL, NULL}
 };
@@ -521,14 +630,133 @@ bool check_for_command(const char* cmd) {
 // Network commands
 void cmd_ifconfig(int argc, char** argv) {
     (void)argc; (void)argv;
-    
-    extern void e1000_print_info(void);
-    e1000_print_info();
+    extern net_device_t* network_get_device(uint32_t index);
+    uint32_t i = 0;
+    bool any = false;
+    while (1) {
+        net_device_t* dev = network_get_device(i);
+        if (!dev) break;
+        any = true;
+        gfx_print(dev->name);
+        gfx_print(": ");
+        gfx_print(dev->state ? "UP" : "DOWN");
+        gfx_print("\n  MTU: ");
+        gfx_print_decimal(dev->mtu);
+        gfx_print("\n  IP: ");
+        gfx_print_decimal(dev->ip_address.addr[0]); gfx_print(".");
+        gfx_print_decimal(dev->ip_address.addr[1]); gfx_print(".");
+        gfx_print_decimal(dev->ip_address.addr[2]); gfx_print(".");
+        gfx_print_decimal(dev->ip_address.addr[3]); gfx_print("\n");
+        i++;
+    }
+    if (!any) {
+        gfx_print("No network devices\n");
+    }
 }
 
 void cmd_ifup(int argc, char** argv) {
+    extern void e1000_set_init_mode(int mode);
+    extern void e1000_init(void);
+    extern void e1000_print_info(void);
+    extern void e1000_print_diag(void);
+    if (argc > 1 && argv && argv[1]) {
+        const char* mode = argv[1];
+        if (mode[0]=='f') { // full
+            gfx_print("ifup: Full init (map MMIO, bring up)\n");
+            e1000_set_init_mode(2);
+            e1000_init();
+            e1000_print_info();
+            return;
+        } else if (mode[0]=='d') { // diag
+            gfx_print("ifup: Diagnostics dump\n");
+            e1000_print_diag();
+            return;
+        } else if (mode[0]=='s') { // safe
+            gfx_print("ifup: Safe mode (no MMIO, stub only)\n");
+            e1000_set_init_mode(0);
+            e1000_init();
+            e1000_print_info();
+            return;
+        }
+    }
+    // Default: Stage1 logging only
+    gfx_print("ifup: Stage1 (log BAR, no MMIO)\n");
+    e1000_set_init_mode(1);
+    e1000_init();
+    e1000_print_info();
+}
+// Explicit E1000 diagnostic command alias (same as ifup diag)
+void cmd_e1000_diag(int argc, char** argv) {
     (void)argc; (void)argv;
-    gfx_print("Interface is already up (E1000 auto-initialized)\n");
+    extern void e1000_print_diag(void);
+    gfx_print("e1000: Diagnostics dump\n");
+    e1000_print_diag();
+}
+
+// e1000_loopback off|mac|phy|status
+void cmd_e1000_loopback(int argc, char** argv) {
+    if (argc < 2) {
+        gfx_print("Usage: e1000_loopback off|mac|phy|status\n");
+        return;
+    }
+    if (strcmp(argv[1], "status") == 0) {
+        int m = e1000_get_loopback_mode();
+        if (m < 0) { gfx_print("Loopback: unavailable\n"); return; }
+        gfx_print("Loopback mode: ");
+        if (m == 0) gfx_print("off\n");
+        else if (m == 2) gfx_print("mac\n");
+        else if (m == 3) gfx_print("phy\n");
+        else { gfx_print("unknown\n"); }
+        return;
+    }
+    if (strcmp(argv[1], "off") == 0) {
+        e1000_config_loopback(E1000_LB_OFF);
+        gfx_print("Loopback: OFF\n");
+    } else if (strcmp(argv[1], "mac") == 0) {
+        e1000_config_loopback(E1000_LB_MAC);
+        gfx_print("Loopback: MAC\n");
+    } else if (strcmp(argv[1], "phy") == 0) {
+        e1000_config_loopback(E1000_LB_PHY);
+        gfx_print("Loopback: PHY\n");
+    } else {
+        gfx_print("Usage: e1000_loopback off|mac|phy|status\n");
+    }
+}
+
+// txtest: send a simple broadcast frame via E1000
+void cmd_txtest(int argc, char** argv) {
+    (void)argc; (void)argv;
+    extern void e1000_send_test_broadcast(void);
+    e1000_send_test_broadcast();
+    gfx_print("txtest: sent (check netlog)\n");
+}
+
+void cmd_phy_dump(int argc, char** argv) {
+    (void)argc; (void)argv;
+    extern void e1000_phy_dump(void);
+    e1000_phy_dump();
+}
+
+// lbtest: enable MAC loopback, send test frame, poll briefly, dump diag, restore off
+void cmd_lbtest(int argc, char** argv) {
+    (void)argc; (void)argv;
+    gfx_print("lbtest: enabling MAC loopback, sending, polling...\n");
+    e1000_config_loopback(E1000_LB_MAC);
+    // Send
+    extern void e1000_send_test_broadcast(void);
+    e1000_send_test_broadcast();
+    // Poll receive path for a short duration
+    extern void e1000_check_packets(void);
+    for (int i = 0; i < 200; ++i) { // ~short spin
+        e1000_check_packets();
+        for (volatile int j = 0; j < 200000; ++j) { }
+    }
+    // Dump quick diagnostics
+    extern void e1000_print_diag(void);
+    e1000_print_diag();
+    // Restore normal mode
+    e1000_config_loopback(E1000_LB_OFF);
+    gfx_print("lbtest: done\n");
 }
 
 void cmd_ifdown(int argc, char** argv) {
@@ -601,6 +829,53 @@ void cmd_arp(int argc, char** argv) {
     arp_print_cache();
 }
 
+// arping <ip>: send ARP request, poll RX briefly, then show ARP cache
+void cmd_arping(int argc, char** argv) {
+    if (argc < 2) {
+        gfx_print("Usage: arping <ip>\n");
+        gfx_print("Example: arping 192.168.100.1\n");
+        return;
+    }
+
+    // Parse dotted-quad
+    const char* ip_str = argv[1];
+    uint8_t ipb[4] = {0};
+    int parts = 0; int current = 0;
+    for (const char* p = ip_str; *p; ++p) {
+        if (*p >= '0' && *p <= '9') {
+            current = current * 10 + (*p - '0');
+            if (current > 255) { gfx_print("Invalid IP\n"); return; }
+        } else if (*p == '.') {
+            if (parts >= 4) { gfx_print("Invalid IP\n"); return; }
+            ipb[parts++] = (uint8_t)current; current = 0;
+        } else { gfx_print("Invalid IP\n"); return; }
+    }
+    if (parts < 3) { gfx_print("Invalid IP\n"); return; }
+    ipb[3] = (uint8_t)current;
+
+    ipv4_addr_t tip = { .addr = { ipb[0], ipb[1], ipb[2], ipb[3] } };
+
+    net_device_t* dev = network_get_default_device();
+    if (!dev) { gfx_print("No network device\n"); return; }
+    if (dev->state != NET_DEV_RUNNING) { gfx_print("Interface is down\n"); return; }
+
+    extern int arp_send_request(net_device_t* dev, ipv4_addr_t* target_ip);
+    extern void e1000_check_packets(void);
+    extern void arp_print_cache(void);
+
+    gfx_print("Sending ARP request for "); gfx_print(ip_str); gfx_print("...\n");
+    (void)arp_send_request(dev, &tip);
+
+    // Poll RX briefly to process reply
+    for (int i = 0; i < 50; ++i) {
+        e1000_check_packets();
+        for (volatile int spin = 0; spin < 200000; ++spin) { }
+    }
+
+    gfx_print("\nARP cache:\n");
+    arp_print_cache();
+}
+
 void cmd_pipeline(int argc, char** argv) {
     (void)argc; (void)argv;
     
@@ -616,6 +891,246 @@ void cmd_window(int argc, char** argv) {
 }
 
 void cmd_winloop(int argc, char** argv);
+
+// UDP echo client: udp_echo <port> <message>
+void cmd_udp_echo(int argc, char** argv) {
+    if (argc < 3) {
+        gfx_print("Usage: udp_echo <port> <message>\n");
+        gfx_print("Example: udp_echo 9000 hello\n");
+        return;
+    }
+
+    // Parse port
+    uint32_t port = 0;
+    for (const char* p = argv[1]; *p; ++p) { if (*p < '0' || *p > '9') { gfx_print("Invalid port\n"); return; } port = port*10 + (uint32_t)(*p - '0'); }
+    if (port == 0 || port > 65535) { gfx_print("Port out of range\n"); return; }
+
+    net_device_t* dev = network_get_default_device();
+    if (!dev) { gfx_print("No network device\n"); return; }
+
+    // Default remote host: use device gateway (bridged LAN)
+    ipv4_addr_t host = dev->gateway;
+    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) {
+        // Fallback to a common host IP if gateway not set
+        host.addr[0] = 172; host.addr[1] = 17; host.addr[2] = 131; host.addr[3] = 240;
+    }
+
+    const char* msg = argv[2];
+    uint32_t len = (uint32_t)strlen(msg);
+
+    int res = udp_send(dev, &host, /*src_port*/ (uint16_t)port, /*dest_port*/ (uint16_t)port, (const uint8_t*)msg, len);
+    if (res < 0) {
+        gfx_print("udp_echo: send failed (ARP unresolved?)\n");
+        gfx_print("Try again after ARP resolves or run 'arp'\n");
+        netlog_write("udp_echo: send failed\n");
+        return;
+    }
+    gfx_print("udp_echo: sent "); gfx_print_decimal(len); gfx_print(" bytes to host:\n");
+    netlog_write_hex("udp_echo: sent bytes=", (uint32_t)len); netlog_write("\n");
+}
+
+// Port manager control: port [allow|block|list] udp|tcp in|out <port>
+void cmd_port(int argc, char** argv) {
+    if (argc < 2) {
+        gfx_print("Usage: port [allow|block|list|save|load] udp|tcp [in|out] [port]\n");
+        return;
+    }
+    if (strcmp(argv[1], "save") == 0) { extern int port_manager_save(void); int r=port_manager_save(); if(r==0) gfx_print("Saved\n"); else gfx_print("Save failed\n"); return; }
+    if (strcmp(argv[1], "load") == 0) { extern int port_manager_load(void); int r=port_manager_load(); if(r==0) gfx_print("Loaded\n"); else gfx_print("Load failed\n"); return; }
+    pm_protocol_t proto = (strcmp(argv[2], "udp")==0)? PM_PROTO_UDP : PM_PROTO_TCP;
+    pm_direction_t dir = PM_DIR_INBOUND;
+    if (argc >= 4) { dir = (strcmp(argv[3], "out")==0)? PM_DIR_OUTBOUND : PM_DIR_INBOUND; }
+    if (strcmp(argv[1], "list") == 0) { port_list(proto, dir); return; }
+    if (argc < 5) { gfx_print("Missing port\n"); return; }
+    // Parse port
+    uint32_t port = 0; for (const char* p = argv[4]; *p; ++p) { if (*p<'0'||*p>'9'){ gfx_print("Invalid port\n"); return;} port=port*10+(*p-'0'); }
+    if (port>65535) { gfx_print("Port out of range\n"); return; }
+    if (strcmp(argv[1], "allow")==0) { port_allow(proto, (uint16_t)port, dir); gfx_print("Port allowed\n"); }
+    else if (strcmp(argv[1], "block")==0) { port_block(proto, (uint16_t)port, dir); gfx_print("Port blocked\n"); }
+    else { gfx_print("Unknown action\n"); }
+}
+
+// Minimal TCP connect: tcp_connect <port>
+void cmd_tcp_connect(int argc, char** argv) {
+    if (argc < 2) {
+        gfx_print("Usage: tcp_connect <port>\n");
+        return;
+    }
+    // One connection, default host = device gateway (bridged)
+    uint32_t port = 0; for (const char* p = argv[1]; *p; ++p) { if (*p<'0'||*p>'9'){ gfx_print("Invalid port\n"); return;} port=port*10+(*p-'0'); }
+    if (port==0 || port>65535) { gfx_print("Port out of range\n"); return; }
+    net_device_t* dev = network_get_default_device(); if (!dev) { gfx_print("No network device\n"); return; }
+    ipv4_addr_t host = dev->gateway;
+    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {172,17,131,240} }; }
+    // Use an ephemeral local port for the client connection
+    static uint16_t eph = 40000;
+    if (eph < 49152) eph = 49152; // ensure in ephemeral range
+    uint16_t local_port = eph++;
+    uint16_t remote_port = (uint16_t)port;
+    int r = tcp_connect(dev, &host, local_port, remote_port);
+    if (r==0) { gfx_print("tcp_connect: SYN sent\n"); netlog_write_hex("tcp_connect: SYN sent port=", (uint32_t)remote_port); netlog_write("\n"); }
+    else { gfx_print("tcp_connect: failed\n"); netlog_write_hex("tcp_connect: failed port=", (uint32_t)remote_port); netlog_write("\n"); }
+}
+
+// HTTP GET: http_get <port> <path>
+void cmd_http_get(int argc, char** argv) {
+    if (argc < 3) {
+        gfx_print("Usage: http_get <port> <path>\n");
+        return;
+    }
+    uint32_t port = 0; for (const char* p = argv[1]; *p; ++p) { if (*p<'0'||*p>'9'){ gfx_print("Invalid port\n"); return;} port=port*10+(*p-'0'); }
+    if (port==0 || port>65535) { gfx_print("Port out of range\n"); return; }
+    const char* path = argv[2];
+    net_device_t* dev = network_get_default_device(); if (!dev) { gfx_print("No network device\n"); return; }
+    ipv4_addr_t host = dev->gateway;
+    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {172,17,131,240} }; }
+    // Use ephemeral local port to avoid inbound default-deny issues
+    static uint16_t eph = 50000;
+    if (eph < 49152) eph = 49152;
+    uint16_t local_port = eph++;
+    uint16_t remote_port = (uint16_t)port;
+    extern void e1000_set_polling_enabled(bool enabled);
+    extern void e1000_check_packets(void);
+    // Enable polling temporarily to process ARP/TCP responses
+    e1000_set_polling_enabled(true);
+    netlog_write_hex("http_get: connect port=", (uint32_t)remote_port); netlog_write("\n");
+    if (tcp_connect(dev, &host, local_port, remote_port) != 0) {
+        gfx_print("tcp_connect pending (ARP). Waiting...\n");
+        netlog_write("http_get: connect pending (ARP)\n");
+        for (int i = 0; i < 300; ++i) { // brief wait to receive ARP reply
+            e1000_check_packets();
+            for (volatile int j = 0; j < 500000; ++j) { }
+        }
+        if (tcp_connect(dev, &host, local_port, remote_port) != 0) {
+            e1000_set_polling_enabled(false);
+            gfx_print("tcp_connect failed\n");
+            netlog_write("http_get: connect failed\n");
+            return;
+        }
+    }
+    char req[256];
+    int n = snprintf(req, sizeof(req), "GET %s HTTP/1.0\r\nHost: %u.%u.%u.%u\r\nConnection: close\r\n\r\n", path,
+                     host.addr[0], host.addr[1], host.addr[2], host.addr[3]);
+    if (n <= 0) { gfx_print("format error\n"); netlog_write("http_get: format error\n"); return; }
+    if (tcp_send(dev, &host, local_port, remote_port, (const uint8_t*)req, (uint32_t)n) != 0) { gfx_print("tcp_send failed\n"); netlog_write("http_get: send failed\n"); return; }
+    gfx_print("HTTP request sent; polling for response...\n");
+    netlog_write("http_get: request sent; polling...\n");
+    for (int i = 0; i < 600; ++i) {
+        e1000_check_packets();
+        for (volatile int j = 0; j < 500000; ++j) { }
+    }
+    // Restore polling default (OFF) to avoid input lag
+    e1000_set_polling_enabled(false);
+    // Optionally log completion marker (response size would need TCP RX accounting)
+    netlog_write("http_get: done polling\n");
+}
+
+// netpoll on|off : toggle E1000 RX polling to reduce input lag
+void cmd_netpoll(int argc, char** argv) {
+    if (argc < 2) { gfx_print("Usage: netpoll on|off\n"); return; }
+    extern void e1000_set_polling_enabled(bool enabled);
+    if (strcmp(argv[1], "on") == 0) { e1000_set_polling_enabled(true); gfx_print("Net polling: ON\n"); }
+    else if (strcmp(argv[1], "off") == 0) { e1000_set_polling_enabled(false); gfx_print("Net polling: OFF\n"); }
+    else { gfx_print("Usage: netpoll on|off\n"); }
+}
+
+// serialtee on|off|status : mirror command output to serial log
+void cmd_serialtee(int argc, char** argv) {
+    if (argc < 2) {
+        gfx_print("Usage: serialtee on|off|status | serialtee ts on|off|status | serialtee date on|off|status\n");
+        return;
+    }
+    if (strcmp(argv[1], "on") == 0) {
+        g_serial_tee = true;
+        gfx_print("Serial tee: ON\n");
+    } else if (strcmp(argv[1], "off") == 0) {
+        g_serial_tee = false;
+        gfx_print("Serial tee: OFF\n");
+    } else if (strcmp(argv[1], "status") == 0) {
+        gfx_print("Serial tee status: ");
+        gfx_print(g_serial_tee ? "ON\n" : "OFF\n");
+    } else if (strcmp(argv[1], "ts") == 0) {
+        if (argc < 3) { gfx_print("Usage: serialtee ts on|off|status\n"); return; }
+        if (strcmp(argv[2], "on") == 0) { g_serial_tee_ts = true; gfx_print("Serial tee timestamps: ON\n"); }
+        else if (strcmp(argv[2], "off") == 0) { g_serial_tee_ts = false; gfx_print("Serial tee timestamps: OFF\n"); }
+        else if (strcmp(argv[2], "status") == 0) { gfx_print("Serial tee timestamps: "); gfx_print(g_serial_tee_ts ? "ON\n" : "OFF\n"); }
+        else { gfx_print("Usage: serialtee ts on|off|status\n"); }
+    } else if (strcmp(argv[1], "date") == 0) {
+        if (argc < 3) { gfx_print("Usage: serialtee date on|off|status\n"); return; }
+        if (strcmp(argv[2], "on") == 0) { g_log_use_datetime = true; gfx_print("Serial tee date/time: ON\n"); }
+        else if (strcmp(argv[2], "off") == 0) { g_log_use_datetime = false; gfx_print("Serial tee date/time: OFF\n"); }
+        else if (strcmp(argv[2], "status") == 0) { gfx_print("Serial tee date/time: "); gfx_print(g_log_use_datetime ? "ON\n" : "OFF\n"); }
+        else { gfx_print("Usage: serialtee date on|off|status\n"); }
+    } else {
+        gfx_print("Usage: serialtee on|off|status | serialtee ts on|off|status | serialtee date on|off|status\n");
+    }
+}
+
+// Host write test: hostwrite <path> <text>
+// Uses 9P write-intent open to create/append on /host share
+void cmd_hostwrite(int argc, char** argv) {
+    if (argc < 3) { gfx_print("Usage: hostwrite <path> <text>\n"); return; }
+    extern bool virtio_9p_is_mounted(void);
+    extern vfs_node_t* vfs_open_for_write(const char* path);
+    extern vfs_node_t* vfs_create(const char* path, uint32_t type);
+    extern int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset);
+    const char* path = argv[1];
+    const char* text = argv[2];
+    // Require /host prefix to ensure 9P backend
+    if (strncmp(path, "/host/", 6) != 0) { gfx_print("Path must start with /host/\n"); return; }
+    if (!virtio_9p_is_mounted()) { gfx_print("hostwrite: 9P not mounted (/host unavailable)\n"); return; }
+    vfs_node_t* node = vfs_open_for_write(path);
+    if (!node) {
+        // Attempt create then reopen for write (server may allow create via write intent or separate create)
+        node = vfs_create(path, VFS_TYPE_FILE);
+        if (!node) {
+            gfx_print("hostwrite: create failed\n"); return;
+        }
+        // Try to re-open for write to acquire 9P fid with write mode
+        vfs_node_t* wnode = vfs_open_for_write(path);
+        if (wnode) node = wnode; // prefer write-intent node if available
+    }
+    int r = vfs_write(node, text, strlen(text), 0);
+    if (r == (int)strlen(text)) { gfx_print("hostwrite: wrote OK\n"); }
+    else { gfx_print("hostwrite: write failed\n"); }
+}
+
+// saveconsole [path]
+void cmd_saveconsole(int argc, char** argv) {
+    const char* path = "/host/console_dump.txt";
+    if (argc >= 2 && argv[1] && argv[1][0]) path = argv[1];
+
+    // If targeting host path, ensure 9P is available
+    if (strncmp(path, "/host/", 6) == 0) {
+        extern bool virtio_9p_is_mounted(void);
+        if (!virtio_9p_is_mounted()) {
+            gfx_print("saveconsole: /host not mounted (enable 9P)\n");
+            return;
+        }
+    }
+
+    int res = console_compositor_dump_to_file(path);
+    if (res >= 0) {
+        gfx_print("saveconsole: wrote "); gfx_print_decimal((uint32_t)res); gfx_print(" line(s) to "); gfx_print(path); gfx_print("\n");
+    } else {
+        if (res == -1) { gfx_print("saveconsole: invalid state or path\n"); }
+        else if (res == -2) { gfx_print("saveconsole: /host unavailable (9P not mounted)\n"); }
+        else if (res == -3) { gfx_print("saveconsole: create failed\n"); }
+        else if (res == -4) { gfx_print("saveconsole: write failed (lines)\n"); }
+        else if (res == -5) { gfx_print("saveconsole: write failed (newline)\n"); }
+        else if (res == -6) { gfx_print("saveconsole: write failed (pending)\n"); }
+        else if (res == -7) { gfx_print("saveconsole: write failed (pending newline)\n"); }
+        else { gfx_print("saveconsole: error\n"); }
+    }
+}
+
+// netlog status|upgrade : inspect or force migrate backend
+void cmd_netlog(int argc, char** argv) {
+    if (argc < 2) { gfx_print("Usage: netlog status|upgrade\n"); return; }
+    if (strcmp(argv[1], "status") == 0) { netlog_status(); return; }
+    if (strcmp(argv[1], "upgrade") == 0) { netlog_force_upgrade(); netlog_status(); return; }
+    gfx_print("Usage: netlog status|upgrade\n");
+}
 
 // AI Commands
 void cmd_aisave(int argc, char** argv) {
@@ -654,6 +1169,7 @@ void cmd_aistats(int argc, char** argv) {
 
 // Quick save/load parity test for AI persistence
 void cmd_aiquicktest(int argc, char** argv) {
+    if (!g_admin_mode) { gfx_print("Access denied. Use 'admin login <password>'\n"); return; }
     (void)argc; (void)argv;
 
     gfx_print("Running AI quick test (cache save/load) ...\n");
@@ -661,8 +1177,9 @@ void cmd_aiquicktest(int argc, char** argv) {
     // Seed predictor cache
     extern void command_cache_clear(void);
     extern bool command_cache_result(const char* command, const char* result);
+    // Predictor stats and API (declared at file scope to avoid transient editor warnings)
+    extern void command_predictor_get_stats(void* stats_out);
     typedef struct { uint32_t total_predictions, cache_hits, cache_misses, cache_size; float hit_rate; } predictor_stats_t;
-    extern void command_predictor_get_stats(predictor_stats_t* stats_out);
 
     command_cache_clear();
     command_cache_result("echo test1", "ok1");
@@ -706,6 +1223,113 @@ void cmd_aiquicktest(int argc, char** argv) {
     } else {
         gfx_print("AI quick test: FAIL (sizes differ)\n");
     }
+}
+
+#ifdef CONFIG_DEV_COMMANDS
+// Developer diagnostics: write a snapshot to /ramdisk/dev_diag.log
+void cmd_dev_diag(int argc, char** argv) {
+    if (!g_admin_mode) { gfx_print("Access denied. Use 'admin login <password>'\n"); return; }
+    (void)argc; (void)argv;
+    extern vfs_node_t* vfs_create(const char* path, uint32_t type);
+    extern int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset);
+    
+
+    vfs_node_t* node = vfs_create("/ramdisk/dev_diag.log", VFS_TYPE_FILE);
+    if (!node) { gfx_print("dev_diag: failed to create log file\n"); return; }
+
+    // Collect minimal diagnostics
+    char buf[256];
+    size_t off = 0;
+    const char* hdr = "=== QARMA Diagnostics ===\n";
+    vfs_write(node, hdr, strlen(hdr), off); off += strlen(hdr);
+
+    extern const char* quantum_get_status(void);
+    const char* qstat = quantum_get_status();
+    int n = snprintf(buf, sizeof(buf), "Quantum: %s\n", qstat);
+    vfs_write(node, buf, (size_t)n, off); off += (size_t)n;
+
+    // Core manager stats
+    extern core_manager_stats_t* core_manager_get_stats(void);
+    core_manager_stats_t* cstats = core_manager_get_stats();
+    if (cstats) {
+        n = snprintf(buf, sizeof(buf),
+                     "Cores: total=%u available=%u reserved=%u allocated=%u\n",
+                     cstats->total_cores, cstats->available_cores,
+                     cstats->reserved_cores, cstats->allocated_cores);
+        vfs_write(node, buf, (size_t)n, off); off += (size_t)n;
+    }
+
+    // Memory pool summary
+    extern memory_pool_stats_t* memory_pool_get_stats(void);
+    memory_pool_stats_t* mp = memory_pool_get_stats();
+    if (mp) {
+        n = snprintf(buf, sizeof(buf), "Memory: total=%u used=%u free=%u\n",
+                     mp->total_bytes, mp->used_bytes, mp->free_bytes);
+        vfs_write(node, buf, (size_t)n, off); off += (size_t)n;
+    }
+
+    // AI persistence counters (printed via aistats, but include summary)
+    extern void ai_persistence_print_stats(void);
+    const char* hint = "See 'aistats' for detailed AI persistence metrics\n";
+    vfs_write(node, hint, strlen(hint), off); off += strlen(hint);
+
+    gfx_print("dev_diag: wrote /ramdisk/dev_diag.log\n");
+}
+#endif
+
+// Admin command to manage dev access
+void cmd_admin(int argc, char** argv) {
+    extern vfs_node_t* vfs_open(const char* path);
+    extern vfs_node_t* vfs_create(const char* path, uint32_t type);
+    extern int vfs_read(vfs_node_t* node, void* buf, size_t size, size_t offset);
+    extern int vfs_write(vfs_node_t* node, const void* buf, size_t size, size_t offset);
+
+    // Prefer ramdisk to avoid host mount/write issues
+    const char* ram_path = "/ramdisk/admin.bin";
+
+    if (argc < 2) {
+        gfx_print("Usage: admin [login <password>|set <password>|status]\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "status") == 0) {
+        gfx_print("Admin mode: "); gfx_print(g_admin_mode ? "ENABLED\n" : "DISABLED\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "login") == 0 && argc >= 3) {
+        // Try ramdisk first for stability
+        vfs_node_t* node = vfs_open(ram_path);
+        const char* used = ram_path;
+        if (!node) { gfx_print("No admin password set. Use 'admin set <password>' first.\n"); return; }
+        char stored[128];
+        int r = vfs_read(node, stored, sizeof(stored)-1, 0);
+        if (r <= 0) { gfx_print("Failed to read admin password\n"); return; }
+        stored[r] = '\0';
+        if (strcmp(stored, argv[2]) == 0) {
+            g_admin_mode = true;
+            gfx_print("Admin login successful\n");
+        } else {
+            gfx_print("Admin login failed\n");
+        }
+        return;
+    }
+
+    if (strcmp(argv[1], "set") == 0 && argc >= 3) {
+        // Write to ramdisk to ensure reliability
+        vfs_node_t* node = vfs_create(ram_path, VFS_TYPE_FILE);
+        const char* used = ram_path;
+        if (!node) { gfx_print("Failed to create admin password file\n"); return; }
+        int w = vfs_write(node, argv[2], strlen(argv[2]), 0);
+        if (w == (int)strlen(argv[2])) {
+            gfx_print("Admin password set at "); gfx_print(used); gfx_print("\n");
+        } else {
+            gfx_print("Failed to write admin password\n");
+        }
+        return;
+    }
+
+    gfx_print("Invalid admin command. Use 'admin login <password>' or 'admin set <password>'\n");
 }
 
 // Background task functions for testing quantum AI

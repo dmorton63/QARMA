@@ -9,6 +9,7 @@
 #include "memory/heap.h"
 #include "string.h"
 #include "command.h"
+#include "vfs.h"
 
 #define CONSOLE_MAX_LINES 100
 #define CONSOLE_LINE_LENGTH 80
@@ -46,49 +47,136 @@ static void draw_string_clipped(int x, int y, int x_max, const char* text,
     gfx_draw_string((uint32_t)x, (uint32_t)y, buf, fg, bg, NULL);
 }
 
+// Helper: placeholder-only detector (e.g., "%s", ">%d", ":%x\n")
+static bool cc_is_placeholder_only(const char* s) {
+    if (!s) return false;
+    while (*s == ' ' || *s == '\t' || *s == '\r') s++;
+    if (!*s) return false;
+    const char* p = s;
+    if (*p == '>' || *p == ':') {
+        p++;
+        while (*p == ' ' || *p == '\t') p++; // allow space after prefix
+    }
+    if (*p != '%') return false;
+    p++;
+    char c = *p;
+    if (!(c == 's' || c == 'd' || c == 'u' || c == 'x' || c == 'X' || c == 'c')) return false;
+    p++;
+    if (*p == '\n') p++;
+    while (*p == ' ' || *p == '\t' || *p == '\r') p++;
+    return *p == '\0';
+}
+
+// Persistent pending line buffer to join fragmented gfx_print() pieces
+static char g_pending_line[CONSOLE_LINE_LENGTH];
+static int g_pending_len = 0;
+
+// Forward declaration
+bool console_compositor_is_visible(void);
+
 // Callback for gfx_print redirection
 static void console_capture_output(const char* text) {
-    if (!g_console || !text) return;
-    
-    // Parse text into lines
-    char line[CONSOLE_LINE_LENGTH];
-    int line_pos = 0;
-    
-    for (int i = 0; text[i] != '\0'; i++) {
-        if (text[i] == '\n') {
-            if (line_pos > 0) {
-                line[line_pos] = '\0';
-                // Add line to console
+    if (!g_console || !text || !*text) return;
+    // Only capture when console is visible or a command is actively running
+    if (!(g_console->capturing_output || console_compositor_is_visible())) return;
+    // Skip accidental placeholder-only fragments
+    if (cc_is_placeholder_only(text)) return;
+
+    for (int i = 0; text[i] != '\0'; ) {
+        char ch = text[i];
+        // Interpret escaped newlines "\n" as actual newlines
+        if (ch == '\\' && text[i+1] == 'n') {
+            ch = '\n';
+            i += 2; // consume both characters
+        } else {
+            // Normalize CR to newline
+            if (ch == '\r') ch = '\n';
+            i++;
+        }
+        if (ch == '\n') {
+            // Flush current pending line (even if empty, create blank line)
+            if (g_console->line_count >= CONSOLE_MAX_LINES) {
+                for (int j = 0; j < CONSOLE_MAX_LINES - 1; j++) {
+                    strcpy(g_console->lines[j], g_console->lines[j + 1]);
+                }
+                g_console->line_count = CONSOLE_MAX_LINES - 1;
+            }
+            g_pending_line[g_pending_len] = '\0';
+            // Drop placeholder-only lines to avoid showing stray "%s"
+            if (!cc_is_placeholder_only(g_pending_line)) {
+                strncpy(g_console->lines[g_console->line_count], g_pending_line, CONSOLE_LINE_LENGTH - 1);
+                g_console->lines[g_console->line_count][CONSOLE_LINE_LENGTH - 1] = '\0';
+                g_console->line_count++;
+            }
+            g_pending_len = 0;
+        } else {
+            if (g_pending_len < CONSOLE_LINE_LENGTH - 1) {
+                g_pending_line[g_pending_len++] = ch;
+            } else {
+                // Line full; flush and start a new one
                 if (g_console->line_count >= CONSOLE_MAX_LINES) {
-                    // Scroll up
                     for (int j = 0; j < CONSOLE_MAX_LINES - 1; j++) {
                         strcpy(g_console->lines[j], g_console->lines[j + 1]);
                     }
                     g_console->line_count = CONSOLE_MAX_LINES - 1;
                 }
-                strncpy(g_console->lines[g_console->line_count], line, CONSOLE_LINE_LENGTH - 1);
-                g_console->lines[g_console->line_count][CONSOLE_LINE_LENGTH - 1] = '\0';
-                g_console->line_count++;
-                line_pos = 0;
+                g_pending_line[g_pending_len] = '\0';
+                if (!cc_is_placeholder_only(g_pending_line)) {
+                    strncpy(g_console->lines[g_console->line_count], g_pending_line, CONSOLE_LINE_LENGTH - 1);
+                    g_console->lines[g_console->line_count][CONSOLE_LINE_LENGTH - 1] = '\0';
+                    g_console->line_count++;
+                }
+                g_pending_len = 0;
+                // Start new pending with current char
+                g_pending_line[g_pending_len++] = ch;
             }
-        } else if (line_pos < CONSOLE_LINE_LENGTH - 1) {
-            line[line_pos++] = text[i];
         }
     }
-    
-    // Add any remaining text
-    if (line_pos > 0) {
-        line[line_pos] = '\0';
-        if (g_console->line_count >= CONSOLE_MAX_LINES) {
-            for (int j = 0; j < CONSOLE_MAX_LINES - 1; j++) {
-                strcpy(g_console->lines[j], g_console->lines[j + 1]);
-            }
-            g_console->line_count = CONSOLE_MAX_LINES - 1;
-        }
-        strncpy(g_console->lines[g_console->line_count], line, CONSOLE_LINE_LENGTH - 1);
-        g_console->lines[g_console->line_count][CONSOLE_LINE_LENGTH - 1] = '\0';
-        g_console->line_count++;
+    // Do not flush trailing text here; wait for '\n' to produce a line
+}
+
+int console_compositor_dump_to_file(const char* path) {
+    if (!g_console || !path || !*path) return -1;
+    extern bool virtio_9p_is_mounted(void);
+    if (strncmp(path, "/host/", 6) == 0 && !virtio_9p_is_mounted()) {
+        // Host path requested but 9P not mounted
+        return -2;
     }
+
+    // Prefer a write-intent open if available
+    extern vfs_node_t* vfs_open_for_write(const char*);
+    vfs_node_t* node = vfs_open_for_write(path);
+    if (!node) {
+        // Try to create then re-open for write
+        vfs_node_t* created = vfs_create(path, VFS_TYPE_FILE);
+        if (!created) return -3;
+        node = vfs_open_for_write(path);
+        if (!node) node = created; // fallback to created handle
+    }
+
+    size_t off = 0; int written_lines = 0;
+    extern int vfs_write(vfs_node_t*, const void*, size_t, size_t);
+
+    // Dump stored lines
+    for (int i = 0; i < g_console->line_count; ++i) {
+        const char* s = g_console->lines[i];
+        if (!s) s = "";
+        size_t len = strlen(s);
+        if (len) { if (vfs_write(node, s, len, off) != (int)len) return -4; off += len; }
+        if (vfs_write(node, "\n", 1, off) != 1) return -5; off += 1; // newline per line
+        written_lines++;
+    }
+
+    // Flush any pending (incomplete) line as well
+    if (g_pending_len > 0) {
+        g_pending_line[g_pending_len] = '\0';
+        size_t len = strlen(g_pending_line);
+        if (len) { if (vfs_write(node, g_pending_line, len, off) != (int)len) return -6; off += len; }
+        if (vfs_write(node, "\n", 1, off) != 1) return -7; off += 1;
+        written_lines++;
+    }
+
+    return written_lines;
 }
 
 // Console content renderer
@@ -245,6 +333,9 @@ void console_compositor_show(void) {
     fb_mark_dirty();
     
     serial_debug("[CONSOLE_SHOW] Console shown (render deferred)\n");
+
+    // Reset any partial pending line to avoid concatenation with new output
+    g_pending_len = 0;
 }
 
 void console_compositor_hide(void) {
@@ -275,6 +366,9 @@ void console_compositor_hide(void) {
     fb_mark_dirty();
     
     serial_debug("[CONSOLE_HIDE] Exit\n");
+
+    // Clear pending buffer when hiding to avoid stale fragments
+    g_pending_len = 0;
 }
 
 void console_compositor_toggle(void) {
@@ -428,7 +522,12 @@ void console_compositor_handle_key(uint8_t scancode, char character) {
     // Enter - execute command
     if (scancode == 0x1C) {
         g_console->input_buffer[g_console->input_pos] = '\0';
-        
+        // If no command, just ignore (avoid printing bare ">")
+        if (g_console->input_buffer[0] == '\0') {
+            compositor_render_all();
+            return;
+        }
+
         // Echo command
         char echo[CONSOLE_LINE_LENGTH];
         snprintf(echo, CONSOLE_LINE_LENGTH, "> %s", g_console->input_buffer);
@@ -463,10 +562,7 @@ void console_compositor_handle_key(uint8_t scancode, char character) {
             g_console->capturing_output = false;
         }
         
-        // Add blank line
-        if (g_console->line_count < CONSOLE_MAX_LINES) {
-            g_console->lines[g_console->line_count++][0] = '\0';
-        }
+        // Do not add auto blank line; keep output compact
         
         // Clear input buffer
         g_console->input_buffer[0] = '\0';

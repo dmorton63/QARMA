@@ -86,6 +86,9 @@ void cmd_version(int argc, char** argv);
 void cmd_clear(int argc, char** argv);
 void cmd_exit(int argc, char** argv);
 
+// Command function prototypes
+// void cmd_vmm(int argc, char **argv);
+
 // Network commands
 void cmd_ifconfig(int argc, char** argv);
 void cmd_ifup(int argc, char** argv);
@@ -100,11 +103,16 @@ void cmd_pipeline(int argc, char** argv);
 void cmd_window(int argc, char** argv);
 void cmd_winloop(int argc, char** argv);
 
+void cmd_hostwrite(int argc, char **argv);
+
+void cmd_netlog(int argc, char **argv);
+
 // AI commands
 void cmd_aisave(int argc, char** argv);
 void cmd_aiload(int argc, char** argv);
 void cmd_aistats(int argc, char** argv);
-void cmd_quantum(int argc, char** argv);
+void cmd_aiquicktest(int argc, char **argv);
+void cmd_quantum(int argc, char **argv);
 
 int atoi(const char* str);
 // Utility functions

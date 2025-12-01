@@ -8,6 +8,8 @@
 #include "config.h"
 #include "graphics.h"
 #include "init.h"
+#include "rtc.h"
+#include "log_timestamp.h"
 
 // Global verbosity level  
 verbosity_level_t g_verbosity = VERBOSITY_VERBOSE;
@@ -55,12 +57,118 @@ void serial_debug_decimal(uint32_t value) {
     serial_debug(ptr);
 }
 
+bool g_log_use_datetime = false;
+
+static void print_two_digits(uint32_t v) {
+    char buf[3];
+    buf[0] = '0' + ((v / 10) % 10);
+    buf[1] = '0' + (v % 10);
+    buf[2] = '\0';
+    serial_debug(buf);
+}
+
+static void print_three_digits(uint32_t v) {
+    char buf[4];
+    buf[0] = '0' + ((v / 100) % 10);
+    buf[1] = '0' + ((v / 10) % 10);
+    buf[2] = '0' + (v % 10);
+    buf[3] = '\0';
+    serial_debug(buf);
+}
+
+void log_print_timestamp(void) {
+    if (g_log_use_datetime) {
+        rtc_datetime_t dt;
+        rtc_read(&dt);
+        // Format: YYYY-MM-DD HH:MM:SS
+        serial_debug("[");
+        serial_debug_decimal(dt.year);
+        serial_debug("-");
+        print_two_digits(dt.month);
+        serial_debug("-");
+        print_two_digits(dt.day);
+        serial_debug(" ");
+        print_two_digits(dt.hour);
+        serial_debug(":");
+        print_two_digits(dt.minute);
+        serial_debug(":");
+        print_two_digits(dt.second);
+        serial_debug("] ");
+        return;
+    }
+
+    // Fallback: [ticks:millis]
+    uint32_t _ts_ticks = get_ticks();
+    uint32_t _ts_ms = (uint32_t)get_system_time_millis(TIMER_FREQUENCY);
+    serial_debug("[");
+    serial_debug_decimal(_ts_ticks);
+    serial_debug(":");
+    serial_debug_decimal(_ts_ms);
+    serial_debug("ms] ");
+}
 void serial_debug_signed(int32_t value) {
     if (value < 0) {
         serial_debug("-");
         value = -value;
     }
     serial_debug_decimal((uint32_t)value);
+}
+
+// Minimal printf-style formatter for serial logging
+// Supports %s, %d, %u, %x, %c
+static void serial_tiny_vformat(char* out, size_t outsz, const char* fmt, va_list ap) {
+    size_t pos = 0;
+    const char* p = fmt ? fmt : "";
+    while (*p && pos + 1 < outsz) {
+        if (*p != '%') {
+            out[pos++] = *p++;
+            continue;
+        }
+        p++;
+        if (*p == '%') { out[pos++] = '%'; p++; continue; }
+        if (*p == 's') {
+            const char* s = va_arg(ap, const char*);
+            if (!s) s = "(null)";
+            while (*s && pos + 1 < outsz) out[pos++] = *s++;
+            p++;
+        } else if (*p == 'c') {
+            int c = va_arg(ap, int);
+            out[pos++] = (char)c;
+            p++;
+        } else if (*p == 'u' || *p == 'd') {
+            int is_signed = (*p == 'd');
+            long v = is_signed ? va_arg(ap, int) : (long)va_arg(ap, unsigned int);
+            if (is_signed && v < 0) { if (pos + 1 < outsz) out[pos++] = '-'; v = -v; }
+            char buf[32]; int bp = 0; unsigned long uv = (unsigned long)v;
+            if (uv == 0) buf[bp++] = '0';
+            while (uv && bp < (int)sizeof(buf)) { buf[bp++] = (char)('0' + (uv % 10)); uv /= 10; }
+            for (int i = bp - 1; i >= 0 && pos + 1 < outsz; --i) out[pos++] = buf[i];
+            p++;
+        } else if (*p == 'x' || *p == 'X') {
+            unsigned int v = va_arg(ap, unsigned int);
+            const char* hex = (*p == 'X') ? "0123456789ABCDEF" : "0123456789abcdef";
+            char buf[8]; int bp = 0;
+            if (v == 0) buf[bp++] = '0';
+            while (v && bp < (int)sizeof(buf)) { buf[bp++] = hex[v & 0xF]; v >>= 4; }
+            for (int i = bp - 1; i >= 0 && pos + 1 < outsz; --i) out[pos++] = buf[i];
+            p++;
+        } else {
+            // Unknown specifier: emit literally
+            out[pos++] = '%';
+            if (*p && pos + 1 < outsz) out[pos++] = *p;
+            if (*p) p++;
+        }
+    }
+    out[pos] = '\0';
+}
+
+void serial_logf(const char* fmt, ...) {
+    char buf[512];
+    va_list ap;
+    va_start(ap, fmt);
+    serial_tiny_vformat(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    serial_debug(buf);
 }
 
 // Callback for successful login

@@ -5,9 +5,19 @@
 
 static arp_cache_entry_t arp_cache[ARP_CACHE_SIZE];
 
+// Track a small set of pending ARP resolutions to retry on link-up
+typedef struct {
+    ipv4_addr_t ip;
+    bool in_use;
+} arp_pending_entry_t;
+
+#define ARP_PENDING_MAX 4
+static arp_pending_entry_t g_arp_pending[ARP_PENDING_MAX];
+
 void arp_init(void) {
     // Clear ARP cache
     memset(arp_cache, 0, sizeof(arp_cache));
+    memset(g_arp_pending, 0, sizeof(g_arp_pending));
     gfx_print("ARP layer initialized\n");
 }
 
@@ -28,6 +38,12 @@ void arp_add_entry(ipv4_addr_t* ip, mac_addr_t* mac) {
     memcpy(&arp_cache[slot].ip, ip, sizeof(ipv4_addr_t));
     memcpy(&arp_cache[slot].mac, mac, sizeof(mac_addr_t));
     arp_cache[slot].valid = true;
+    extern void netlog_write(const char*); extern void netlog_write_hex(const char*, uint32_t);
+    netlog_write("[arp-cache-add] ip=");
+    for (int i=0;i<4;i++){ netlog_write_hex("", ip->addr[i]); }
+    netlog_write(" mac=");
+    for (int i=0;i<6;i++){ netlog_write_hex("", mac->addr[i]); }
+    netlog_write(" slot="); netlog_write_hex("", slot); netlog_write("\n");
 }
 
 bool arp_lookup(ipv4_addr_t* ip, mac_addr_t* mac_out) {
@@ -69,18 +85,36 @@ int arp_send_request(net_device_t* dev, ipv4_addr_t* target_ip) {
     memcpy(&arp_req.sender_mac, &dev->mac_address, sizeof(mac_addr_t));
     memcpy(&arp_req.sender_ip, &dev->ip_address, sizeof(ipv4_addr_t));
     
-    // Target MAC is unknown (broadcast)
-    memset(&arp_req.target_mac, 0xFF, sizeof(mac_addr_t));
+    // Target MAC is unknown (zero per ARP spec for requests)
+    memset(&arp_req.target_mac, 0x00, sizeof(mac_addr_t));
     memcpy(&arp_req.target_ip, target_ip, sizeof(ipv4_addr_t));
     
     serial_debug("[ARP: send]\n");
     gfx_print("[ARP: send]");
     
+    // Remember this IP as pending resolution
+    for (int i = 0; i < ARP_PENDING_MAX; ++i) {
+        if (!g_arp_pending[i].in_use || memcmp(&g_arp_pending[i].ip, target_ip, sizeof(ipv4_addr_t)) == 0) {
+            g_arp_pending[i].ip = *target_ip;
+            g_arp_pending[i].in_use = true;
+            break;
+        }
+    }
+
     // Send as Ethernet frame (broadcast)
     mac_addr_t broadcast_mac = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
     int result = ethernet_send_frame(dev, &broadcast_mac, ETHERTYPE_ARP, 
                                      (uint8_t*)&arp_req, sizeof(arp_req));
     
+    // Brief auto-poll to process immediate ARP replies without requiring manual netpoll
+    {
+        extern void e1000_check_packets(void);
+        for (int i = 0; i < 64; ++i) {
+            e1000_check_packets();
+            for (volatile int spin = 0; spin < 100000; ++spin) { }
+        }
+    }
+
     serial_debug("[ARP: done]\n");
     gfx_print("[ARP: done]");
     return result;
@@ -98,11 +132,23 @@ void arp_receive(net_device_t* dev, const uint8_t* data, uint32_t len) {
     
     arp_packet_t* arp = (arp_packet_t*)data;
     uint16_t opcode = __builtin_bswap16(arp->opcode);
+    extern void netlog_write(const char*); extern void netlog_write_hex(const char*, uint32_t);
+    netlog_write("[arp-rx] op="); netlog_write_hex("", opcode); netlog_write(" sender=");
+    for (int i=0;i<6;i++){ netlog_write_hex("", arp->sender_mac.addr[i]); }
+    netlog_write(" sip="); for (int i=0;i<4;i++){ netlog_write_hex("", arp->sender_ip.addr[i]); }
+    netlog_write(" tip="); for (int i=0;i<4;i++){ netlog_write_hex("", arp->target_ip.addr[i]); }
+    netlog_write("\n");
     
     serial_debug("[ARP_RX: add cache]\\n");
     
     // Add sender to cache
     arp_add_entry(&arp->sender_ip, &arp->sender_mac);
+    // Mark any pending entry for this IP as resolved
+    for (int i = 0; i < ARP_PENDING_MAX; ++i) {
+        if (g_arp_pending[i].in_use && memcmp(&g_arp_pending[i].ip, &arp->sender_ip, sizeof(ipv4_addr_t)) == 0) {
+            g_arp_pending[i].in_use = false;
+        }
+    }
     
     serial_debug("[ARP_RX: cached]\\n");
     
@@ -129,6 +175,28 @@ void arp_receive(net_device_t* dev, const uint8_t* data, uint32_t len) {
     else if (opcode == ARP_OP_REPLY) {
         // Already added to cache above
         gfx_print("ARP: Received reply\n");
+    }
+}
+
+void arp_retry_pending(net_device_t* dev) {
+    if (!dev) return;
+    extern void netlog_write(const char*); extern void netlog_write_hex(const char*, uint32_t);
+    int retried = 0;
+    for (int i = 0; i < ARP_PENDING_MAX; ++i) {
+        if (g_arp_pending[i].in_use) {
+            (void)arp_send_request(dev, &g_arp_pending[i].ip);
+            retried++;
+        }
+    }
+    if (retried > 0) { netlog_write("[arp-retry] pending count="); netlog_write_hex("", retried); netlog_write("\n"); }
+}
+
+void arp_note_resolved(ipv4_addr_t* ip) {
+    if (!ip) return;
+    for (int i = 0; i < ARP_PENDING_MAX; ++i) {
+        if (g_arp_pending[i].in_use && memcmp(&g_arp_pending[i].ip, ip, sizeof(ipv4_addr_t)) == 0) {
+            g_arp_pending[i].in_use = false;
+        }
     }
 }
 

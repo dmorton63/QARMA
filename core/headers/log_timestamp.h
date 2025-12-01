@@ -4,22 +4,21 @@
 #include "stdtools.h"
 #include "timer.h"
 #include "config.h"  // For SERIAL_LOG macros
+#include "rtc.h"
+
+// Forward declarations to avoid newline-printing macros for timestamp parts
+extern void serial_debug(const char* msg);
+extern void serial_debug_decimal(uint32_t value);
+extern uint64_t get_system_time_millis(uint32_t frequency);
+extern void log_print_timestamp(void);
+extern bool g_log_use_datetime;
 
 // Timer frequency (set in interrupts.c)
 #define TIMER_FREQUENCY 100
 
 // Macro to print timestamp in format [ticks:milliseconds]
 // Simple format for debugging: just show ticks and ms
-#define PRINT_TIMESTAMP() \
-    do { \
-        uint32_t _ts_ticks = get_ticks(); \
-        uint32_t _ts_ms = get_system_time_millis(TIMER_FREQUENCY); \
-        SERIAL_LOG("["); \
-        SERIAL_LOG_DEC("", _ts_ticks); \
-        SERIAL_LOG(":"); \
-        SERIAL_LOG_DEC("", _ts_ms); \
-        SERIAL_LOG("ms] "); \
-    } while(0)
+#define PRINT_TIMESTAMP() do { log_print_timestamp(); } while(0)
 
 // Timestamped logging macros
 #define LOG_TS(msg) \

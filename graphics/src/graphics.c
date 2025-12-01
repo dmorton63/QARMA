@@ -20,6 +20,27 @@ extern void message_box_log(const char* msg);
 typedef void (*console_output_callback_t)(const char*);
 static console_output_callback_t g_console_output_callback = NULL;
 
+// Detect placeholder-only strings like "%s", ">%d", ":%x\n" possibly with surrounding whitespace
+static bool gfx_is_placeholder_only(const char* s) {
+    if (!s) return false;
+    while (*s == ' ' || *s == '\t' || *s == '\r') s++;
+    if (!*s) return false;
+    const char* p = s;
+    if (*p == '>' || *p == ':') {
+        p++;
+        while (*p == ' ' || *p == '\t') p++; // allow space after prefix
+    }
+    if (*p != '%') return false;
+    p++;
+    // Reject longer format sequences (digits, '.', etc.) to avoid false positives; only single specifier
+    char c = *p;
+    if (!(c == 's' || c == 'd' || c == 'u' || c == 'x' || c == 'X' || c == 'c')) return false;
+    p++;
+    if (*p == '\n') p++;
+    while (*p == ' ' || *p == '\t' || *p == '\r') p++;
+    return *p == '\0';
+}
+
 void gfx_set_console_callback(console_output_callback_t callback) {
     SERIAL_LOG("[GFX] Console callback ");
     if (callback) {
@@ -166,8 +187,12 @@ void alternative_set_mode(display_mode_t mode) {
 
 // Core printing functions
 void gfx_putchar(char c) {
-    // If console callback is set, don't output to backend
+    // If console callback is set, forward single characters as tiny strings
     if (g_console_output_callback) {
+        char one[2];
+        one[0] = c;
+        one[1] = '\0';
+        g_console_output_callback(one);
         return;
     }
     
@@ -182,6 +207,7 @@ void gfx_putchar(char c) {
 
 void gfx_print(const char* str) {
     if (!str) return;
+    if (gfx_is_placeholder_only(str)) return; // drop accidental placeholder-only emissions
     
     // If console callback is set, redirect output there
     if (g_console_output_callback) {
@@ -215,6 +241,12 @@ void gfx_print(const char* str) {
                     gfx_print(str);
                     break;
                 }
+                case 'd': {
+                    int32_t sval = va_arg(args, int32_t);
+                    if (sval < 0) { gfx_putchar('-'); uint32_t u = (uint32_t)(-sval); gfx_print_decimal(u); }
+                    else { gfx_print_decimal((uint32_t)sval); }
+                    break;
+                }
                 case 'u': {
                     uint32_t val = va_arg(args, uint32_t);
                     gfx_print_decimal(val);
@@ -223,7 +255,23 @@ void gfx_print(const char* str) {
                 case 'X': {
                     uint32_t val = va_arg(args, uint32_t);
                     gfx_print("0x");
-                    gfx_print_hex(val);  // See below
+                    // print 8 uppercase hex digits without an extra 0x prefix
+                    for (int i = 7; i >= 0; i--) {
+                        uint32_t nibble = (val >> (i * 4)) & 0xF;
+                        char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
+                        gfx_putchar(c);
+                    }
+                    break;
+                }
+                case 'x': {
+                    uint32_t val = va_arg(args, uint32_t);
+                    gfx_print("0x");
+                    // print 8 lowercase hex digits without an extra 0x prefix
+                    for (int i = 7; i >= 0; i--) {
+                        uint32_t nibble = (val >> (i * 4)) & 0xF;
+                        char c = (nibble < 10) ? ('0' + nibble) : ('a' + nibble - 10);
+                        gfx_putchar(c);
+                    }
                     break;
                 }
                 default:

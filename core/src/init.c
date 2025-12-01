@@ -33,6 +33,7 @@
 #include "frame.h"
 #include "boot_messages.h"
 #include "boot_log.h"
+#include "network_subsystem.h"
 
 // Global desktop frame
 qarma_frame_t* g_desktop_frame = NULL;
@@ -128,6 +129,9 @@ void qarma_init_core_subsystems(void) {
     // Initialize video subsystem
     video_subsystem_init(NULL);
     gfx_print("Video subsystem initialized.\n");
+
+    // Initialize network subsystem (registers stub device in safe mode)
+    network_subsystem_init();
 }
 
 void qarma_init_filesystems(void) {

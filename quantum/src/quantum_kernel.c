@@ -114,9 +114,10 @@ void quantum_kernel_main(uint64_t magic, uint64_t mbi_addr) {
     quantum_kernel_init();           // Initialize quantum core
     quantum_ai_init();               // Initialize AI observer
     quantum_scheduler_init();        // Prepare scheduler
-    
-    SERIAL_LOG("[QUANTUM] Quantum subsystem initialized (disabled by default)\n");
-    SERIAL_LOG("[QUANTUM] Use 'quantum on' command to enable\n");
+
+    // Enable quantum processing by default
+    quantum_enable();
+    SERIAL_LOG("[QUANTUM] Quantum subsystem initialized and ENABLED by default\n");
 
     // Optionally spawn initial quantum process
     // quantum_process_create("init", 0);

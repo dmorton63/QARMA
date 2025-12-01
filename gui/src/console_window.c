@@ -265,9 +265,17 @@ void console_window_execute_command(console_window_t* cw) {
     textbox_data_t* input = (textbox_data_t*)cw->input_textbox->implementation_data;
     if (!input || input->text[0] == '\0') return;
     
-    // Echo command
+    // Echo command (avoid snprintf to bypass limited formatter)
     char echo_line[CONSOLE_LINE_LENGTH];
-    snprintf(echo_line, CONSOLE_LINE_LENGTH, "> %s", input->text);
+    echo_line[0] = '>';
+    echo_line[1] = ' ';
+    // Copy input text safely
+    size_t i = 0;
+    while (i < CONSOLE_LINE_LENGTH - 3 && input->text[i] != '\0') {
+        echo_line[2 + i] = input->text[i];
+        i++;
+    }
+    echo_line[2 + i] = '\0';
     console_window_print(cw, echo_line);
     
     // Add to history

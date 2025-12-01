@@ -40,6 +40,8 @@ void vfs_init(void);
 int vfs_mount(const char* devname, const char* fstype, const char* mountpoint);
 // Open a file
 vfs_node_t* vfs_open(const char* path);
+// Open a file specifically for writing (used by 9P host share)
+vfs_node_t* vfs_open_for_write(const char* path);
 // Create a file or directory
 vfs_node_t* vfs_create(const char* path, uint32_t type);
 // Read from a file

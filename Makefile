@@ -101,18 +101,63 @@ $(BUILD_DIR)/qarma.iso: $(BUILD_DIR)/kernel.bin config/grub.cfg
 # Configuration
 QEMU_CPUS ?= 8
 QEMU_MEMORY ?= 16384M
+QEMU_HOSTFWD_TCP ?=
+# Example: QEMU_HOSTFWD_TCP="hostfwd=tcp::8080-:8080,hostfwd=tcp::5000-:5000"
+QEMU_HOSTFWD_UDP ?=
+# Example: QEMU_HOSTFWD_UDP="hostfwd=udp::5353-:5353"
+QEMU_NETDEV_ID ?= net0
+QEMU_ENABLE_9P ?= 1
 
-# Run in QEMU (64-bit)
+# Tap/bridge networking (optional)
+QEMU_NET_BACKEND ?= user   # user | tap
+QEMU_TAP_IFNAME  ?= tap0
+
+# Precompose VirtFS args to avoid commas in make function calls
+QEMU_9P_ARGS := -fsdev local,id=shared,path=./shared_files,security_model=none -device virtio-9p-pci,fsdev=shared,mount_tag=hostshare
+
+# Compose extra -netdev user options (hostfwd) as comma-suffixed list
+NETDEV_EXTRAS :=
+ifneq ($(strip $(QEMU_HOSTFWD_TCP)),)
+NETDEV_EXTRAS += ,$(QEMU_HOSTFWD_TCP)
+endif
+ifneq ($(strip $(QEMU_HOSTFWD_UDP)),)
+NETDEV_EXTRAS += ,$(QEMU_HOSTFWD_UDP)
+endif
+
+# Compose -netdev line based on backend (avoid commas in function args)
+TAP_NETDEV  := -netdev tap,id=$(QEMU_NETDEV_ID),ifname=$(QEMU_TAP_IFNAME),script=no,downscript=no
+USER_NETDEV := -netdev user,id=$(QEMU_NETDEV_ID)$(NETDEV_EXTRAS)
+QEMU_NETDEV_LINE := $(if $(filter tap,$(QEMU_NET_BACKEND)),$(TAP_NETDEV),$(USER_NETDEV))
+
+# Run in QEMU (64-bit) with current backend (default: user)
 qemu: $(BUILD_DIR)/qarma.iso
 	@mkdir -p shared_files
 	@echo "Booting QARMA OS in QEMU x86_64 ($(QEMU_CPUS) CPUs, $(QEMU_MEMORY) RAM)..."
 	@echo "Host shared directory: ./shared_files"
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 -fsdev local,id=shared,path=./shared_files,security_model=none -device virtio-9p-pci,fsdev=shared,mount_tag=hostshare
+	@echo "Net backend: $(QEMU_NET_BACKEND)"
+	@echo "Netdev line: $(QEMU_NETDEV_LINE)"
+	@# Ensure host net.log exists so guest logging has a target immediately
+	@bash -lc 'if [ ! -f shared_files/net.log ]; then echo "=== QARMA Network Log (host precreated) ===" > shared_files/net.log; fi'
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
+		$(QEMU_NETDEV_LINE) \
+		-device e1000,netdev=$(QEMU_NETDEV_ID)
+
+# Convenience target to force tap backend regardless of defaults
+.PHONY: qemu-tap
+qemu-tap:
+	@$(MAKE) QEMU_NET_BACKEND=tap qemu
+
+.PHONY: qemu-kill
+qemu-kill:
+	@echo "Killing any running QEMU holding qarma_disk.img..."
+	@pkill -f 'qemu-system-x86_64.*qarma_disk.img' || true
 
 # Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso
 	@echo "Starting debugger..."
-	qemu-system-x86_64 -drive file=$<,format=raw,media=cdrom,if=ide -m 4096M -vga std -smp $(QEMU_CPUS) -s -S -cpu qemu64 &
+	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
+		$(QEMU_NETDEV_LINE) \
+		-device e1000,netdev=$(QEMU_NETDEV_ID) -s -S &
 	gdb $(BUILD_DIR)/kernel.elf -ex "target remote :1234"
 
 # Clean build artifacts

@@ -1,1 +1,74 @@
 Preparing build directories...
+Compiling drivers/src/net/net/e1000.c...
+gcc -std=c99 -ffreestanding -Wall -Wextra -O0 -g -fno-exceptions -fno-builtin -fno-stack-protector -m64 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -ffunction-sections -fdata-sections -gdwarf-4 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fcf-protection=none -MMD -MP -DDEBUG_SERIAL -D__x86_64__ -Ikernel/headers -Icore/headers -Idrivers/headers -Ifs/headers -Igraphics/headers -Igui/headers -Iwindow_manager/headers -Ikeyboard/headers -Inetwork/headers -Ishell/headers -Iai/headers -Iquantum/headers -Isecurity/headers -Isplash_app/headers -Iparallel/headers -Iide/headers -Ikernel/headers -c drivers/src/net/net/e1000.c -o build/drivers/src/net/net/e1000.o
+In file included from core/headers/log_timestamp.h:6,
+                 from drivers/src/net/net/e1000.c:12:
+core/headers/config.h:5: warning: "DEBUG_SERIAL" redefined
+    5 | #define DEBUG_SERIAL
+      | 
+<command-line>: note: this is the location of the previous definition
+drivers/src/net/net/e1000.c: In function ‘dma_kmap_page’:
+drivers/src/net/net/e1000.c:58:12: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   58 |     return (void*)(uint32_t)va;
+      |            ^
+drivers/src/net/net/e1000.c: In function ‘e1000_set_init_mode’:
+drivers/src/net/net/e1000.c:113:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+  113 |     if (mode < 0) mode = 0; if (mode > 2) mode = 2;
+      |     ^~
+drivers/src/net/net/e1000.c:113:29: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  113 |     if (mode < 0) mode = 0; if (mode > 2) mode = 2;
+      |                             ^~
+drivers/src/net/net/e1000.c: In function ‘e1000_send_packet’:
+drivers/src/net/net/e1000.c:17:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   17 | #define offsetof(type, member) ((size_t)&((type*)0)->member)
+      |                                 ^
+drivers/src/net/net/e1000.c:308:61: note: in expansion of macro ‘offsetof’
+  308 |     e1000_device_t* dev = (e1000_device_t*)((char*)netdev - offsetof(e1000_device_t, net_dev));
+      |                                                             ^~~~~~~~
+drivers/src/net/net/e1000.c:316:9: warning: the comparison will always evaluate as ‘true’ for the address of ‘tx_buffers’ will never be NULL [-Waddress]
+  316 |     if (!dev->tx_buffers) {
+      |         ^
+In file included from drivers/src/net/net/e1000.c:6:
+drivers/headers/net/net/e1000.h:169:14: note: ‘tx_buffers’ declared here
+  169 |     uint8_t* tx_buffers[E1000_NUM_TX_DESC];
+      |              ^~~~~~~~~~
+drivers/src/net/net/e1000.c: In function ‘e1000_init_device’:
+drivers/src/net/net/e1000.c:17:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   17 | #define offsetof(type, member) ((size_t)&((type*)0)->member)
+      |                                 ^
+drivers/src/net/net/e1000.c:378:61: note: in expansion of macro ‘offsetof’
+  378 |     e1000_device_t* dev = (e1000_device_t*)((char*)netdev - offsetof(e1000_device_t, net_dev));
+      |                                                             ^~~~~~~~
+drivers/src/net/net/e1000.c: In function ‘e1000_shutdown_device’:
+drivers/src/net/net/e1000.c:17:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   17 | #define offsetof(type, member) ((size_t)&((type*)0)->member)
+      |                                 ^
+drivers/src/net/net/e1000.c:592:61: note: in expansion of macro ‘offsetof’
+  592 |     e1000_device_t* dev = (e1000_device_t*)((char*)netdev - offsetof(e1000_device_t, net_dev));
+      |                                                             ^~~~~~~~
+drivers/src/net/net/e1000.c: In function ‘e1000_print_diag’:
+drivers/src/net/net/e1000.c:1024:33: warning: implicit declaration of function ‘gfx_print_decimal’; did you mean ‘gfx_print_hex’? [-Wimplicit-function-declaration]
+ 1024 |             gfx_print("  RXD"); gfx_print_decimal(i); gfx_print(": addr=0x"); gfx_print_hex(addr_lo);
+      |                                 ^~~~~~~~~~~~~~~~~
+      |                                 gfx_print_hex
+Linking kernel...
+ld -T kernel/src/linker64.ld -nostdlib -m elf_x86_64 --gc-sections -Map=build/kernel.map -z max-page-size=4096 build/core/src/boot_stub.o build/core/src/scheduler/task_switch.o build/core/src/gdt_flush.o build/core/src/input/input/mouse_asm.o build/core/src/interrupts_asm.o build/core/src/pic.o build/keyboard/src/keyboard_asm.o build/core/src/scheduler/task_manager.o build/core/src/scheduler/scheduler_demo.o build/core/src/scheduler/subsystem_registry.o build/core/src/scheduler/task_test.o build/core/src/interrupt_wrappers.o build/core/src/interrupts.o build/core/src/cpu_exceptions.o build/core/src/panic.o build/core/src/memory/pmm/pmm.o build/core/src/memory/dma_allocator.o build/core/src/memory/memory_pool.o build/core/src/memory/heap.o build/core/src/memory/vmm/vmm.o build/core/src/gdt.o build/core/src/core_manager.o build/core/src/rtc.o build/core/src/sleep.o build/core/src/overlay/overlay.o build/core/src/console.o build/core/src/timer.o build/core/src/text_functions/text.o build/core/src/handle_manager.o build/core/src/boot_log.o build/core/src/memory.o build/core/src/clock_overlay.o build/core/src/kernel.o build/core/src/input/input/input.o build/core/src/input/input/mouse.o build/core/src/input/input/mock_mouse.o build/core/src/panic_examples.o build/core/src/system_control.o build/core/src/blockdev.o build/core/src/multiboot.o build/core/src/message_system.o build/core/src/idt.o build/core/src/init.o build/core/src/string.o build/core/src/math.o build/core/src/pci.o build/drivers/src/virtio_9p.o build/drivers/src/usb/usb/uhci.o build/drivers/src/usb/usb/xhci.o build/drivers/src/usb/usb/usb_keyboard.o build/drivers/src/usb/usb/usb_hid.o build/drivers/src/usb/usb/usb_mouse.o build/drivers/src/usb/usb/usb.o build/drivers/src/usb/usb/usb_msc.o build/drivers/src/net/net/e1000.o build/drivers/src/block/block/ata.o build/drivers/src/block/block/ata_blockdev.o build/drivers/src/block/block/ramdisk.o build/drivers/src/block/block/cdrom.o build/fs/src/file_subsystem/file_subsystem/file_subsystem.o build/fs/src/simplefs.o build/fs/src/vfs.o build/fs/src/fat16.o build/fs/src/iso9660.o build/fs/src/fs_init.o build/graphics/src/framebuffer.o build/graphics/src/message_box.o build/graphics/src/fonts.o build/graphics/src/irq_logger.o build/graphics/src/compositor.o build/graphics/src/serial_console.o build/graphics/src/graphics.o build/graphics/src/vga_text.o build/graphics/src/popup.o build/graphics/src/png_decoder.o build/graphics/src/subsystem/subsystem/video_subsystem.o build/graphics/src/cursor_loader.o build/gui/src/renderer.o build/gui/src/boot_messages.o build/gui/src/control_base.o build/gui/src/status_bar.o build/gui/src/frame.o build/gui/src/controls/controls/close_button.o build/gui/src/controls/controls/qarma_textbox.o build/gui/src/controls/controls/scrollbar.o build/gui/src/controls/controls/menu.o build/gui/src/controls/controls/qarma_button.o build/gui/src/controls/controls/qarma_label.o build/gui/src/desktop_toolbar.o build/gui/src/console_window.o build/gui/src/qarma_control.o build/window_manager/src/qarma_window_manager.o build/window_manager/src/window_compositor.o build/window_manager/src/panic.o build/window_manager/src/console_compositor.o build/window_manager/src/main_window.o build/window_manager/src/window_demo.o build/window_manager/src/qarma_win_factory.o build/window_manager/src/qarma_input_events.o build/window_manager/src/login_screen.o build/window_manager/src/qarma_win_handle.o build/keyboard/src/command.o build/keyboard/src/fs_commands.o build/keyboard/src/keyboard.o build/network/src/icmp.o build/network/src/port_manager.o build/network/src/network_subsystem.o build/network/src/tcp.o build/network/src/ipv4.o build/network/src/ethernet.o build/network/src/netlog.o build/network/src/udp.o build/network/src/arp.o build/shell/src/shell.o build/ai/src/ai_subsystem.o build/ai/src/command_predictor.o build/ai/src/ai_persistence.o build/quantum/src/quantum_register.o build/quantum/src/quantum_adaptive.o build/quantum/src/quantum_scheduler.o build/quantum/src/quantum_kernel.o build/quantum/src/quantum_cross_learning.o build/quantum/src/quantum_ai_observer.o build/quantum/src/quantum_register_example.o build/security/src/security_manager.o build/splash_app/src/qarma_splash_app.o build/splash_app/src/qarma_splash_window.o build/parallel/src/pipeline_example.o build/parallel/src/parallel_engine.o build/parallel/src/execution_pipeline.o build/ide/src/nomain_syntax.o build/ide/src/ide_stub.o -o build/kernel.elf
+ld: warning: build/keyboard/src/keyboard_asm.o: missing .note.GNU-stack section implies executable stack
+ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+objcopy -O binary build/kernel.elf build/kernel.bin
+Creating QARMA OS ISO...
+xorriso 1.5.6 : RockRidge filesystem manipulator, libburnia project.
+
+Drive current: -outdev 'stdio:build/qarma.iso'
+Media current: stdio file, overwriteable
+Media status : is blank
+Media summary: 0 sessions, 0 data blocks, 0 data,  936g free
+Added to ISO image: directory '/'='/tmp/grub.PlwTAx'
+xorriso : UPDATE :     295 files added in 1 seconds
+Added to ISO image: directory '/'='/home/dmort/qarma/build/iso'
+xorriso : UPDATE :     301 files added in 1 seconds
+xorriso : NOTE : Copying to System Area: 512 bytes from file '/usr/lib/grub/i386-pc/boot_hybrid.img'
+ISO image produced: 3067 sectors
+Written to medium : 3067 sectors at LBA 0
+Writing to 'stdio:build/qarma.iso' completed successfully.
+

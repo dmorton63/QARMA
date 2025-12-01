@@ -143,7 +143,7 @@ static uint16_t virtqueue_alloc_desc_chain(virtqueue_t* vq, uint16_t count) {
 // Send request and wait for response
 static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint32_t* resp_len) {
     virtqueue_t* vq = g_9p_state.vq;
-    SERIAL_LOG("[9P] RPC: begin\n");
+    // Routine RPC logging suppressed; only failures below will log.
     
     // Allocate descriptors (one for request, one for response)
     uint16_t head = virtqueue_alloc_desc_chain(vq, 2);
@@ -177,7 +177,7 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
     vq->avail.idx++;
     
     // Notify device
-    SERIAL_LOG("[9P] RPC: notify queue 0\n");
+    // notify device
     outw(g_9p_state.io_base + VIRTIO_PCI_QUEUE_NOTIFY, 0);
     
     // Wait for response (simple polling - production should use interrupts)
@@ -190,9 +190,7 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
         SERIAL_LOG("[9P] ERROR: Request timeout\n");
         return false;
     }
-    
     // Get response length
-    SERIAL_LOG("[9P] RPC: response received\n");
     virtq_used_elem_t* used_elem = &vq->used.ring[vq->last_used_idx % VIRTQUEUE_SIZE];
     *resp_len = used_elem->len;
     vq->last_used_idx++;
@@ -202,13 +200,11 @@ static bool virtio_9p_rpc(void* request, uint32_t req_len, void* response, uint3
     vq->free_head = head;
     vq->num_free += 2;
     
-    SERIAL_LOG("[9P] RPC: end\n");
     return true;
 }
 
 // Initialize VirtIO device
 bool virtio_9p_init(void) {
-    SERIAL_LOG("[9P] Scanning for VirtIO 9P device...\n");
     
     // Scan PCI for VirtIO 9P device
     for (uint32_t bus = 0; bus < 256; bus++) {
@@ -220,11 +216,7 @@ bool virtio_9p_init(void) {
             
             // Check for VirtIO 9P
             if (vendor == VIRTIO_VENDOR_ID && device_id == VIRTIO_9P_DEVICE_ID) {
-                SERIAL_LOG("[9P] Found VirtIO 9P device at PCI ");
-                serial_debug_hex(bus);
-                SERIAL_LOG(":");
-                serial_debug_hex(device);
-                SERIAL_LOG("\n");
+                // Suppress routine discovery logs
                 
                 g_9p_state.pci_bus = bus;
                 g_9p_state.pci_device = device;
@@ -234,34 +226,26 @@ bool virtio_9p_init(void) {
                 uint32_t bar0 = pci_read_config_dword(bus, device, 0, 0x10);
                 if (bar0 & 1) {  // I/O space
                     g_9p_state.io_base = bar0 & ~3;
-                    SERIAL_LOG("[9P] I/O base: 0x");
-                    serial_debug_hex(g_9p_state.io_base);
-                    SERIAL_LOG("\n");
+                    // Quiet: io_base recorded
                 }
                 
                 // Reset device
-                SERIAL_LOG("[9P] Resetting device status=0\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, 0);
                 
                 // Set ACKNOWLEDGE status
-                SERIAL_LOG("[9P] Setting ACK\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, VIRTIO_STATUS_ACK);
                 
                 // Set DRIVER status
-                SERIAL_LOG("[9P] Setting DRIVER\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, VIRTIO_STATUS_ACK | VIRTIO_STATUS_DRIVER);
                 
                 // Read features
                 uint32_t features = inl(g_9p_state.io_base + VIRTIO_PCI_HOST_FEATURES);
-                SERIAL_LOG("[9P] Device features: 0x");
-                serial_debug_hex(features);
-                SERIAL_LOG("\n");
+                (void)features; // quiet
                 
                 // Write guest features (accept all for now)
                 outl(g_9p_state.io_base + VIRTIO_PCI_GUEST_FEATURES, features);
                 // Set FEATURES_OK and verify
                 uint8_t status = VIRTIO_STATUS_ACK | VIRTIO_STATUS_DRIVER | VIRTIO_STATUS_FEATURES_OK;
-                SERIAL_LOG("[9P] Setting FEATURES_OK\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, status);
                 uint8_t status_read = inb(g_9p_state.io_base + VIRTIO_PCI_STATUS);
                 if ((status_read & VIRTIO_STATUS_FEATURES_OK) == 0) {
@@ -270,7 +254,6 @@ bool virtio_9p_init(void) {
                 }
                 
                 // Allocate virtqueue (DMA-safe, 2 pages)
-                SERIAL_LOG("[9P] Allocating virtqueue (DMA pool 64KB)\n");
                 void* vq_virt = dma_allocator_alloc(64 * 1024, 4096, 0);
                 g_9p_state.vq = (virtqueue_t*)vq_virt;
                 g_9p_state.vq_phys = dma_allocator_get_phys(vq_virt);
@@ -278,28 +261,18 @@ bool virtio_9p_init(void) {
                     SERIAL_LOG("[9P] ERROR: Failed to allocate virtqueue\n");
                     return false;
                 }
-                SERIAL_LOG("[9P] Virtqueue allocated virt=0x");
-                serial_debug_hex((uint32_t)(uintptr_t)g_9p_state.vq);
-                SERIAL_LOG(" phys=0x");
-                serial_debug_hex((uint32_t)(g_9p_state.vq_phys));
-                SERIAL_LOG("\n");
                 memset(g_9p_state.vq, 0, 8192);
                 virtqueue_init(g_9p_state.vq);
                 
                 // Setup virtqueue 0
-                SERIAL_LOG("[9P] Selecting queue 0\n");
                 outw(g_9p_state.io_base + VIRTIO_PCI_QUEUE_SEL, 0);
                 // Optionally set queue size if available; assume default
-                SERIAL_LOG("[9P] Setting QUEUE_PFN (phys>>12)=0x");
-                serial_debug_hex((uint32_t)(g_9p_state.vq_phys >> 12));
-                SERIAL_LOG("\n");
                 outl(g_9p_state.io_base + VIRTIO_PCI_QUEUE_PFN, (uint32_t)(g_9p_state.vq_phys >> 12));
                 
                 // Allocate message buffer (DMA-safe). Reserve 2 * msize (req+resp)
                 // Default desired msize = 32KB (fits in a 64KB pool block)
                 uint32_t desired_msize = 32 * 1024;
                 uint32_t msg_total = desired_msize * 2;
-                SERIAL_LOG("[9P] Allocating message buffer (DMA pool 64KB)\n");
                 void* msg_virt = dma_allocator_alloc(msg_total, 4096, 0);
                 g_9p_state.msg_buffer = (uint8_t*)msg_virt;
                 g_9p_state.msg_phys = dma_allocator_get_phys(msg_virt);
@@ -307,29 +280,21 @@ bool virtio_9p_init(void) {
                     SERIAL_LOG("[9P] ERROR: Failed to allocate message buffer\n");
                     return false;
                 }
-                SERIAL_LOG("[9P] Message buffer allocated virt=0x");
-                serial_debug_hex((uint32_t)(uintptr_t)g_9p_state.msg_buffer);
-                SERIAL_LOG(" phys=0x");
-                serial_debug_hex((uint32_t)(g_9p_state.msg_phys));
-                SERIAL_LOG("\n");
                 g_9p_state.msg_buffer_size = msg_total;
                 memset(g_9p_state.msg_buffer, 0, g_9p_state.msg_buffer_size);
                 g_9p_state.msize = desired_msize;
                 
                 // Set DRIVER_OK status
-                SERIAL_LOG("[9P] Setting DRIVER_OK\n");
                 outb(g_9p_state.io_base + VIRTIO_PCI_STATUS, status | VIRTIO_STATUS_DRIVER_OK);
                 
                 g_9p_state.initialized = true;
                 g_9p_state.next_fid = P9_ROOT_FID + 1;
                 g_9p_state.next_tag = 1;
-                
-                SERIAL_LOG("[9P] VirtIO driver initialized\n");
                 return true;
             }
         }
     }
-    
+    // Fail: device not found
     SERIAL_LOG("[9P] No VirtIO 9P device found\n");
     return false;
 }
@@ -358,20 +323,13 @@ bool virtio_9p_mount(const char* mount_tag, const char* mount_point) {
         return false;
     }
     
-    if (g_9p_state.mounted) {
-        SERIAL_LOG("[9P] WARNING: Already mounted\n");
-        return true;
-    }
+    if (g_9p_state.mounted) { return true; }
     
     // Store mount information
     strncpy(g_9p_state.mount_tag, mount_tag, sizeof(g_9p_state.mount_tag) - 1);
     strncpy(g_9p_state.mount_point, mount_point, sizeof(g_9p_state.mount_point) - 1);
     
-    SERIAL_LOG("[9P] Mounting '");
-    SERIAL_LOG(mount_tag);
-    SERIAL_LOG("' at '");
-    SERIAL_LOG(mount_point);
-    SERIAL_LOG("'\n");
+    // Quiet: attempt mount
     
     uint8_t* req = g_9p_state.msg_buffer;
     uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
@@ -474,9 +432,7 @@ int virtio_9p_open(const char* path, int mode) {
         return -1;
     }
     
-    SERIAL_LOG("[9P] Opening file: ");
-    SERIAL_LOG(path);
-    SERIAL_LOG("\n");
+    // Quiet: only errors will log
     
     // Allocate new FID
     uint32_t fid = g_9p_state.next_fid++;
@@ -573,9 +529,7 @@ int virtio_9p_open(const char* path, int mode) {
         return -1;
     }
     
-    SERIAL_LOG("[9P] File opened - FID: ");
-    serial_debug_hex(fid);
-    SERIAL_LOG("\n");
+    // Quiet
     
     return fid;
 }
@@ -584,13 +538,7 @@ int virtio_9p_open(const char* path, int mode) {
 int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset) {
     if (!g_9p_state.mounted) return -1;
     
-    SERIAL_LOG("[9P] Reading FID ");
-    serial_debug_hex(fid);
-    SERIAL_LOG(" count=");
-    serial_debug_hex(count);
-    SERIAL_LOG(" offset=");
-    serial_debug_hex((uint32_t)offset);
-    SERIAL_LOG("\n");
+    // Quiet
     
     uint8_t* req = g_9p_state.msg_buffer;
     uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
@@ -630,9 +578,7 @@ int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset) {
     uint32_t data_count = *(uint32_t*)(resp + 7);
     memcpy(buffer, resp + 11, data_count);
     
-    SERIAL_LOG("[9P] Read ");
-    serial_debug_hex(data_count);
-    SERIAL_LOG(" bytes\n");
+    // Quiet
     
     return data_count;
 }
@@ -640,84 +586,72 @@ int virtio_9p_read(int fid, void* buffer, uint32_t count, uint64_t offset) {
 // Write to file
 int virtio_9p_write(int fid, const void* buffer, uint32_t count, uint64_t offset) {
     if (!g_9p_state.mounted) return -1;
-    
-    SERIAL_LOG("[9P] Writing FID ");
-    serial_debug_hex(fid);
-    SERIAL_LOG(" count=");
-    serial_debug_hex(count);
-    SERIAL_LOG("\n");
-    
+
     uint8_t* req = g_9p_state.msg_buffer;
     uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
-    
+
     // Limit write size
     if (count > g_9p_state.msize - 32) {
         count = g_9p_state.msize - 32;
     }
-    
+
     uint8_t* p = req;
     p += 4;
     *p++ = P9_TWRITE;
-    *(uint16_t*)p = g_9p_state.next_tag++;
-    p += 2;
-    *(uint32_t*)p = fid;
-    p += 4;
-    *(uint64_t*)p = offset;
-    p += 8;
-    *(uint32_t*)p = count;
-    p += 4;
-    memcpy(p, buffer, count);
-    p += count;
-    
-    uint32_t req_size = p - req;
+    *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
+    *(uint32_t*)p = fid; p += 4;
+    *(uint64_t*)p = offset; p += 8;
+    *(uint32_t*)p = count; p += 4;
+    memcpy(p, buffer, count); p += count;
+
+    uint32_t req_size = (uint32_t)(p - req);
     *(uint32_t*)req = req_size;
-    
+    // Validate size vs formula (4 size field + 1 type +2 tag +4 fid +8 offset +4 count + count data)
+    uint32_t expected_size = 4 + 1 + 2 + 4 + 8 + 4 + count;
+    if (req_size != expected_size) {
+        SERIAL_LOG("[9P] WARN: TWRITE size mismatch req_size="); serial_debug_hex(req_size);
+        SERIAL_LOG(" expected="); serial_debug_hex(expected_size);
+        SERIAL_LOG(" count="); serial_debug_hex(count); SERIAL_LOG("\n");
+        *(uint32_t*)req = expected_size; // enforce correct header
+    }
+
     uint32_t resp_size = g_9p_state.msize;
     if (!virtio_9p_rpc(req, req_size, resp, &resp_size)) {
         SERIAL_LOG("[9P] ERROR: TWRITE failed\n");
         return -1;
     }
-    
+
     if (resp[4] != P9_RWRITE) {
         SERIAL_LOG("[9P] ERROR: Expected RWRITE\n");
         return -1;
     }
-    
+
     uint32_t written = *(uint32_t*)(resp + 7);
-    
-    SERIAL_LOG("[9P] Wrote ");
-    serial_debug_hex(written);
-    SERIAL_LOG(" bytes\n");
-    
+    if (written != count) {
+        SERIAL_LOG("[9P] WARN: Host wrote fewer bytes (requested ");
+        serial_debug_hex(count); SERIAL_LOG(" got "); serial_debug_hex(written); SERIAL_LOG(")\n");
+    }
     return written;
 }
 
 // Close file
 void virtio_9p_close(int fid) {
     if (!g_9p_state.mounted) return;
-    
-    SERIAL_LOG("[9P] Closing FID ");
-    serial_debug_hex(fid);
-    SERIAL_LOG("\n");
-    
+
     uint8_t* req = g_9p_state.msg_buffer;
     uint8_t* resp = g_9p_state.msg_buffer + g_9p_state.msize;
-    
+
     uint8_t* p = req;
     p += 4;
     *p++ = P9_TCLUNK;
-    *(uint16_t*)p = g_9p_state.next_tag++;
-    p += 2;
-    *(uint32_t*)p = fid;
-    p += 4;
-    
-    uint32_t req_size = p - req;
+    *(uint16_t*)p = g_9p_state.next_tag++; p += 2;
+    *(uint32_t*)p = fid; p += 4;
+
+    uint32_t req_size = (uint32_t)(p - req);
     *(uint32_t*)req = req_size;
-    
+
     uint32_t resp_size = g_9p_state.msize;
     virtio_9p_rpc(req, req_size, resp, &resp_size);
-    
-    SERIAL_LOG("[9P] File closed\n");
 }
 
 bool virtio_9p_readdir(const char* path, void (*callback)(const char* name, bool is_dir)) {

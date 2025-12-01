@@ -1,0 +1,105 @@
+QARMA Console v1.0
+Type 'help' for available commands
+Click CMD button to toggle console, ESC to close
+
+> %s
+ifup: Full init (map MMIO, bring up)
+E1000: Scanning PCI bus for Intel NICs...
+E1000: Found Intel NIC (Device ID: 0x0000100E)
+E1000: Using identity MMIO BAR[0x00000000] raw=0x0xFEB80000 phys=virt=0x0xFEB80
+000
+[VFS] Attempting to open: /ramdisk
+[VFS] File found successfully
+[VFS] Attempting to open: /host
+[VFS] File found successfully
+E1000: MAC address: 52:54:00:12:34:56
+E1000: Initializing RX/TX rings...
+E1000: RX ring programmed (deferred enable)
+E1000: TX ring programmed (deferred enable)
+E1000: RX/TX rings initialized
+Network device registered: eth0
+E1000: Bringing device up...
+E1000: Link is DOWN (continuing)
+E1000: Init complete (link DOWN)
+E1000: Device initialized successfully
+E1000: Found and initialized Intel NIC
+E1000 Network Interface:
+  Device: eth0 (E1000)
+  Status: Initialized
+  Link: DOWN
+  Speed: 10/100Mbps
+> %s
+PHY dump (addrs 0..7 regs 0..6,4/5):
+  A=0x00000001 CTRL=0x00001140 BMSR=0x0000796D ANAR=0x00000DE1 ANLPAR=0x000041E
+0
+> %s
+Net polling: ON
+> %s
+[net] default scan call 0x00000000 count=0x00000001
+  idx:0x00000000 name=eth0 state=RUNNING send=Y rx=0x00000000 tx=0x00000000
+[net] default select RUNNING: eth0
+Sending ARP request for 192.168.100.1...
+[ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ETH: start][
+ETH: create][ETH: send][TX: start][TX: wait][TX: copy][TX: setup][TX: notify][T
+X: done][ETH: done][ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][
+ETH: send][TX: start][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH:
+ done][ARP: done][ARP: done]
+ARP cache:
+IP Address        MAC Address         Status
+------------------------------------------------
+(ARP cache is empty)
+> %s
+IP Address        MAC Address         Status
+------------------------------------------------
+(ARP cache is empty)
+> %s
+Net polling: OFF
+> %s
+art][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ARP: done]
+ARP cache:
+IP Address        MAC Address         Status
+------------------------------------------------
+(ARP cache is empty)
+> %s
+IP Address        MAC Address         Status
+------------------------------------------------
+(ARP cache is empty)
+> %s
+Net polling: OFF
+> %s
+t
+[ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ARP: done]tc
+p_connect failed
+> %s
+----------------------------------------
+(ARP cache is empty)
+> %s
+t pending (ARP). Waiting...
+[ETH: start][ETH: create][ETH: send][TX: start][TX: wait][TX: copy][TX: setup][
+TX: notify][TX: done][ETH: done][ARP: start][ARP: fill][ARP: send][ETH: start][
+ETH: create][ETH: send][TX: start][TX: wait][TX: copy][TX: setup][TX: notify][T
+X: done][ETH: done][ARP: done][RX: pkt!][RX: pkt!][RX: pkt!][RX: pkt!][RX: pkt!
+][RX: pkt!]IPv4: MAC address not in ARP cache, sending request
+[ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ARP: done]tc
+p_connect failed
+> %s
+[net] default scan call 0x00000001 count=0x00000001
+  idx:0x00000000 name=eth0 state=RUNNING send=Y rx=0x00000006 tx=0x00000000
+[net] default select RUNNING: eth0
+IPv4: MAC address not in ARP cache, sending request
+[ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ARP: done]tc
+p_connect pending (ARP). Waiting...
+IPv4: MAC address not in ARP cache, sending request
+[ARP: start][ARP: fill][ARP: send][ETH: start][ETH: create][ETH: send][TX: star
+t][TX: wait][TX: copy][TX: setup][TX: notify][TX: done][ETH: done][ARP: done]tc
+p_connect failed
+> %s
+IP Address        MAC Address         Status
+------------------------------------------------
+(ARP cache is empty)
+> %s
