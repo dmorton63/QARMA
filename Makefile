@@ -138,7 +138,7 @@ qemu: $(BUILD_DIR)/qarma.iso
 	@echo "Netdev line: $(QEMU_NETDEV_LINE)"
 	@# Ensure host net.log exists so guest logging has a target immediately
 	@bash -lc 'if [ ! -f shared_files/net.log ]; then echo "=== QARMA Network Log (host precreated) ===" > shared_files/net.log; fi'
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
+	./run_qemu.sh -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device isa-debug-exit,iobase=0x501,iosize=0x01 -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
 		$(QEMU_NETDEV_LINE) \
 		-device e1000,netdev=$(QEMU_NETDEV_ID)
 
@@ -155,7 +155,7 @@ qemu-kill:
 # Debug with GDB (64-bit)
 debug: $(BUILD_DIR)/qarma.iso
 	@echo "Starting debugger..."
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
+	./run_qemu.sh -cdrom $(BUILD_DIR)/qarma.iso -drive file=qarma_disk.img,format=raw,if=ide,index=1 -m $(QEMU_MEMORY) -vga std -smp $(QEMU_CPUS) -serial file:qarma_serial.log -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-tablet,bus=xhci.0 -cpu qemu64 $(if $(filter 1,$(QEMU_ENABLE_9P)),$(QEMU_9P_ARGS)) \
 		$(QEMU_NETDEV_LINE) \
 		-device e1000,netdev=$(QEMU_NETDEV_ID) -s -S &
 	gdb $(BUILD_DIR)/kernel.elf -ex "target remote :1234"

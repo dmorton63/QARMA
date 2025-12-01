@@ -15,10 +15,56 @@ typedef struct {
 static arp_pending_entry_t g_arp_pending[ARP_PENDING_MAX];
 
 void arp_init(void) {
+    extern void gfx_print(const char*);
+    extern void gfx_print_hex(uint32_t);
+    
     // Clear ARP cache
     memset(arp_cache, 0, sizeof(arp_cache));
     memset(g_arp_pending, 0, sizeof(g_arp_pending));
-    gfx_print("ARP layer initialized\n");
+    
+    gfx_print("ARP: Cache cleared, pre-populating QEMU entries...\n");
+    
+    // QEMU user-mode networking hack: Pre-populate gateway (10.0.2.2) with a fake MAC
+    // QEMU's user networking doesn't respond to ARP, but accepts packets with any dest MAC
+    ipv4_addr_t qemu_gw = {{10, 0, 2, 2}};
+    mac_addr_t qemu_gw_mac = {{0x52, 0x55, 0x0A, 0x00, 0x02, 0x02}};  // Fake but valid MAC
+    
+    gfx_print("ARP: Adding gateway 10.0.2.2 -> 52:55:0a:00:02:02\n");
+    arp_add_entry(&qemu_gw, &qemu_gw_mac);
+    
+    // Also add QEMU DNS (10.0.2.3)
+    ipv4_addr_t qemu_dns = {{10, 0, 2, 3}};
+    mac_addr_t qemu_dns_mac = {{0x52, 0x55, 0x0A, 0x00, 0x02, 0x03}};
+    
+    gfx_print("ARP: Adding DNS 10.0.2.3 -> 52:55:0a:00:02:03\n");
+    arp_add_entry(&qemu_dns, &qemu_dns_mac);
+    
+    // Verify entries were added
+    gfx_print("ARP: Verification - cache entry 0 valid=");
+    gfx_print_hex(arp_cache[0].valid ? 1 : 0);
+    gfx_print(" IP=");
+    gfx_print_hex(arp_cache[0].ip.addr[0]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[0].ip.addr[1]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[0].ip.addr[2]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[0].ip.addr[3]);
+    gfx_print("\n");
+    
+    gfx_print("ARP: Verification - cache entry 1 valid=");
+    gfx_print_hex(arp_cache[1].valid ? 1 : 0);
+    gfx_print(" IP=");
+    gfx_print_hex(arp_cache[1].ip.addr[0]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[1].ip.addr[1]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[1].ip.addr[2]);
+    gfx_print(".");
+    gfx_print_hex(arp_cache[1].ip.addr[3]);
+    gfx_print("\n");
+    
+    gfx_print("ARP layer initialized (QEMU user-mode gateway pre-populated)\n");
 }
 
 void arp_add_entry(ipv4_addr_t* ip, mac_addr_t* mac) {

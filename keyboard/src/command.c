@@ -471,6 +471,8 @@ static const simple_command_t commands[] = {
     {"ping", cmd_ping},
     {"arp", cmd_arp},
     {"arping", cmd_arping},
+    {"ip", cmd_ip},
+    {"telnet", cmd_telnet},
     {"udp_echo", cmd_udp_echo},
     {"port", cmd_port},
     {"tcp_connect", cmd_tcp_connect},
@@ -829,6 +831,209 @@ void cmd_arp(int argc, char** argv) {
     arp_print_cache();
 }
 
+// ip: Show IP configuration of default network device
+void cmd_ip(int argc, char** argv) {
+    (void)argc; (void)argv;
+    
+    extern net_device_t* network_get_default_device(void);
+    extern void ipv4_addr_to_string(ipv4_addr_t* ip, char* buffer);
+    extern void mac_addr_to_string(mac_addr_t* mac, char* buffer);
+    
+    net_device_t* dev = network_get_default_device();
+    if (!dev) {
+        gfx_print("No network device available\n");
+        return;
+    }
+    
+    char ip_buf[16];
+    char mac_buf[18];
+    char nm_buf[16];
+    char gw_buf[16];
+    
+    gfx_print("\nNetwork Configuration: ");
+    gfx_print(dev->name);
+    gfx_print("\n");
+    gfx_print("================================\n");
+    
+    gfx_print("State:     ");
+    switch (dev->state) {
+        case NET_DEV_DOWN: gfx_print("DOWN"); break;
+        case NET_DEV_UP: gfx_print("UP"); break;
+        case NET_DEV_RUNNING: gfx_print("RUNNING"); break;
+        case NET_DEV_ERROR: gfx_print("ERROR"); break;
+        default: gfx_print("UNKNOWN"); break;
+    }
+    gfx_print("\n");
+    
+    mac_addr_to_string(&dev->mac_address, mac_buf);
+    gfx_print("MAC:       "); gfx_print(mac_buf); gfx_print("\n");
+    
+    ipv4_addr_to_string(&dev->ip_address, ip_buf);
+    gfx_print("IP:        "); gfx_print(ip_buf); gfx_print("\n");
+    
+    ipv4_addr_to_string(&dev->netmask, nm_buf);
+    gfx_print("Netmask:   "); gfx_print(nm_buf); gfx_print("\n");
+    
+    ipv4_addr_to_string(&dev->gateway, gw_buf);
+    gfx_print("Gateway:   "); gfx_print(gw_buf); gfx_print("\n");
+    
+    gfx_print("MTU:       ");
+    char mtu_str[16];
+    int mtu_val = dev->mtu;
+    int len = 0;
+    if (mtu_val == 0) {
+        mtu_str[len++] = '0';
+    } else {
+        char temp[16];
+        int temp_len = 0;
+        while (mtu_val > 0) {
+            temp[temp_len++] = '0' + (mtu_val % 10);
+            mtu_val /= 10;
+        }
+        for (int i = temp_len - 1; i >= 0; i--) {
+            mtu_str[len++] = temp[i];
+        }
+    }
+    mtu_str[len] = '\0';
+    gfx_print(mtu_str); gfx_print("\n\n");
+}
+
+// telnet <host> <port>: Simple TCP connection test
+void cmd_telnet(int argc, char** argv) {
+    if (argc < 3) {
+        gfx_print("Usage: telnet <host> <port>\n");
+        gfx_print("Example: telnet 10.0.2.2 80\n");
+        return;
+    }
+    
+    // Parse IP address
+    const char* ip_str = argv[1];
+    uint8_t ipb[4] = {0};
+    int parts = 0;
+    int current = 0;
+    
+    for (const char* p = ip_str; *p; ++p) {
+        if (*p >= '0' && *p <= '9') {
+            current = current * 10 + (*p - '0');
+            if (current > 255) {
+                gfx_print("Invalid IP address\n");
+                return;
+            }
+        } else if (*p == '.') {
+            if (parts >= 4) {
+                gfx_print("Invalid IP address\n");
+                return;
+            }
+            ipb[parts++] = (uint8_t)current;
+            current = 0;
+        } else {
+            gfx_print("Invalid IP address\n");
+            return;
+        }
+    }
+    if (parts < 3) {
+        gfx_print("Invalid IP address\n");
+        return;
+    }
+    ipb[3] = (uint8_t)current;
+    
+    // Parse port
+    const char* port_str = argv[2];
+    int port = 0;
+    for (const char* p = port_str; *p; ++p) {
+        if (*p >= '0' && *p <= '9') {
+            port = port * 10 + (*p - '0');
+            if (port > 65535) {
+                gfx_print("Invalid port number\n");
+                return;
+            }
+        } else {
+            gfx_print("Invalid port number\n");
+            return;
+        }
+    }
+    
+    if (port == 0) {
+        gfx_print("Port must be 1-65535\n");
+        return;
+    }
+    
+    ipv4_addr_t dest_ip = { .addr = { ipb[0], ipb[1], ipb[2], ipb[3] } };
+    
+    extern net_device_t* network_get_default_device(void);
+    net_device_t* dev = network_get_default_device();
+    if (!dev) {
+        gfx_print("No network device available\n");
+        return;
+    }
+    
+    if (dev->state != NET_DEV_RUNNING) {
+        gfx_print("Network device is not running. Try 'ifup full' first.\n");
+        return;
+    }
+    
+    gfx_print("Attempting to connect to ");
+    gfx_print(ip_str);
+    gfx_print(" port ");
+    gfx_print(port_str);
+    gfx_print("...\n");
+    
+    extern int tcp_connect(net_device_t* dev, ipv4_addr_t* dest_ip, uint16_t local_port, uint16_t remote_port);
+    
+    // Use ephemeral port range (49152-65535)
+    uint16_t local_port = 50000;
+    int result = tcp_connect(dev, &dest_ip, local_port, (uint16_t)port);
+    
+    if (result == 0) {
+        gfx_print("Connected! (Local port: ");
+        char port_buf[16];
+        int len = 0;
+        int pval = local_port;
+        if (pval == 0) {
+            port_buf[len++] = '0';
+        } else {
+            char temp[16];
+            int temp_len = 0;
+            while (pval > 0) {
+                temp[temp_len++] = '0' + (pval % 10);
+                pval /= 10;
+            }
+            for (int i = temp_len - 1; i >= 0; i--) {
+                port_buf[len++] = temp[i];
+            }
+        }
+        port_buf[len] = '\0';
+        gfx_print(port_buf);
+        gfx_print(")\n");
+        gfx_print("Note: Connection will timeout after inactivity\n");
+    } else {
+        gfx_print("Connection failed (error code: ");
+        char err_buf[16];
+        int len = 0;
+        int eval = result;
+        if (eval < 0) {
+            gfx_print("-");
+            eval = -eval;
+        }
+        if (eval == 0) {
+            err_buf[len++] = '0';
+        } else {
+            char temp[16];
+            int temp_len = 0;
+            while (eval > 0) {
+                temp[temp_len++] = '0' + (eval % 10);
+                eval /= 10;
+            }
+            for (int i = temp_len - 1; i >= 0; i--) {
+                err_buf[len++] = temp[i];
+            }
+        }
+        err_buf[len] = '\0';
+        gfx_print(err_buf);
+        gfx_print(")\n");
+    }
+}
+
 // arping <ip>: send ARP request, poll RX briefly, then show ARP cache
 void cmd_arping(int argc, char** argv) {
     if (argc < 2) {
@@ -961,7 +1166,8 @@ void cmd_tcp_connect(int argc, char** argv) {
     if (port==0 || port>65535) { gfx_print("Port out of range\n"); return; }
     net_device_t* dev = network_get_default_device(); if (!dev) { gfx_print("No network device\n"); return; }
     ipv4_addr_t host = dev->gateway;
-    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {172,17,131,240} }; }
+    // Fallback to QEMU user-mode gateway if gateway not set
+    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {10,0,2,2} }; }
     // Use an ephemeral local port for the client connection
     static uint16_t eph = 40000;
     if (eph < 49152) eph = 49152; // ensure in ephemeral range
@@ -983,7 +1189,8 @@ void cmd_http_get(int argc, char** argv) {
     const char* path = argv[2];
     net_device_t* dev = network_get_default_device(); if (!dev) { gfx_print("No network device\n"); return; }
     ipv4_addr_t host = dev->gateway;
-    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {172,17,131,240} }; }
+    // Fallback to QEMU user-mode gateway if gateway not set
+    if (host.addr[0] == 0 && host.addr[1] == 0 && host.addr[2] == 0 && host.addr[3] == 0) { host = (ipv4_addr_t){ .addr = {10,0,2,2} }; }
     // Use ephemeral local port to avoid inbound default-deny issues
     static uint16_t eph = 50000;
     if (eph < 49152) eph = 49152;

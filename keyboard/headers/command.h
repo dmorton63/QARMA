@@ -95,6 +95,8 @@ void cmd_ifup(int argc, char** argv);
 void cmd_ifdown(int argc, char** argv);
 void cmd_ping(int argc, char** argv);
 void cmd_arp(int argc, char** argv);
+void cmd_ip(int argc, char** argv);
+void cmd_telnet(int argc, char** argv);
 
 // Pipeline commands
 void cmd_pipeline(int argc, char** argv);

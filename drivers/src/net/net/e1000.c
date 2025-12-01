@@ -1265,21 +1265,23 @@ bool e1000_detect_pci(uint8_t bus, uint8_t slot, uint8_t func) {
     e1000_dev->net_dev.rx_packets = e1000_dev->net_dev.tx_packets = 0; e1000_dev->net_dev.rx_bytes = e1000_dev->net_dev.tx_bytes = 0;
     e1000_dev->net_dev.rx_errors = e1000_dev->net_dev.tx_errors = 0; e1000_dev->net_dev.send_packet = e1000_send_packet; e1000_dev->net_dev.receive_packet = NULL;
     e1000_dev->net_dev.init = e1000_init_device; e1000_dev->net_dev.shutdown = e1000_shutdown_device;
-    // Default guest IP for isolated bridge (br0 192.168.100.1/24)
-    e1000_dev->net_dev.ip_address.addr[0] = 192;
-    e1000_dev->net_dev.ip_address.addr[1] = 168;
-    e1000_dev->net_dev.ip_address.addr[2] = 100;
-    e1000_dev->net_dev.ip_address.addr[3] = 2;
+    // Default guest IP for QEMU user-mode networking (10.0.2.0/24 network)
+    // QEMU reserves: 10.0.2.2 (gateway/DNS), 10.0.2.3 (DNS), 10.0.2.4 (DHCP start)
+    // Safe to use 10.0.2.15 as static guest IP (typical QEMU default)
+    e1000_dev->net_dev.ip_address.addr[0] = 10;
+    e1000_dev->net_dev.ip_address.addr[1] = 0;
+    e1000_dev->net_dev.ip_address.addr[2] = 2;
+    e1000_dev->net_dev.ip_address.addr[3] = 15;
     // Netmask 255.255.255.0
     e1000_dev->net_dev.netmask.addr[0] = 255;
     e1000_dev->net_dev.netmask.addr[1] = 255;
     e1000_dev->net_dev.netmask.addr[2] = 255;
     e1000_dev->net_dev.netmask.addr[3] = 0;
-    // Gateway (host side bridge address)
-    e1000_dev->net_dev.gateway.addr[0] = 192;
-    e1000_dev->net_dev.gateway.addr[1] = 168;
-    e1000_dev->net_dev.gateway.addr[2] = 100;
-    e1000_dev->net_dev.gateway.addr[3] = 1;
+    // Gateway (QEMU user-mode gateway, also acts as DNS)
+    e1000_dev->net_dev.gateway.addr[0] = 10;
+    e1000_dev->net_dev.gateway.addr[1] = 0;
+    e1000_dev->net_dev.gateway.addr[2] = 2;
+    e1000_dev->net_dev.gateway.addr[3] = 2;
     extern int network_register_device(net_device_t* device);
     if (network_register_device(&e1000_dev->net_dev) != 0) { gfx_print("E1000: Failed to register network device\n"); return false; }
     if (e1000_dev->mem_base && !e1000_dev->mmio_inert) {
