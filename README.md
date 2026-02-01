@@ -1,5 +1,7 @@
 # QARMA-OS - Revolutionary Operating System
-
+# UPDATE - QARMA is now morphing into QAIOS and this repository will eventually go away.
+# DUE to REFACTORING, Restructuring, and a move to C++ in the system we will need to retire this repository and replace it.
+# The new QAIOS system folder structures, and code placement will represent the different layers of operation inside the Operating System
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 ![Status](https://img.shields.io/badge/status-in_development-yellow)
