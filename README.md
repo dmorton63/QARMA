@@ -234,4 +234,7 @@ by David K. Morton, and its voice must remain expressive.
 All derivatives must preserve visible attribution — in logs, banners, or documentation.  
 QARMA must always speak with intention, and its legacy must be honored.
 
+# 02/01/2026 — QAIOS is coming soon
+After a major refactor of the QARMA window subsystem—and a series of framebuffer and video‑layer surprises—we stepped back to review all supporting modules. That review made something obvious: several subsystems were doing far more than they should.
+The original windowing layer (name still subject to change) had grown into a mix of low‑level rendering code and high‑level window logic. Moving to C++ was our first step toward untangling that. By pushing low‑level operations back into dedicated classes and letting the window system focus on behavior, we’ve finally streamlined message handling. Each window now derives from a class with its own message handler, giving us a cleaner, more modular architecture.
 
